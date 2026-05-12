@@ -1,0 +1,142 @@
+Hi Team,
+
+We are implementing backend-based SharePoint file streaming and document access using Microsoft Graph with site-specific permissions (`Sites.Selected`).
+
+Kindly help complete the following one-time SharePoint permission configuration for the Azure App Registration.
+
+---
+
+## Required Microsoft Graph Application Permissions
+
+Please ensure the Azure App Registration has the following Microsoft Graph Application Permissions configured:
+
+Runtime permission:
+
+* Sites.Selected
+
+Temporary onboarding/setup permission:
+
+* Sites.FullControl.All
+
+After adding permissions, please click:
+
+* Grant admin consent
+
+---
+
+## SharePoint Site Access Requirement
+
+The application should be granted access ONLY to the approved SharePoint site.
+
+The SharePoint site URL will be provided separately.
+
+Example:
+https://tenant.sharepoint.com/sites/site-name
+
+---
+
+## Step 1 - Generate Access Token
+
+Token endpoint:
+
+POST https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token
+
+Request body (x-www-form-urlencoded):
+
+client_id=APPLICATION_CLIENT_ID
+client_secret=APPLICATION_CLIENT_SECRET
+scope=https://graph.microsoft.com/.default
+grant_type=client_credentials
+
+---
+
+## Step 2 - Resolve SharePoint Site ID
+
+API:
+
+GET https://graph.microsoft.com/v1.0/sites/{hostname}:/{site-path}
+
+Example:
+
+GET https://graph.microsoft.com/v1.0/sites/tenant.sharepoint.com:/sites/site-name
+
+Headers:
+
+Authorization: Bearer ACCESS_TOKEN
+
+Response:
+
+{
+"id": "SITE_ID"
+}
+
+Please copy the returned SITE_ID.
+
+---
+
+## Step 3 - Grant Site-Specific Permission
+
+API:
+
+POST https://graph.microsoft.com/v1.0/sites/{site-id}/permissions
+
+Headers:
+
+Authorization: Bearer ACCESS_TOKEN
+Content-Type: application/json
+
+Request body:
+
+{
+"roles": ["read"],
+"grantedToIdentities": [
+{
+"application": {
+"id": "APPLICATION_CLIENT_ID",
+"displayName": "APPLICATION_NAME"
+}
+}
+]
+}
+
+This grants the application access to the specified SharePoint site for:
+
+* file streaming
+* file download
+* drive listing
+* file listing
+* metadata access
+
+---
+
+## Step 4 - Remove Temporary Elevated Permission
+
+After successful site permission assignment, please remove:
+
+* Sites.FullControl.All
+
+and retain only:
+
+* Sites.Selected
+
+for runtime access.
+
+---
+
+## Runtime APIs Used by Backend
+
+Get Site:
+GET /sites/{hostname}:/{site-path}
+
+List Drives:
+GET /sites/{site-id}/drives
+
+List Files:
+GET /drives/{drive-id}/root/children
+
+Stream File Content:
+GET /drives/{drive-id}/items/{item-id}/content
+
+No interactive login will be required after onboarding/setup.
+
+Please let us know once the site-specific permission assignment has been completed.
