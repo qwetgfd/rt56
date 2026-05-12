@@ -1,0 +1,97 @@
+<div class="config-container">
+  <h2>Azure / SharePoint Configuration</h2>
+  <p class="subtitle">Enter your Azure AD and SharePoint details. These are stored locally in your browser.</p>
+
+  <form (ngSubmit)="onSubmit()" #configForm="ngForm">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="tenantId">Tenant ID <span class="required">*</span></label>
+        <input
+          type="text"
+          id="tenantId"
+          name="tenantId"
+          [(ngModel)]="config.tenantId"
+          required
+          placeholder="e.g., 12345678-1234-1234-1234-123456789abc"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="clientId">Client ID <span class="required">*</span></label>
+        <input
+          type="text"
+          id="clientId"
+          name="clientId"
+          [(ngModel)]="config.clientId"
+          required
+          placeholder="e.g., abcdef12-3456-7890-abcd-ef1234567890"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="clientSecret">Client Secret <span class="required">*</span></label>
+        <div class="secret-input">
+          <input
+            [type]="showSecret ? 'text' : 'password'"
+            id="clientSecret"
+            name="clientSecret"
+            [(ngModel)]="config.clientSecret"
+            required
+            placeholder="Your client secret"
+          />
+          <button type="button" class="toggle-secret" (click)="showSecret = !showSecret">
+            {{ showSecret ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="hostName">SharePoint Host Name <span class="required">*</span></label>
+        <input
+          type="text"
+          id="hostName"
+          name="hostName"
+          [(ngModel)]="config.hostName"
+          required
+          placeholder="e.g., yourcompany.sharepoint.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="sitePath">Site Path <span class="required">*</span></label>
+        <input
+          type="text"
+          id="sitePath"
+          name="sitePath"
+          [(ngModel)]="config.sitePath"
+          required
+          placeholder="e.g., sites/YourSiteName"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="driveName">Drive Name</label>
+        <input
+          type="text"
+          id="driveName"
+          name="driveName"
+          [(ngModel)]="config.driveName"
+          placeholder="Documents"
+        />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="!configForm.form.valid">
+        Save Configuration
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="clearConfig()">
+        Clear
+      </button>
+    </div>
+
+    <div *ngIf="saved" class="success-message">
+      Configuration saved successfully!
+    </div>
+  </form>
+</div>
