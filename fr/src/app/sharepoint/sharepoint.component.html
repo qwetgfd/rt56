@@ -1,0 +1,572 @@
+﻿<div class="sp-root">
+  <div class="sp-shell" [class.sp-shell--home]="view === 'home'">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         HOME
+         ═══════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="view === 'home'">
+      <section class="sp-home">
+        <div class="sp-home-panel">
+          <header class="sp-home-header">
+            <span class="sp-home-eyebrow">TP Data Ingestion</span>
+            <h1 class="sp-title sp-title--home">SharePoint Integration</h1>
+            <p class="sp-subtitle sp-subtitle--home">
+              Browse document libraries, stream files, and manage SharePoint lists — all through a unified workspace.
+            </p>
+          </header>
+
+          <div class="sp-action-grid">
+            <button type="button" class="sp-action-card" (click)="openWorkspace()">
+              <span class="sp-action-icon sp-action-icon--workspace" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                </svg>
+              </span>
+              <span class="sp-action-label">SharePoint Workspace</span>
+              <span class="sp-action-desc">Browse document libraries, stream files, and manage lists. Choose TP-Internal or External credentials.</span>
+              <span class="sp-action-cta sp-action-cta--emphasis">
+                Open workspace
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </span>
+            </button>
+
+            <button type="button" class="sp-action-card" (click)="openAppsList()">
+              <span class="sp-action-icon sp-action-icon--register" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+              </span>
+              <span class="sp-action-label">Manage applications</span>
+              <span class="sp-action-desc">Register, edit, or remove Azure AD applications. View integration samples and credentials.</span>
+              <span class="sp-action-cta">
+                View apps
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         APPS LIST
+         ═══════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="view === 'apps-list'">
+      <nav class="sp-topbar">
+        <button type="button" class="sp-back" (click)="goHome()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          Back
+        </button>
+      </nav>
+
+      <section class="sp-page-intro">
+        <h1 class="sp-title">Registered applications</h1>
+        <p class="sp-subtitle">Manage your Azure AD applications and view integration samples.</p>
+      </section>
+
+      <div class="sp-card sp-card--wide">
+        <div class="sp-toolbar-row">
+          <button type="button" class="sp-btn sp-btn--primary" (click)="openRegister()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Register application
+          </button>
+          <button type="button" class="sp-btn sp-btn--secondary" (click)="openSampleCode()" *ngIf="registeredApps.length">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M10 14L21 3M5 10v11h11"/></svg>
+            Integration samples
+          </button>
+        </div>
+
+        <p class="sp-banner sp-banner--success" *ngIf="successMessage">{{ successMessage }}</p>
+
+        <div class="sp-apps-empty" *ngIf="!registeredApps.length">
+          <p>No applications registered yet. Register an application to get started.</p>
+          <button type="button" class="sp-btn sp-btn--primary" (click)="openRegister()">Register your first application</button>
+        </div>
+
+        <div class="sp-apps-grid" *ngIf="registeredApps.length">
+          <div class="sp-app-card" *ngFor="let app of registeredApps">
+            <div class="sp-app-card-body">
+              <div class="sp-app-card-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/>
+                </svg>
+              </div>
+              <div class="sp-app-card-info">
+                <h3 class="sp-app-card-title">{{ app.displayName }}</h3>
+                <p class="sp-app-card-meta">{{ app.sharepointHostName }} &middot; {{ app.driveName || defaultDriveName }}</p>
+                <p class="sp-app-card-notes" *ngIf="app.notes">{{ app.notes }}</p>
+              </div>
+            </div>
+            <div class="sp-app-card-actions">
+              <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="openAppEdit(app.id)">Edit</button>
+              <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="goToWorkspaceExternal(); selectedRegisteredAppId = app.id; onRegisteredAppSelected()">Use</button>
+              <button type="button" class="sp-btn sp-btn--icon sp-btn--sm sp-btn--danger" (click)="deleteApp(app.id)" title="Delete">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         REGISTER / EDIT APP
+         ═══════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="view === 'register' || view === 'app-edit'">
+      <nav class="sp-topbar">
+        <button type="button" class="sp-back" (click)="view === 'app-edit' ? openAppsList() : goHome()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          Back
+        </button>
+      </nav>
+
+      <section class="sp-page-intro">
+        <h1 class="sp-title">{{ editingAppId ? 'Edit application' : 'Register new application' }}</h1>
+        <p class="sp-subtitle">Configure Azure AD and SharePoint connection settings.</p>
+      </section>
+
+      <section class="sp-card sp-card--wide sp-card--success" *ngIf="registerSuccess && view === 'register'">
+        <div class="sp-success-panel">
+          <span class="sp-success-icon" aria-hidden="true">✓</span>
+          <div>
+            <h2 class="sp-card-title sp-card-title--inline">Application registered</h2>
+            <p class="sp-success-text">{{ successMessage }}</p>
+          </div>
+        </div>
+        <p class="sp-code-desc sp-code-desc--after-success">Use integration samples to wire up your app, or open the workspace to browse files.</p>
+        <footer class="sp-form-footer">
+          <button type="button" class="sp-btn sp-btn--secondary" (click)="openAppsList()">View all applications</button>
+          <button type="button" class="sp-btn sp-btn--secondary" (click)="openSampleCode()">Integration samples</button>
+          <button type="button" class="sp-btn sp-btn--primary" (click)="goToWorkspaceExternal()">Open workspace</button>
+        </footer>
+      </section>
+
+      <section class="sp-card sp-card--wide" *ngIf="!registerSuccess || view === 'app-edit'">
+        <div class="sp-alert sp-alert--info" *ngIf="view === 'register'">
+          <strong>Runtime paths</strong>
+          <span>Site URL and file path are set in the workspace — not during registration.</span>
+        </div>
+
+        <form class="sp-form" (ngSubmit)="saveRegisteredApplication()">
+          <div class="sp-form-section">
+            <h2 class="sp-section-title">Application details</h2>
+            <div class="sp-field">
+              <label for="reg-name">Application name <span class="sp-required">*</span></label>
+              <input id="reg-name" type="text" [(ngModel)]="registerForm.displayName" name="displayName" placeholder="Contoso Data Ingestion" />
+            </div>
+            <div class="sp-field">
+              <label for="reg-notes">Description / metadata</label>
+              <textarea id="reg-notes" rows="3" [(ngModel)]="registerForm.notes" name="notes" placeholder="Environment, owner, or integration notes"></textarea>
+            </div>
+          </div>
+
+          <div class="sp-form-section">
+            <h2 class="sp-section-title">Azure AD credentials</h2>
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label for="reg-tenant">Tenant ID <span class="sp-required">*</span></label>
+                <input id="reg-tenant" type="text" [(ngModel)]="registerForm.tenantId" name="tenantId" placeholder="00000000-0000-0000-0000-000000000000" />
+              </div>
+              <div class="sp-field">
+                <label for="reg-client">Client ID <span class="sp-required">*</span></label>
+                <input id="reg-client" type="text" [(ngModel)]="registerForm.clientId" name="clientId" placeholder="00000000-0000-0000-0000-000000000000" />
+              </div>
+            </div>
+            <div class="sp-field">
+              <label for="reg-secret">Client secret <span class="sp-required">*</span></label>
+              <input id="reg-secret" type="password" [(ngModel)]="registerForm.clientSecret" name="clientSecret" autocomplete="new-password" />
+            </div>
+          </div>
+
+          <div class="sp-form-section">
+            <h2 class="sp-section-title">SharePoint</h2>
+            <div class="sp-form-row">
+              <div class="sp-field">
+                <label for="reg-host">Host name <span class="sp-required">*</span></label>
+                <input id="reg-host" type="text" [(ngModel)]="registerForm.sharepointHostName" name="sharepointHostName" placeholder="contoso.sharepoint.com" />
+              </div>
+              <div class="sp-field">
+                <label for="reg-drive">Default document library</label>
+                <input id="reg-drive" type="text" [(ngModel)]="registerForm.driveName" name="regDriveName" [placeholder]="defaultDriveName" />
+                <span class="sp-field-hint">e.g. {{ defaultDriveName }}, Media library</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="sp-error" *ngIf="error" role="alert">{{ error }}</p>
+
+          <footer class="sp-form-footer">
+            <button type="button" class="sp-btn sp-btn--secondary" (click)="view === 'app-edit' ? openAppsList() : goHome()">Cancel</button>
+            <button type="submit" class="sp-btn sp-btn--primary" [disabled]="!isRegisterFormValid()">{{ editingAppId ? 'Save changes' : 'Register application' }}</button>
+          </footer>
+        </form>
+      </section>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SAMPLE CODE
+         ═══════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="view === 'sample-code'">
+      <nav class="sp-topbar">
+        <button type="button" class="sp-back" (click)="openAppsList()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          Back
+        </button>
+      </nav>
+
+      <section class="sp-page-intro">
+        <h1 class="sp-title">Integration samples</h1>
+        <p class="sp-subtitle">Boilerplate code to integrate with the SharePoint streaming API from your own applications.</p>
+      </section>
+
+      <section class="sp-card sp-card--wide">
+        <h2 class="sp-section-title">C# / .NET</h2>
+        <p class="sp-code-desc">Use HttpClient to list folders, stream files, and download content.</p>
+        <div class="sp-code-block">
+          <div class="sp-code-block-head">
+            <span>Program.cs</span>
+            <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="copyToClipboard(sampleCSharpCode, 'C# code')">Copy</button>
+          </div>
+          <pre class="sp-code-content">{{ sampleCSharpCode }}</pre>
+        </div>
+      </section>
+
+      <section class="sp-card sp-card--wide">
+        <h2 class="sp-section-title">cURL</h2>
+        <p class="sp-code-desc">Command-line examples for testing the API endpoints directly.</p>
+        <div class="sp-code-block">
+          <div class="sp-code-block-head">
+            <span>shell</span>
+            <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="copyToClipboard(sampleCurlCode, 'cURL code')">Copy</button>
+          </div>
+          <pre class="sp-code-content">{{ sampleCurlCode }}</pre>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SHAREPOINT WORKSPACE
+         ═══════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="view === 'workspace'">
+      <nav class="sp-topbar">
+        <button type="button" class="sp-back" (click)="goHome()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          Back
+        </button>
+      </nav>
+
+      <section class="sp-page-intro sp-page-intro--workspace">
+        <h1 class="sp-title sp-title--workspace">SharePoint Workspace</h1>
+        <p class="sp-subtitle sp-subtitle--workspace">Browse files, stream media, and manage lists.</p>
+      </section>
+
+      <div class="sp-workspace-layout" [class.sp-workspace-layout--config-collapsed]="configPanelCollapsed">
+
+        <!-- Configuration profile card -->
+        <section class="sp-card sp-card--wide sp-card--config" [class.sp-card--collapsed]="configPanelCollapsed">
+          <div class="sp-card-head">
+            <div class="sp-card-head-text">
+              <h2 class="sp-card-title">Connection</h2>
+              <p class="sp-card-lead">TP-Internal / External</p>
+            </div>
+            <button type="button" class="sp-collapse-btn" (click)="toggleConfigPanel()" [attr.aria-expanded]="!configPanelCollapsed">
+              <svg class="sp-collapse-icon" [class.sp-collapse-icon--up]="!configPanelCollapsed" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              {{ configPanelCollapsed ? 'Expand' : 'Collapse' }}
+            </button>
+          </div>
+
+          <div class="sp-config-collapsed-bar" *ngIf="configPanelCollapsed">
+            <span class="sp-chip sp-chip--profile">{{ configProfileLabel }}</span>
+            <span class="sp-chip" *ngIf="activeCredentials.sharepointHostName">{{ activeCredentials.sharepointHostName }}</span>
+            <span class="sp-chip" *ngIf="effectiveDriveName">{{ effectiveDriveName }}</span>
+            <span class="sp-chip" *ngIf="sitePath">{{ sitePath }}</span>
+            <span class="sp-chip sp-chip--status" [class.sp-chip--warn]="!canUseWorkspace">{{ canUseWorkspace ? 'Connected' : 'Not connected' }}</span>
+          </div>
+
+          <div id="sp-config-body" class="sp-card-body" *ngIf="!configPanelCollapsed">
+            <div class="sp-segment" role="radiogroup" aria-label="Connection profile">
+              <label class="sp-segment-item" [class.sp-segment-item--active]="isTpInternal">
+                <input type="radio" name="configProfile" value="tp-internal" [(ngModel)]="configProfile" (ngModelChange)="onConfigProfileChange()" />
+                <span class="sp-segment-label">TP-Internal</span>
+                <span class="sp-segment-hint">Preconfigured</span>
+              </label>
+              <label class="sp-segment-item" [class.sp-segment-item--active]="isTpExternal">
+                <input type="radio" name="configProfile" value="tp-external" [(ngModel)]="configProfile" (ngModelChange)="onConfigProfileChange()" />
+                <span class="sp-segment-label">External</span>
+                <span class="sp-segment-hint">Manual or registered app</span>
+              </label>
+            </div>
+
+            <ng-container *ngIf="isTpInternal">
+              <div class="sp-status sp-status--ok">
+                <span class="sp-status-dot"></span>
+                TP-Internal active
+              </div>
+              <button type="button" class="sp-link-btn" (click)="showInternalConfig = !showInternalConfig">
+                {{ showInternalConfig ? 'Hide' : 'View' }} credential summary
+              </button>
+              <dl class="sp-config-dl" *ngIf="showInternalConfig">
+                <dt>Tenant</dt><dd>{{ internalConfigSummary.tenantId }}</dd>
+                <dt>Client ID</dt><dd>{{ internalConfigSummary.clientId }}</dd>
+                <dt>Secret</dt><dd>{{ internalConfigSummary.secret }}</dd>
+                <dt>Host</dt><dd>{{ internalConfigSummary.host }}</dd>
+              </dl>
+            </ng-container>
+
+            <ng-container *ngIf="isTpExternal && !externalConnected">
+              <div class="sp-field" *ngIf="registeredApps.length">
+                <label for="reg-app-select">Registered application</label>
+                <select id="reg-app-select" class="sp-select" [(ngModel)]="selectedRegisteredAppId" name="registeredApp" (ngModelChange)="onRegisteredAppSelected()">
+                  <option value="">Enter credentials manually</option>
+                  <option *ngFor="let app of registeredApps" [value]="app.id">{{ app.displayName }}</option>
+                </select>
+              </div>
+
+              <ng-container *ngIf="!selectedRegisteredAppId">
+                <div class="sp-form-row">
+                  <div class="sp-field">
+                    <label for="ext-tenant">Tenant ID</label>
+                    <input id="ext-tenant" type="text" [(ngModel)]="activeCredentials.tenantId" name="extTenant" placeholder="00000000-0000-0000-0000-000000000000" />
+                  </div>
+                  <div class="sp-field">
+                    <label for="ext-client">Client ID</label>
+                    <input id="ext-client" type="text" [(ngModel)]="activeCredentials.clientId" name="extClient" placeholder="00000000-0000-0000-0000-000000000000" />
+                  </div>
+                </div>
+                <div class="sp-field">
+                  <label for="ext-secret">Client secret</label>
+                  <input id="ext-secret" type="password" [(ngModel)]="activeCredentials.clientSecret" name="extSecret" />
+                </div>
+                <div class="sp-field">
+                  <label for="ext-host">SharePoint host</label>
+                  <input id="ext-host" type="text" [(ngModel)]="activeCredentials.sharepointHostName" name="extHost" placeholder="contoso.sharepoint.com" />
+                </div>
+              </ng-container>
+
+              <button type="button" class="sp-btn sp-btn--primary sp-btn--block" (click)="applyExternalCredentials()">Connect</button>
+            </ng-container>
+
+            <ng-container *ngIf="isTpExternal && externalConnected">
+              <div class="sp-status sp-status--ok">
+                <span class="sp-status-dot"></span>
+                External &middot; Connected
+              </div>
+              <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="disconnectExternal()">Switch connection</button>
+            </ng-container>
+          </div>
+        </section>
+
+        <!-- Main workspace card -->
+        <section class="sp-card sp-card--wide sp-card--workspace" *ngIf="canUseWorkspace" [class.sp-card--workspace-expanded]="configPanelCollapsed">
+
+          <!-- Workspace tabs -->
+          <div class="sp-workspace-top">
+            <div class="sp-workspace-top-label">
+              <span class="sp-profile-pill">{{ configProfileLabel }}</span>
+              <span class="sp-workspace-top-title">Workspace</span>
+            </div>
+
+            <div class="sp-tabs">
+              <button type="button" class="sp-tab" [class.sp-tab--active]="workspaceTab === 'files'" (click)="openWorkspaceTab('files')">Files</button>
+              <button type="button" class="sp-tab" [class.sp-tab--active]="workspaceTab === 'lists'" (click)="openWorkspaceTab('lists')">Lists</button>
+            </div>
+          </div>
+
+          <!-- Files tab -->
+          <div class="sp-workspace-body" *ngIf="workspaceTab === 'files'">
+            <div class="sp-path-strip">
+              <label class="sp-path-cell">
+                <span class="sp-path-label">Site</span>
+                <input id="site-path" type="text" [(ngModel)]="sitePath" name="sitePath" placeholder="Sharepoint_PluginTest" (ngModelChange)="onSitePathChange($event)" />
+              </label>
+              <span class="sp-path-sep">/</span>
+              <label class="sp-path-cell">
+                <span class="sp-path-label">Library</span>
+                <input id="drive-name" type="text" [(ngModel)]="driveName" name="driveName" [placeholder]="'e.g. ' + defaultDriveName" [disabled]="!sitePath.trim()" (ngModelChange)="onDriveNameChange($event)" />
+              </label>
+              <span class="sp-path-sep">/</span>
+              <label class="sp-path-cell sp-path-cell--file">
+                <span class="sp-path-label">File</span>
+                <input id="file-path" type="text" [(ngModel)]="filePath" name="filePath" placeholder="folder/file.pdf" [disabled]="!sitePath.trim() || !driveName.trim()" (ngModelChange)="onFilePathChange()" />
+              </label>
+              <div class="sp-path-actions">
+                <button type="button" class="sp-btn sp-btn--primary sp-btn--compact" (click)="loadChildren()" [disabled]="loading || !sitePath.trim() || !driveName.trim()">{{ loading ? 'Loading...' : 'Browse' }}</button>
+                <button type="button" class="sp-btn sp-btn--secondary sp-btn--compact" (click)="streamFile()" [disabled]="loading || !filePath.trim()">Stream</button>
+              </div>
+            </div>
+
+            <p class="sp-error" *ngIf="error" role="alert">{{ error }}</p>
+            <p class="sp-banner sp-banner--success" *ngIf="successMessage">{{ successMessage }}</p>
+
+            <div class="sp-browser-panel">
+              <div class="sp-browser-empty" *ngIf="!items.length && !loading && !error">
+                <p>Enter a site name and library, then click <strong>Browse</strong> to explore files.</p>
+              </div>
+
+              <ng-container *ngIf="items.length || loading">
+                <nav class="sp-breadcrumbs" *ngIf="breadcrumbs.length">
+                  <button type="button" class="sp-crumb sp-crumb--up" *ngIf="currentPath" (click)="goBack()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    Parent
+                  </button>
+                  <span class="sp-crumb-sep" *ngIf="currentPath">/</span>
+                  <button type="button" class="sp-crumb" *ngFor="let crumb of breadcrumbs; let i = index" (click)="navigateBreadcrumb(i)">{{ crumb }}</button>
+                </nav>
+                <div class="sp-loading-bar" *ngIf="loading"><span></span></div>
+                <ul class="sp-file-list" *ngIf="!loading && items.length">
+                  <li *ngFor="let item of items">
+                    <button type="button" class="sp-file-row" (click)="openItem(item)">
+                      <span class="sp-file-icon">{{ getFileIcon(item) }}</span>
+                      <span class="sp-file-name">{{ item.name }}</span>
+                      <span class="sp-file-meta">{{ getFileSize(item) }}</span>
+                      <span class="sp-file-chevron" aria-hidden="true">&rsaquo;</span>
+                    </button>
+                  </li>
+                </ul>
+              </ng-container>
+            </div>
+
+            <!-- Developer tools (collapsed by default) -->
+            <div class="sp-devtools" *ngIf="sitePath.trim() && driveName.trim()">
+              <button type="button" class="sp-devtools-toggle" (click)="showDeveloperTools = !showDeveloperTools">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M10 14L21 3M5 10v11h11"/></svg>
+                Developer tools
+                <svg class="sp-devtools-arrow" [class.sp-devtools-arrow--open]="showDeveloperTools" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="sp-devtools-body" *ngIf="showDeveloperTools">
+                <p class="sp-devtools-hint">Generate cURL commands for API testing. These are for developer reference only.</p>
+                <div class="sp-devtools-actions">
+                  <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="copyToClipboard(sampleCurlCode, 'cURL samples')">Copy cURL samples</button>
+                  <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="copyToClipboard(sampleCSharpCode, 'C# samples')">Copy C# samples</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lists tab -->
+          <div class="sp-workspace-body" *ngIf="workspaceTab === 'lists'">
+            <div class="sp-path-strip sp-path-strip--lists">
+              <label class="sp-path-cell">
+                <span class="sp-path-label">Site</span>
+                <input type="text" [(ngModel)]="sitePath" name="listSitePath" placeholder="Sharepoint_PluginTest" (ngModelChange)="onSitePathChange($event)" />
+              </label>
+              <span class="sp-path-hint">Enter the site name only (no <code>sites/</code> prefix).</span>
+            </div>
+            <p class="sp-error" *ngIf="error" role="alert">{{ error }}</p>
+            <p class="sp-banner sp-banner--success" *ngIf="successMessage">{{ successMessage }}</p>
+
+            <div class="sp-lists-layout">
+              <!-- Lists sidebar -->
+              <div class="sp-lists-sidebar">
+                <div class="sp-lists-header">
+                  <span class="sp-lists-title">Lists</span>
+                  <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="loadLists()" [disabled]="listLoading">Refresh</button>
+                </div>
+                <div class="sp-lists-empty" *ngIf="!spLists.length && !listLoading">
+                  <p>Click Refresh to load lists from the current site.</p>
+                </div>
+                <div class="sp-loading-bar" *ngIf="listLoading"><span></span></div>
+                <ul class="sp-lists-menu" *ngIf="spLists.length">
+                  <li *ngFor="let list of spLists">
+                    <button type="button" class="sp-list-item" [class.sp-list-item--active]="selectedList?.id === list.id" (click)="selectList(list)">
+                      <span class="sp-list-item-name">{{ list.displayName || list.name }}</span>
+                      <span class="sp-list-item-desc" *ngIf="list.description">{{ list.description }}</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- List content -->
+              <div class="sp-lists-content">
+                <div class="sp-lists-content-empty" *ngIf="!selectedList && !listLoading">
+                  <p>Select a list from the sidebar to view and manage items.</p>
+                </div>
+
+                <ng-container *ngIf="selectedList">
+                  <div class="sp-list-toolbar">
+                    <span class="sp-list-toolbar-title">{{ selectedList.displayName || selectedList.name }}</span>
+                    <button type="button" class="sp-btn sp-btn--primary sp-btn--sm" (click)="openNewListItem()">Add item</button>
+                  </div>
+
+                  <div class="sp-loading-bar" *ngIf="listLoading"><span></span></div>
+
+                  <!-- Item form -->
+                  <div class="sp-list-form" *ngIf="showListItemForm">
+                    <h3 class="sp-list-form-title">{{ editingListItem ? 'Edit item' : 'New item' }}</h3>
+                    <div class="sp-field" *ngFor="let col of listColumns">
+                      <label [for]="'field-' + col">{{ col }}</label>
+                      <input [id]="'field-' + col" type="text" [(ngModel)]="listItemForm[col]" [name]="'field-' + col" />
+                    </div>
+                    <div class="sp-list-form-actions">
+                      <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="cancelListItemForm()">Cancel</button>
+                      <button type="button" class="sp-btn sp-btn--primary sp-btn--sm" (click)="saveListItem()">{{ editingListItem ? 'Save' : 'Create' }}</button>
+                    </div>
+                  </div>
+
+                  <!-- Items table -->
+                  <div class="sp-list-table-wrap" *ngIf="!listLoading && listItems.length">
+                    <table class="sp-list-table">
+                      <thead>
+                        <tr>
+                          <th *ngFor="let col of listColumns">{{ col }}</th>
+                          <th class="sp-list-table-actions">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let item of listItems">
+                          <td *ngFor="let col of listColumns">{{ getListItemField(item, col) }}</td>
+                          <td class="sp-list-table-actions">
+                            <button type="button" class="sp-btn sp-btn--icon sp-btn--sm" (click)="openEditListItem(item)" title="Edit">
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button type="button" class="sp-btn sp-btn--icon sp-btn--sm sp-btn--danger" (click)="deleteListItem(item)" title="Delete">
+                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="sp-lists-content-empty" *ngIf="!listLoading && !listItems.length && !showListItemForm">
+                    <p>No items in this list. Click "Add item" to create one.</p>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         VIEWER MODAL
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="sp-viewer-backdrop" *ngIf="showViewer" (click)="closeViewer()">
+      <div class="sp-viewer" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <header class="sp-viewer-header">
+          <h3>{{ selectedItem?.name }}</h3>
+          <div class="sp-viewer-actions">
+            <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="downloadFile()">Download</button>
+            <button type="button" class="sp-btn sp-btn--icon" (click)="closeViewer()" aria-label="Close">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </header>
+        <div class="sp-viewer-body">
+          <p class="sp-loading" *ngIf="viewerLoading">Loading preview...</p>
+          <p class="sp-error" *ngIf="error && !viewerLoading" role="alert">{{ error }}</p>
+          <p class="sp-hint" *ngIf="mediaPlaybackUnsupported">This format may not play in the browser. Download the file to open it locally.</p>
+
+          <video *ngIf="fileType === 'video' && safeBlobUrl" [src]="safeBlobUrl" controls class="sp-media" (canplay)="onStreamCanPlay()" (error)="onStreamError()"></video>
+          <audio *ngIf="fileType === 'audio' && safeBlobUrl" [src]="safeBlobUrl" controls class="sp-media" (canplay)="onStreamCanPlay()" (error)="onStreamError()"></audio>
+          <iframe *ngIf="fileType === 'pdf' && safeBlobUrl" [src]="safeBlobUrl" class="sp-iframe" title="PDF preview"></iframe>
+          <img *ngIf="fileType === 'image' && safeBlobUrl" [src]="safeBlobUrl" alt="" class="sp-image" />
+          <pre *ngIf="fileType === 'text' && fileContent" class="sp-text-preview">{{ fileContent }}</pre>
+          <p *ngIf="fileType === 'unknown' && safeBlobUrl" class="sp-hint">Preview is not available for this file type.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
