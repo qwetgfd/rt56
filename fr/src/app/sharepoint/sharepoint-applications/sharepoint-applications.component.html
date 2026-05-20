@@ -1,0 +1,294 @@
+<ng-container *ngIf="view === 'list'">
+  <section class="sp-page">
+    <header class="sp-page__head">
+      <div>
+        <button type="button" class="sp-back" (click)="navigateHome.emit()">
+          <sp-icon name="back" size="sm" /> Back to home
+        </button>
+        <h2 class="sp-page__title">Registered applications</h2>
+        <p class="sp-page__lead">All SharePoint apps available to Internal, External and Custom flows.</p>
+      </div>
+      <div class="sp-page__actions">
+        <div class="sp-view-toggle" role="group" aria-label="Applications view">
+          <button type="button" class="sp-view-toggle__button" [class.sp-view-toggle__button--active]="displayMode === 'cards'" [attr.aria-pressed]="displayMode === 'cards'" (click)="setDisplayMode('cards')">
+            <sp-icon name="grid" size="sm" /> Cards
+          </button>
+          <button type="button" class="sp-view-toggle__button" [class.sp-view-toggle__button--active]="displayMode === 'table'" [attr.aria-pressed]="displayMode === 'table'" (click)="setDisplayMode('table')">
+            <sp-icon name="list" size="sm" /> List
+          </button>
+        </div>
+        <button type="button" class="sp-btn sp-btn--primary" (click)="showForm('custom')">
+          <sp-icon name="plus" size="sm" /> Register application
+        </button>
+      </div>
+    </header>
+
+    <div class="sp-alert sp-alert--error" *ngIf="status.error" role="alert" aria-live="assertive">
+      <sp-icon class="sp-alert__icon" name="alert" />
+      <div class="sp-alert__body">
+        <strong>Error</strong>
+        <p>{{ status.error }}</p>
+      </div>
+    </div>
+    <div class="sp-alert sp-alert--success" *ngIf="status.success" role="status" aria-live="polite">
+      <sp-icon class="sp-alert__icon" name="check" />
+      <div class="sp-alert__body">
+        <strong>Success</strong>
+        <p>{{ status.success }}</p>
+      </div>
+      <button type="button" class="sp-alert__dismiss" (click)="status.dismissSuccess()" aria-label="Dismiss success message"><sp-icon name="x" size="sm" /></button>
+    </div>
+
+    <section class="sp-app-summary" *ngIf="applications.length" aria-label="Application summary">
+      <button type="button" class="sp-summary-card sp-summary-card--blue" [class.sp-summary-card--active]="typeFilter === 'all'" (click)="setTypeFilter('all')">
+        <sp-icon class="sp-summary-card__icon" name="apps" />
+        <span>Total applications</span>
+        <strong>{{ applications.length }}</strong>
+      </button>
+      <button type="button" class="sp-summary-card sp-summary-card--green" [class.sp-summary-card--active]="typeFilter === 'tp_internal'" (click)="setTypeFilter('tp_internal')">
+        <sp-icon class="sp-summary-card__icon" name="building" />
+        <span>Internal</span>
+        <strong>{{ internalCount }}</strong>
+      </button>
+      <button type="button" class="sp-summary-card sp-summary-card--amber" [class.sp-summary-card--active]="typeFilter === 'tp_external'" (click)="setTypeFilter('tp_external')">
+        <sp-icon class="sp-summary-card__icon" name="cloud" />
+        <span>External</span>
+        <strong>{{ externalCount }}</strong>
+      </button>
+      <button type="button" class="sp-summary-card sp-summary-card--purple" [class.sp-summary-card--active]="typeFilter === 'custom'" (click)="setTypeFilter('custom')">
+        <sp-icon class="sp-summary-card__icon" name="settings" />
+        <span>Custom</span>
+        <strong>{{ customCount }}</strong>
+      </button>
+    </section>
+
+    <section class="sp-filter-bar" *ngIf="applications.length" aria-label="Application filters">
+      <label class="sp-search">
+        <sp-icon name="search" size="sm" />
+        <span class="sp-sr-only">Search applications</span>
+        <input type="search" class="sp-input" [(ngModel)]="searchTerm" name="applicationSearch" placeholder="Search by name, host, tenant, Entra app ID, or streaming consumer ID" />
+      </label>
+      <select class="sp-input sp-filter-select" [(ngModel)]="typeFilter" name="applicationTypeFilter" aria-label="Filter by application type">
+        <option value="all">All application types</option>
+        <option value="tp_internal">Internal</option>
+        <option value="tp_external">External</option>
+        <option value="custom">Custom</option>
+      </select>
+    </section>
+
+    <div class="sp-empty-state" *ngIf="!applications.length">
+      <div class="sp-empty-state__icon" aria-hidden="true">
+        <sp-icon name="apps" size="lg" />
+      </div>
+      <h3>No applications yet</h3>
+      <p>Register your first SharePoint application to start browsing libraries and streaming files.</p>
+      <button type="button" class="sp-btn sp-btn--primary" (click)="showForm('custom')">Register an application</button>
+    </div>
+
+    <div class="sp-empty-state sp-empty-state--compact" *ngIf="applications.length && !filteredApplications.length">
+      <div class="sp-empty-state__icon" aria-hidden="true">
+        <sp-icon name="search" size="lg" />
+      </div>
+      <h3>No matching applications</h3>
+      <p>Adjust the search text or application type filter.</p>
+    </div>
+
+    <div class="sp-card-grid" *ngIf="filteredApplications.length && displayMode === 'cards'">
+      <article class="sp-app-card" *ngFor="let app of filteredApplications">
+        <header class="sp-app-card__head">
+          <div>
+            <span class="sp-chip sp-chip--{{ app.applicationTypeCode | lowercase }}">{{ app.applicationTypeName }}</span>
+            <h3 class="sp-app-card__name">{{ app.displayName }}</h3>
+          </div>
+        </header>
+        <dl class="sp-keyvals">
+          <div><dt>Host</dt><dd>{{ app.hostName }}</dd></div>
+          <div><dt>Site</dt><dd>{{ app.siteName || '-' }}</dd></div>
+          <div><dt>Library</dt><dd>{{ app.libraryName || 'Documents' }}</dd></div>
+          <div><dt>Tenant</dt><dd class="sp-mono">{{ app.tenantId }}</dd></div>
+          <div><dt>Entra app ID</dt><dd class="sp-mono">{{ app.clientId }}</dd></div>
+          <div><dt>Registered app ID</dt><dd class="sp-mono">{{ app.applicationId }}</dd></div>
+        </dl>
+        <p class="sp-app-card__notes" *ngIf="app.notes">{{ app.notes }}</p>
+        <footer class="sp-app-card__foot">
+          <button type="button" class="sp-btn sp-btn--icon" (click)="editApplication(app)" title="Edit" [attr.aria-label]="'Edit ' + app.displayName">
+            <sp-icon name="edit" />
+          </button>
+          <button type="button" class="sp-btn sp-btn--icon" (click)="useApplication.emit(app)" title="Use" [attr.aria-label]="'Use ' + app.displayName">
+            <sp-icon name="play" />
+          </button>
+          <button type="button" class="sp-btn sp-btn--icon sp-btn--danger-icon" (click)="deleteApplication(app)" title="Delete" [attr.aria-label]="'Delete ' + app.displayName">
+            <sp-icon name="trash" />
+          </button>
+        </footer>
+      </article>
+    </div>
+
+    <div class="sp-table-card" *ngIf="filteredApplications.length && displayMode === 'table'">
+      <table class="sp-table">
+        <thead>
+          <tr>
+            <th scope="col">Application</th>
+            <th scope="col">Type</th>
+            <th scope="col">Host</th>
+            <th scope="col">Site</th>
+            <th scope="col">Library</th>
+            <th scope="col">Updated</th>
+            <th scope="col" class="sp-table__actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let app of filteredApplications">
+            <td>
+              <div class="sp-table__primary">{{ app.displayName }}</div>
+              <div class="sp-table__secondary sp-mono">{{ app.applicationId }}</div>
+            </td>
+            <td><span class="sp-chip sp-chip--{{ app.applicationTypeCode | lowercase }}">{{ app.applicationTypeName }}</span></td>
+            <td>{{ app.hostName }}</td>
+            <td>{{ app.siteName || '-' }}</td>
+            <td>{{ app.libraryName || 'Documents' }}</td>
+            <td>{{ (app.modifiedOn || app.createdOn) | date:'mediumDate' }}</td>
+            <td>
+              <div class="sp-row-actions">
+                <button type="button" class="sp-btn sp-btn--icon sp-btn--sm" (click)="editApplication(app)" title="Edit" [attr.aria-label]="'Edit ' + app.displayName">
+                  <sp-icon name="edit" size="sm" />
+                </button>
+                <button type="button" class="sp-btn sp-btn--icon sp-btn--sm" (click)="useApplication.emit(app)" title="Use" [attr.aria-label]="'Use ' + app.displayName">
+                  <sp-icon name="play" size="sm" />
+                </button>
+                <button type="button" class="sp-btn sp-btn--icon sp-btn--sm sp-btn--danger-icon" (click)="deleteApplication(app)" title="Delete" [attr.aria-label]="'Delete ' + app.displayName">
+                  <sp-icon name="trash" size="sm" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</ng-container>
+
+<ng-container *ngIf="view === 'form'">
+  <section class="sp-page">
+    <header class="sp-page__head">
+      <div>
+        <button type="button" class="sp-back" (click)="showList()">
+          <sp-icon name="back" size="sm" /> Back to applications
+        </button>
+        <h2 class="sp-page__title">{{ applicationForm.applicationId ? 'Edit' : 'Register' }} application</h2>
+        <p class="sp-page__lead">Register Microsoft Entra (Azure AD) access to SharePoint, plus automatically issued credentials for the HTTP streaming API.</p>
+      </div>
+    </header>
+
+    <div class="sp-alert sp-alert--error" *ngIf="status.error" role="alert" aria-live="assertive">
+      <sp-icon class="sp-alert__icon" name="alert" />
+      <div class="sp-alert__body">
+        <strong>Error</strong>
+        <p>{{ status.error }}</p>
+      </div>
+    </div>
+    <div class="sp-alert sp-alert--success" *ngIf="status.success" role="status" aria-live="polite">
+      <sp-icon class="sp-alert__icon" name="check" />
+      <div class="sp-alert__body">
+        <strong>Success</strong>
+        <p>{{ status.success }}</p>
+      </div>
+      <button type="button" class="sp-alert__dismiss" (click)="status.dismissSuccess()" aria-label="Dismiss success message"><sp-icon name="x" size="sm" /></button>
+    </div>
+
+    <form class="sp-form" (ngSubmit)="saveApplication()" novalidate>
+      <details class="sp-form-hint">
+        <summary>How credentials are stored</summary>
+        <p>Microsoft Entra credentials are stored for SharePoint access. When you save, this system also issues a <strong>registered app ID</strong> and <strong>API secret</strong> for <code>/auth/token</code>.</p>
+      </details>
+      <div class="sp-form__grid">
+        <fieldset class="sp-fieldset">
+          <legend>Identity</legend>
+          <div class="sp-field">
+            <label for="app-type">Application type <span class="sp-required" aria-label="required">*</span></label>
+            <select id="app-type" class="sp-input" [(ngModel)]="applicationForm.applicationTypeCode" name="applicationTypeCode">
+              <option *ngFor="let t of applicationTypes" [value]="t.code">{{ t.displayName }}</option>
+            </select>
+          </div>
+          <div class="sp-field">
+            <label for="app-name">Display name <span class="sp-required" aria-label="required">*</span></label>
+            <input id="app-name" class="sp-input" type="text" [(ngModel)]="applicationForm.displayName" name="displayName" placeholder="Contoso Data Ingestion" />
+          </div>
+          <div class="sp-field">
+            <label for="app-notes">Notes</label>
+            <textarea id="app-notes" class="sp-input" rows="3" [(ngModel)]="applicationForm.notes" name="notes" placeholder="Owner, environment, links..."></textarea>
+          </div>
+        </fieldset>
+
+        <fieldset class="sp-fieldset">
+          <legend>Microsoft Entra (Graph API)</legend>
+          <div class="sp-field">
+            <label for="app-tenant">Tenant ID <span class="sp-required" aria-label="required">*</span></label>
+            <input id="app-tenant" class="sp-input" type="text" [(ngModel)]="applicationForm.tenantId" name="tenantId" placeholder="00000000-0000-0000-0000-000000000000" />
+          </div>
+          <div class="sp-field">
+            <label for="app-client">Application (client) ID <span class="sp-required" aria-label="required">*</span></label>
+            <input id="app-client" class="sp-input" type="text" [(ngModel)]="applicationForm.clientId" name="clientId" placeholder="00000000-0000-0000-0000-000000000000" />
+          </div>
+          <div class="sp-field">
+            <label for="app-secret">Client secret (Entra) <span class="sp-required" aria-label="required">*</span></label>
+            <div class="sp-secret-field">
+              <input id="app-secret" class="sp-input sp-secret-field__input" [type]="appSecretVisible ? 'text' : 'password'" [(ngModel)]="applicationForm.clientSecret" name="clientSecret" autocomplete="off" />
+              <button type="button" class="sp-secret-field__toggle" (click)="appSecretVisible = !appSecretVisible" [attr.aria-label]="appSecretVisible ? 'Hide client secret' : 'Show client secret'" [title]="appSecretVisible ? 'Hide' : 'Show'">
+                <sp-icon [name]="appSecretVisible ? 'eye-off' : 'eye'" />
+              </button>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="sp-fieldset sp-fieldset--full" *ngIf="applicationForm.applicationId">
+          <legend>Streaming API credentials</legend>
+          <p class="sp-hint">Issued when this application was saved (not Microsoft Entra). Send these two values to <code>POST /auth/token</code>; then use only the JWT and file path.</p>
+          <div class="sp-field">
+            <label for="app-registered-id">Registered app ID</label>
+            <input id="app-registered-id" class="sp-input sp-input--readonly" type="text" [readonly]="true" [(ngModel)]="applicationForm.applicationId" name="registeredAppId" />
+          </div>
+          <div class="sp-field">
+            <label for="app-consumer-secret">API secret</label>
+            <div class="sp-secret-field">
+              <input id="app-consumer-secret" class="sp-input sp-secret-field__input" [type]="appConsumerSecretVisible ? 'text' : 'password'" [readonly]="true" [(ngModel)]="applicationForm.consumerSecret" name="consumerSecret" autocomplete="off" />
+              <button type="button" class="sp-secret-field__toggle" (click)="appConsumerSecretVisible = !appConsumerSecretVisible" [attr.aria-label]="appConsumerSecretVisible ? 'Hide consumer secret' : 'Show consumer secret'" [title]="appConsumerSecretVisible ? 'Hide' : 'Show'">
+                <sp-icon [name]="appConsumerSecretVisible ? 'eye-off' : 'eye'" />
+              </button>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="sp-fieldset sp-fieldset--full">
+          <legend>SharePoint location</legend>
+          <div class="sp-field sp-field--inline">
+            <div class="sp-field">
+              <label for="app-host">Host Name <span class="sp-required" aria-label="required">*</span></label>
+              <input id="app-host" class="sp-input" type="text" [(ngModel)]="applicationForm.hostName" name="hostName" placeholder="contoso.sharepoint.com" />
+            </div>
+            <div class="sp-field">
+              <label for="app-site">Site Name</label>
+              <input id="app-site" class="sp-input" type="text" [(ngModel)]="applicationForm.siteName" name="siteName" placeholder="MyTeamSite" />
+            </div>
+            <div class="sp-field">
+              <label for="app-library">Library Name</label>
+              <input id="app-library" class="sp-input" type="text" [(ngModel)]="applicationForm.libraryName" name="libraryName" placeholder="Documents" />
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      <footer class="sp-form__foot">
+        <button type="button" class="sp-btn sp-btn--ghost" (click)="showList()">Cancel</button>
+        <button type="submit" class="sp-btn sp-btn--primary" [disabled]="!isFormValid">
+          {{ applicationForm.applicationId ? 'Save changes' : 'Register application' }}
+        </button>
+      </footer>
+    </form>
+
+    <div class="sp-api-download" *ngIf="applicationForm.applicationId">
+      <p>Need the streaming API script again?</p>
+      <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="downloadCurlForApp()">Download API guide (.txt)</button>
+    </div>
+  </section>
+</ng-container>
