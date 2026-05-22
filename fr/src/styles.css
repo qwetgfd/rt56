@@ -1,7 +1,0 @@
-/* Dev shell only. All SharePoint UI styles live under src/app/sharepoint/. */
-
-html,
-body {
-  margin: 0;
-  height: 100%;
-}
