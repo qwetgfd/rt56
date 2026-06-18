@@ -1,0 +1,19 @@
+<div id="chart">
+  @if (chartOptions) {
+    <apx-chart
+      [series]="chartOptions.series"
+      [chart]="chartOptions.chart"
+      [plotOptions]="chartOptions.plotOptions"
+      [labels]="chartOptions.labels"
+      [legend]="chartOptions.legend"
+      [labels]="chartOptions.labels"
+      [theme]="chartOptions.theme"
+      [fill]="chartOptions.fill"
+      [yaxis]="chartOptions.yaxis"
+      [stroke]="chartOptions.stroke"
+      [colors]="chartOptions.color"
+    ></apx-chart>
+  }
+</div>
+
+

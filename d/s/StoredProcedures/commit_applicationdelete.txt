@@ -1,0 +1,24 @@
+﻿-- SharePoint-only stored procedure: commit_applicationdelete
+-- Safe to recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[commit_applicationdelete_backup18June2026]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[commit_applicationdelete_backup18June2026];
+IF OBJECT_ID(N'[dbo].[commit_applicationdelete]', N'P') IS NOT NULL
+    EXEC sp_rename N'dbo.commit_applicationdelete', N'commit_applicationdelete_backup18June2026', N'OBJECT';
+GO
+
+CREATE OR ALTER PROCEDURE dbo.commit_applicationdelete
+    @Applicationid UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE  dbo.di_application
+    SET     isactive   = 0,
+            modifiedon = GETUTCDATE()
+    WHERE   applicationid = @Applicationid;
+    SELECT @@ROWCOUNT AS AffectedRows;
+END;
+GO

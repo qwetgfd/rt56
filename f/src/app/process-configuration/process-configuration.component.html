@@ -1,0 +1,1522 @@
+<form [formGroup]="processConfigurationForm" (ngSubmit)="onSubmit()" class="config-form"
+  [ngClass]="{
+    'active-tab-client': activeTab === 'client-tab',
+    'active-tab-additional': activeTab === 'addtional-setting-tab',
+    'active-tab-database': activeTab === 'database-settings-tab'
+  }">
+
+  <section class="tab-setting mb-3">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+
+      <li class="nav-item" role="presentation" [ngClass]="invalidTabClass('client-tab')">
+        <button class="nav-link active" id="client-tab"
+          type="button" role="tab" aria-controls="client-tab-pane" aria-selected="true"
+        (click)="onTabChanged('client-tab', $event)">Process Settings</button>
+      </li>
+
+      <li class="nav-item" role="presentation" [ngClass]="invalidTabClass('addtional-setting-tab')">
+        <button class="nav-link" id="addtional-setting-tab" type="button" role="tab"
+          aria-controls="addtional-setting-tab-pane" aria-selected="false"
+          (click)="onTabChanged('addtional-setting-tab', $event)">
+          Additional Settings
+        </button>
+      </li>
+
+      <li class="nav-item" role="presentation" [ngClass]="invalidTabClass('database-settings-tab')">
+        <button class="nav-link" id="database-settings-tab" type="button" role="tab"
+          aria-controls="database-settings-tab-pane" aria-selected="false"
+          (click)="onTabChanged('database-settings-tab', $event)">
+          @if (dataSource === 1) {
+            Database Settings
+          }
+
+          <!-- <ng-container *ngIf="dataSource === 2">
+          Destination Settings
+        </ng-container> -->
+
+
+        @if ([
+          DataSourceTypes.DataBricks,
+          DataSourceTypes.LandingLayer
+          ].includes(dataSource)) {
+          Destination Settings
+        }
+
+      </button>
+    </li>
+    <!-- <li class="nav-item" role="presentation">
+    <button class="nav-link" id="apply-rule-tab" data-bs-toggle="tab" data-bs-target="#apply-rule-tab-pane"
+      type="button" role="tab" aria-controls="apply-rule-tab-pane" aria-selected="false"
+      (click)="onTabChanged('apply-rule-tab')">Apply Rules
+    </button>
+  </li> -->
+</ul>
+
+<div class="tab-content" id="myTabContent">
+
+  <div [ngClass]="{'active':activeTab === 'client-tab'}" class="tab-pane" id="client-tab-pane"
+    role="tabpanel" aria-labelledby="client-tab" tabindex="0">
+    @if (clientInfoForm) {
+      <div [formGroup]="clientInfoForm">
+                    <!-- *ngIf="(fabService.isFABUser$ | async) && 
+                    ((formValues?.flpConfigurationId !== ''  && formValues?.campaignId !== null)
+                    || (formValues?.flpConfigurationId === '' ))" -->
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" value="" formControlName="isExternalProject"
+              id="checkNativeSwitchExternalProject" (change)="onExternalProjectChange($event)" switch>
+              <label class="form-check-label" for="checkNativeSwitchExternalProject">
+                External
+              </label>
+            </div>
+          </div>
+          @if (showCampaignName && ((formValues?.flpConfigurationId !== ''  && formValues?.campaignId !== null)
+            || (formValues?.flpConfigurationId === '' ))) {
+            <div class="mb-3">
+              <label for="RegionId" class="form-label">Campaign Name
+                <!-- <b class="text-danger">*</b> -->
+              </label>
+              <!-- -->
+              <ng-select [items]="campaignNames" bindLabel="campaignName" bindValue="campaignId"
+                [multiple]="false" [clearable]="false" formControlName="campaignName"
+                placeholder="Search and select Campaign Names" (change)="onCampaignNameChange($event)">
+              </ng-select>
+              @if (clientSettingsTabVisited && clientInfoForm.get('campaignName')?.hasError('required')) {
+                <span class="text-danger"
+                  >
+                  Campaign Name is required.
+                </span>
+              }
+            </div>
+          }
+          <div class="mb-3">
+            <label for="RegionId" class="form-label">Region <b class="text-danger">*</b></label>
+            <!-- <select class="form-select" aria-label="Select Region" id="regionId" formControlName="RegionId">
+            <option value="">--Select a value--</option>
+            <option *ngFor="let region of DIRegions" value="{{region.id}}">
+              {{region.name}}
+            </option>
+          </select> -->
+          <!-- <ng-select id="regionId" formControlName="RegionId" [items]="DIRegions" bindLabel="name"
+          bindValue="id" [multiple]="false" [clearable]="false" (change)="getProcessName()">
+        </ng-select> -->
+        <ng-select id="RegionId" formControlName="RegionId" placeholder="Select Region"
+          [multiple]="false" [clearable]="false" [loading]="isRegionLoading"
+          (change)="getProcessName('R')">
+          <ng-option selected disabled value="">Select Region</ng-option>
+          @for (region of dsRegion; track region) {
+            <ng-option [value]="region.id">
+              {{region.name}}
+            </ng-option>
+          }
+        </ng-select>
+        @if (clientSettingsTabVisited && clientInfoForm.get('RegionId')?.hasError('required')) {
+          <span class="text-danger"
+            >
+            Region is required.
+          </span>
+        }
+      </div>
+      <div class="mb-3">
+        <label for="SubRegionId" class="form-label">Sub-Region <b class="text-danger">*</b></label>
+        <!-- <select class="form-select" aria-label="Select Sub-Region" formControlName="SubRegionId">
+        <option value="">--Select a value--</option>
+        <ng-container *ngFor="let subregion of DISubRegions">
+          <option value="{{subregion.id}}">
+            {{subregion.name}}
+          </option>
+        </ng-container>
+      </select> -->
+      <!-- <ng-select id="SubRegionId" formControlName="SubRegionId" [items]="DISubRegions" bindLabel="name"
+      bindValue="id" [multiple]="false" [clearable]="false" (change)="getProcessName()">
+    </ng-select> -->
+    <ng-select id="SubRegionId" formControlName="SubRegionId" placeholder="Select Sub-Region"
+      [loading]="isSubRegionLoading" [multiple]="false" [clearable]="false"
+      (change)="getProcessName('S')">
+      <ng-option selected disabled value="">Select Sub-Region</ng-option>
+      @for (subregion of dsSubRegion; track subregion) {
+        <ng-option [value]="subregion.id">
+          {{subregion.name}}
+        </ng-option>
+      }
+    </ng-select>
+    @if (clientSettingsTabVisited && clientInfoForm.get('SubRegionId')?.hasError('required')) {
+      <span class="text-danger"
+        >
+        Sub-Region is required.
+      </span>
+    }
+  </div>
+  <div class="mb-3">
+    <label for="ClientId" class="form-label">Client Name <b class="text-danger">*</b></label>
+    <ng-select id="ClientId" formControlName="ClientId" placeholder="Select Client Name"
+      [loading]="isClientLoading" [multiple]="false" [clearable]="false"
+      (change)="getProcessName('C')">
+      <ng-option selected disabled value="">Select Client Name</ng-option>
+      @for (client of dsClient; track client) {
+        <ng-option [value]="client.id">
+          {{client.name}}
+        </ng-option>
+      }
+    </ng-select>
+    @if (clientSettingsTabVisited && clientInfoForm.get('ClientId')?.hasError('required')) {
+      <span class="text-danger"
+        >
+        Client Name is required.
+      </span>
+    }
+  </div>
+  <div class="mb-3">
+    <label for="security_group" class="form-label">
+      Security Group Name
+      <b class="text-danger">*</b>
+    </label>
+    <div class="note" style="font-size: x-small;">Minimum of 5 characters to start searching</div>
+    <!-- [ngbTooltip]="'Minimum of 5 characters to search'" -->
+    <ng-select placeholder="Search and Select Security Groups" [items]="securityGroups"
+      [loading]="securityGroupIsLoading" bindLabel="displayName" bindValue="id" [multiple]="true"
+      [clearable]="true" formControlName="security_group" (change)="onSecurityGroupSelect($event)"
+      #securityGroupBox (search)="onSearchGroup($event.term)" [compareWith]="compareWithFn"
+      (blur)="onBlurSearchGroup($event)">
+    </ng-select>
+    <!-- <span class="text-danger"
+    *ngIf="clientSettingsTabVisited && processConfigurationForm.controls['security_group'].invalid && processConfigurationForm.controls['security_group'].touched">
+    Security Group is required.
+  </span> -->
+  @if (clientInfoForm.get('security_group')?.hasError('required')) {
+    <span class="text-danger">
+      Security Group is required.
+    </span>
+  }
+</div>
+</div>
+}
+</div>
+
+<div [ngClass]="{'active':activeTab === 'addtional-setting-tab'}" class="tab-pane"
+  id="addtional-setting-tab-pane" role="tabpanel" aria-labelledby="addtional-setting-tab" tabindex="0">
+
+  @if ([DataSourceTypes.DataBricks, DataSourceTypes.Default].includes(dataSource)) {
+    <div class="input-group mb-3" [hidden]="disableDelimiter">
+      <!-- [hidden]="disableDelimiter" -->
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+        data-bs-toggle="dropdown" aria-expanded="false"
+        [disabled]="formValues?.flpConfigurationId !== ''">
+        Select Delimeter
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" (click)="onDelimiterChanged($event)">comma (,)</a></li>
+        <li><a class="dropdown-item" (click)="onDelimiterChanged($event)">pipe (|)</a></li>
+        <li><a class="dropdown-item" (click)="onDelimiterChanged($event)">tab (\t)</a></li>
+        <li><a class="dropdown-item" (click)="onDelimiterChanged($event)">semicolon (;)</a></li>
+        <li><a class="dropdown-item" (click)="onDelimiterChanged($event)">none</a></li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" (click)="onDelimiterChanged($event)">Other</a></li>
+      </ul>
+      <input type="text" class="form-control" aria-label="" #delimiter formControlName="delimiter"
+        appNospaces [readOnly]="this.processConfigurationForm.get('delimiter')?.value !== ''"
+        (change)="onDelimiterChanged($event)">
+      </div>
+      <!-- header Related -->
+      <div>
+        <h6 class="border-bottom">Header Section</h6>
+      </div>
+      <div class="mt-3 mb-3">
+        <div class="d-flex align-items-center">
+          <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+            formControlName="flexCheckHasHeaders" (change)="onHasHeadersChange($event)">
+            <label class="form-label mb-0">Has Headers</label>
+          </div>
+          <div class="note">If checked, the first row of parsed data will be interpreted as field names.
+          </div>
+        </div>
+        <div class="row">
+          <!-- <div class="mb-3 col-sm-6 d-flex align-items-center d-none">
+          <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+            formControlName="spanish_to_english" (change)="onConvertSpanishToEnglish($event)">
+            <label class="form-label mb-0">Convert Spanish to English Characters</label>
+          </div> -->
+          <div class="d-flex align-items-center">
+            <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+              formControlName="spanish_to_english" (change)="onConvertSpanishToEnglish($event)">
+              <div class="d-flex align-items-center">
+                <label class="form-label mb-0 me-2 text-nowrap" for="fromSelectLanguage">Convert
+                  Characters
+                From </label>
+                <select name="fromSelectLanguage"
+                  class="btn btn-outline-secondary btn-sm modified-select" id="fromSelectLanguage">
+                  <option value="eng" selected>Spanish to English</option>
+                </select>
+              </div>
+            </div>
+            <!-- Select Language dropdown  -->
+            <div class="mb-3 col-sm-12 align-items-center d-none">
+              <div class="row">
+                <div class="col-sm-12">
+                  <label class="d-block f-12 mb-2">Convert Characters</label>
+                </div>
+              </div>
+              <div class="input-group  d-flex">
+                <label class="me-2 f-12 pt-2" for="from">From</label>
+                <select name="fromSelectLanguage" class="form-select me-2 select-cust"
+                  id="fromSelectLanguage">
+                  <option value="spanish">Spanish</option>
+                  <option value="french">French</option>
+                  <option value="german">German</option>
+                </select>
+                <label class="me-2 f-12 pt-2" for="to">To</label>
+                <select name="toSelectLanguage" class="form-select me-2 select-cust"
+                  id="toSelectLanguage">
+                  <option value="English">English</option>
+                  <option value="french">French</option>
+                  <option value="german">German</option>
+                </select>
+              </div>
+            </div>
+            <!-- Select Language dropdown End  -->
+          </div>
+          <div class="row">
+            <div class="mb-3 col-sm-6 d-flex align-items-center">
+              <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                formControlName="roman_numerals_only" (change)="onConvertRomanNumerals($event)">
+                @if (showRomanNumeralsConversionOnProcess) {
+                  <span _ngcontent-ng-c3457709596="" class="material-symbols-rounded"
+                  > sync </span>
+                }
+                <label class="form-label mb-0">Use Roman Numerals Only</label>
+              </div>
+            </div>
+            <!-- header Related End -->
+            <!-- Data Related -->
+            <div class="mt-2">
+              <h6 class="border-bottom">Data Section</h6>
+            </div>
+            <!-- Data Related End -->
+            <div class="mb-3">
+              <div class="d-flex align-items-center">
+                <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                  formControlName="flexCheckSkipEmptyLines" (change)="onSkipEmptyLines($event)">
+                  <label class="form-label mb-0">Skip Empty Lines</label>
+                </div>
+                <div class="note">If checked, lines that are completely empty (those which evaluate to an empty
+                string) will be skipped.</div>
+              </div>
+              <div class="mb-3">
+                <div class="d-flex align-items-center">
+                  <input class="form-check-input mt-0 me-2" type="checkbox"
+                    [checked]="keyColumnsSelected.length > 0" aria-label=""
+                    formControlName="ignore_duplicate_rows" (change)="onIgnoreDuplicateRows($event)">
+                    <div>
+                      <label class="form-label mb-0 me-2">Ignore Duplicate Rows</label>
+                      <label class="mb-0 me-2 text-sm"> by
+                      </label>
+                      <select class="btn btn-outline-secondary btn-sm modified-select"
+                        formControlName="order_by_column_list_name_sort_dir"
+                        (change)="onOrderByChange($event)">
+                        <option value="desc">Descending</option>
+                        <option value="asc">Ascending</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="note">Key column must be selected for ignored duplicate rows.</div>
+                  @if (keyColumnsSelected.length > 0) {
+                    <div class="d-flex align-items-center key-col">
+                      <label class="form-label">Key Columns :
+                        <span class="key-col-val">{{keyColumnsSelected}}</span>
+                      </label>
+                    </div>
+                  }
+                  @if (dedupColumnsSelected.length > 0) {
+                    <div class="d-flex align-items-center key-col">
+                      <label class="form-label">Dedup Columns :
+                        <span class="key-col-val">{{dedupColumnsSelected}}</span>
+                      </label>
+                    </div>
+                  }
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex align-items-center">
+                    <input class="form-check-input mt-0 me-2" type="checkbox" aria-label=""
+                      formControlName="isSkipRow" (change)="onIsSkipRow($event)">
+                      <div>
+                        <label class="form-label mb-0 me-2">Skip Rows</label>
+                        <label class="mb-0 me-2 text-sm" for="txtSkipHeaderRows">From Header</label>
+                        <input type="text" class="btn-outline-secondary " id="txtSkipHeaderRows"
+                          style="width:50px" maxlength="2" placeholder="" formControlName="skip_header_rows"
+                          (change)="onSkipHeadersRowChange($event)">
+                          <label class="mb-0 me-2 text-sm" for="txtSkipFooterRows">&nbsp;From Footer</label>
+                          <input type="text" class="btn-outline-secondary" style="width:50px"
+                            id="txtSkipFooterRows" maxlength="2" placeholder=""
+                            formControlName="skip_footer_rows" (change)="onSkipFooterRowChange($event)">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <div class="d-flex align-items-center">
+                          @if (processConfigurationForm.get('skip_header_rows')?.errors && processConfigurationForm.get('skip_header_rows')?.errors?.['required']) {
+                            <div
+                            class="text-danger">Skip Header Rows is required.</div>
+                          }
+                          @if (processConfigurationForm.get('skip_header_rows')?.errors && processConfigurationForm.get('skip_header_rows')?.errors?.['pattern']) {
+                            <div
+                            class="text-danger">Between 0 - 99 whole numbers only.</div>
+                          }
+                          @if (processConfigurationForm.get('skip_footer_rows')?.errors && processConfigurationForm.get('skip_footer_rows')?.errors?.['required']) {
+                            <div
+                            class="text-danger">Skip Footer Rows is required.</div>
+                          }
+                          @if (processConfigurationForm.get('skip_footer_rows')?.errors && processConfigurationForm.get('skip_footer_rows')?.errors?.['pattern']) {
+                            <div
+                            class="text-danger">Between 0 - 99 whole numbers only.</div>
+                          }
+                          @if (skipHeadersRowsIsInvalid || skipFooterRowsIsInvalid) {
+                            <div class="text-danger">
+                              Skip Rows from Header/Footer is higher/lower than the file total row count.
+                            </div>
+                          }
+                        </div>
+                      </div>
+                      <div class="row">
+                        <!-- <div class="mb-3 col-sm-6 d-flex align-items-center">
+                        <input class="form-check-input mt-0 me-2" type="checkbox" [checked]="keyColumnsSelected" aria-label=""
+                          formControlName="ignore_duplicate_rows">
+                          <label class="form-label mb-0">Ignore Duplicate Rows</label>
+                        </div> -->
+                        <div class="mb-3 col-sm-6 d-flex align-items-center" class="hide">
+                          <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                            formControlName="is_active">
+                            <label class="form-label mb-0">Is Active</label>
+                          </div>
+                          <div class="mb-3 col-sm-6 d-flex align-items-center">
+                            <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                              formControlName="do_not_archive_file" (change)="onDoNotArchive($event)">
+                              <label class="form-label mb-0">Do not Archive</label>
+                            </div>
+                            <!-- <div class="mb-3 col-sm-6">
+                            <label for="exampleFormControlInput1" class="form-label">Escape Character</label>
+                            <input type="email" class="form-control" id="exampleFormControlInput1"
+                              placeholder="Enter Escape Character" value="default">
+                              <i class="note">The character used to escape the quote character within a field</i>
+                            </div> -->
+                          </div>
+                          <div class="mb-3" [hidden]="disableDelimiter">
+                            <!-- [hidden]="disableDelimiter" -->
+                            <div><label for="txtQuoteCharacter" class="form-label">Quote Character</label></div>
+                            <input type="text" class="form-control" id="txtQuoteCharacter"
+                              placeholder="Enter Quote Character" formControlName="txtQuoteCharacter" maxlength="1"
+                              (change)="onQuoteCharacterChange($event)">
+                              <div class="note">The character used to quote fields</div>
+                            </div>
+                            <div class="mb-3 mt-3">
+                              <div>
+                                <label for="txtEncoding" class="form-label me-2">Validations</label>
+                                @if (formValues?.ruleSetNameId || excelFileRule.length > 0) {
+                                  <label
+                                  >{{processConfigurationForm.get('ruleSetName')?.value}}</label>
+                                }
+                                <!-- <label
+                              *ngIf="excelFileRule?.length > 0">{{processConfigurationForm.get('ruleSetName')?.value}}</label> -->
+                              <button class="btn btn-info btn-arrow ms-3" type="button"
+                                (click)="onUIValidationRule($event)">
+                                <span class="material-symbols-outlined">
+                                  arrow_forward
+                                </span>
+                              </button>
+                            </div>
+                            <!-- <div id="divValidationRuleReset" class="note d-none">
+                            <span class="material-icons-round" id="iconValidationRuleSet" style="font-size: 16px;">
+                              priority_high
+                            </span>
+                            Validation Rule has been reset!
+                          </div> -->
+                          <div class="note ">
+                            Validation Rule will be reset for any changes in the header's settings.
+                          </div>
+                        </div>
+                        <div class="mb-3 d-none">
+                          <div><label for="txtEncoding" class="form-label">BE Validation Rule</label>
+                          <!-- <input type="text" class="form-control" placeholder="Enter Validation Rule"> -->
+                          <!-- <ng-select formControlName="ruleSetNames" placeholder="Select A Validation Rule"
+                          class="form-control p-0" [multiple]="false" [clearable]="false" [items]="ruleSetNames"
+                          bindValue="ruleSetNameId" bindLabel="ruleSetName" (change)="onRuleSetNames($event)"
+                          [loading]="isgetRuleSetBySecGrpIdsLoading" [clearable]="true" [compareWith]="fnCompareWithRuleSetNames">
+                        </ng-select> -->
+                        <button class="btn btn-info btn-arrow ms-3" type="button" data-bs-toggle="offcanvas"
+                          data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions"
+                          (click)="onBEValidationRule($event)">
+                          <span class="material-symbols-outlined">
+                            arrow_forward
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                  @if (dataSource === DataSourceTypes.LandingLayer) {
+                    <div class="mt-2">
+                      <h6 class="border-bottom">Validation Criteria</h6>
+                    </div>
+                    <div class="mb-3">
+                      <label for="landingLayerFileExtension" class="form-label">
+                        Extension
+                        <b class="text-danger">*</b>
+                      </label>
+                      <ng-select id="landingLayerFileExtension" formControlName="landingLayerFileExtension"
+                        placeholder="Select File Name Extension" [multiple]="true" [clearable]="true"
+                        [loading]="isFileExtensionLoading" bindLabel="fileExtension" bindValue="id"
+                        [items]="fileNameExtensions" (change)="extensionChange($event)">
+                      </ng-select>
+                      @if (processConfigurationForm.get('landingLayerFileExtension')?.hasError('required') &&
+                        (processConfigurationForm.get('landingLayerFileExtension')?.touched || processConfigurationForm.get('landingLayerFileExtension')?.dirty || isSubmitted) ) {
+                        <span class="text-danger"
+                          >
+                          File Extension is required.
+                        </span>
+                      }
+                    </div>
+                    <div class="mb-3">
+                      <label for="landingLayerRegex" class="form-label">
+                        Regex
+                      </label>
+                      <div class="input-group mb-2">
+                        <input type="text" class="form-control" aria-label="Base-Folder"
+                          formControlName="landingLayerRegex" placeholder="Enter your Regular Expression"
+                          (keyup.enter)="addOrUpdateRegex()" (keydown.enter)="preventSubmit($event)">
+                          <button class="btn btn-outline-secondary" type="button" id="btnAddRegex"
+                            (click)="addOrUpdateRegex()"
+                            [disabled]="processConfigurationForm.get('landingLayerRegex')?.invalid">{{editingRegexIndex
+                          === null ? 'Add' : 'Update'}}</button>
+                          @if (editingRegexIndex !== null) {
+                            <button class="btn btn-outline-secondary" type="button"
+                            (click)="clearEditor()">Cancel</button>
+                          }
+                        </div>
+                        <a (click)="openCustomRegex()" class="mb-3"
+                          style="cursor:pointer; text-decoration: underline; color:#0d6efd; display: inline-block;">
+                          Click here for Custom Regex
+                        </a>
+                        <mat-accordion class="mb-4">
+                          <mat-expansion-panel [expanded]="regexList.length > 0">
+                            <mat-expansion-panel-header>
+                              <mat-panel-title>
+                                <strong>Your Regex Expressions</strong>
+                              </mat-panel-title>
+                            </mat-expansion-panel-header>
+                            @if (regexList.length) {
+                              <mat-list>
+                                @for (r of regexList; track trackByRegexListIndex($index); let i = $index) {
+                                  <div>
+                                    <div class="full-width d-flex border-bottom py-2">
+                                      <div class="left-section flex-grow-1">
+                                        <span (click)="selectForEdit(i)" title="Edit regex"
+                                          class="cursor-pointer fw-bold d-block">
+                                          {{ i + 1 }}. {{ r.regex }}
+                                        </span>
+                                        @if (r.description) {
+                                          <small class="text-muted d-block mt-1">
+                                            {{ r.description }}
+                                          </small>
+                                        }
+                                      </div>
+                                      <span class="dbtn cursor-pointer ms-2" aria-label="Remove" title="Delete"
+                                        (click)="removeRegex(i, $event)">
+                                        <mat-icon class="text-danger">delete</mat-icon>
+                                      </span>
+                                    </div>
+                                  </div>
+                                }
+                              </mat-list>
+                            } @else {
+                              <div class="text-muted p-3">
+                                No expressions yet. Add one above.
+                              </div>
+                            }
+                          </mat-expansion-panel>
+                        </mat-accordion>
+                      </div>
+                      <div class="mt-2">
+                        <h6 class="border-bottom">Naming Convention</h6>
+                      </div>
+                      <div class="mb-3">
+                        <label for="Prefix" class="form-label">
+                        </label>
+                        <div class="d-flex align-items-center">
+                          <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                            formControlName="landingLayerPrefixCheckbox">
+                            <label class="form-label mb-0" for="landingLayerPrefixCheckbox">
+                              Prefix
+                              <b class="text-danger">*</b>
+                            </label>
+                          </div>
+                          <input type="text" class="form-control" aria-label="Base-Folder"
+                            formControlName="landingLayerPrefix" placeholder="Enter File Name Prefix">
+                            @if (processConfigurationForm.get('landingLayerPrefix')?.hasError('required') &&
+                              (processConfigurationForm.get('landingLayerPrefix')?.touched || processConfigurationForm.get('landingLayerPrefix')?.dirty || isSubmitted)) {
+                              <span class="text-danger"
+                                >
+                                File Name Prefix is required.
+                              </span>
+                            }
+                          </div>
+                          <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                              <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                                formControlName="landingLayerDateformatCheckbox">
+                                <label class="form-label mb-0" for="landingLayerDateformat">
+                                  Date
+                                  <b class="text-danger">*</b>
+                                </label>
+                              </div>
+                              <ng-select id="landingLayerDateformat" formControlName="landingLayerDateformat"
+                                placeholder="Select Date Format" [multiple]="false" [clearable]="false" bindLabel="format"
+                                bindValue="formatId" [items]="dateOnlyFormats">
+                              </ng-select>
+                              <!-- <input type="text" class="form-control" aria-label="Base-Folder"
+                              formControlName="landingLayerDateformat" placeholder="Enter Date Format eg:YYYYMMDD"> -->
+                            </div>
+                            <div class="mb-3">
+                              <div class="d-flex align-items-center">
+                                <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                                  formControlName="landingLayerTimeformatCheckBox">
+                                  <label class="form-label mb-0" for="landingLayerTimeformatCheckBox">
+                                    Time
+                                    <b class="text-danger">*</b>
+                                  </label>
+                                </div>
+                                <ng-select id="landingLayerTimeformat" formControlName="landingLayerTimeformat"
+                                  placeholder="Select Time Format" [multiple]="false" [clearable]="false" bindLabel="format"
+                                  bindValue="formatId" [items]="timeOnlyFormats">
+                                </ng-select>
+                              </div>
+                            }
+                          </div>
+                          <div [ngClass]="{'active':activeTab === 'database-settings-tab'}" class="tab-pane"
+                            id="database-settings-tab-pane" role="tabpanel" aria-labelledby="database-settings-tab" tabindex="0">
+                            <app-error-box [error]="databaseDestinationSettingsError"
+                            (hide)="databaseDestinationSettingsError = ''"></app-error-box>
+                            @if (dataSource === DataSourceTypes.Default) {
+                              <div class="mb-3">
+                                <label for="databaseConfigurationId" class="form-label">Database Name</label>
+                                <!-- <ng-select formControlName="databaseConfigurationId" [clearable]="false" [items]="databaseNames"
+                                [editableSearchTerm]="true" bindLabel="databaseName" bindValue="id"
+                                (change)="onDatabaseNameChange($event)">
+                                <ng-template ng-option-tmp let-item="item" let-index="index">
+                                  <ng-container *ngIf="item.defaultDB">
+                                    <span class="ng-value-label">{{item.databaseName}} - Default</span>
+                                  </ng-container>
+                                  <ng-container *ngIf="!item.defaultDB">
+                                    <span class="ng-value-label">{{item.databaseName}} - Exclusive</span>
+                                  </ng-container>
+                                </ng-template>
+                              </ng-select> -->
+                              <!-- bindLabel="databaseName" -->
+                              @if (formValues.flpConfigurationId === '') {
+                                <ng-select
+                                  formControlName="databaseConfigurationId" [items]="databaseNames" bindValue="id"
+                                  bindLabel="databaseName" [clearable]="false" [placeholder]="'Please select the database'"
+                                  (change)="onDatabaseNameChange($event)" [loading]="isDatabaseNamesLoading"
+                                  [groupBy]="'groupBy'">
+                                  <!-- <ng-template ng-option-tmp let-item="item">
+                                  - {{ item.databaseName }}
+                                </ng-template> -->
+                                <ng-template ng-optgroup-tmp let-item="item">
+                                  <div style="text-align:left; font-weight:bold; padding-left:8px;" class="categoryColor">
+                                    {{ item.groupBy }}
+                                  </div>
+                                </ng-template>
+                              </ng-select>
+                            }
+                            @if (formValues.flpConfigurationId !== '') {
+                              <input type="hidden" class="form-control"
+                                id="databaseConfigurationId" placeholder="Select Database Name"
+                                formControlName="databaseConfigurationId">
+                            }
+                            <input [type]="formValues.flpConfigurationId !== '' ? 'text' : 'hidden'" class="form-control"
+                              id="databaseName" formControlName="databaseName">
+                              <input type="hidden" class="form-control" id="databaseNameId" formControlName="databaseNameId">
+                              <input type="hidden" class="form-control" id="frmSubmitted" formControlName="frmSubmitted">
+                              <input type="hidden" class="form-control" id="ignoreSheet" formControlName="ignoreSheet">
+                              <input type="hidden" class="form-control" id="newSheet" formControlName="newSheet">
+                              <input type="hidden" class="form-control" id="missingSheet" formControlName="missingSheet">
+                              @if (processConfigurationForm.get('databaseName')?.hasError('required')) {
+                                <span class="text-danger"
+                                  >
+                                  Database Name is required.
+                                </span>
+                              }
+                            </div>
+                            <div class="mb-3">
+                              <label for="tableName" class="form-label">Table Name</label>
+                              <input type="text" class="form-control" id="tableName" placeholder="Enter Table Name"
+                                formControlName="tableName" appNospaces>
+                                @if (processConfigurationForm.get('tableName')?.hasError('required')) {
+                                  <span class="text-danger"
+                                    >
+                                    Table Name is required.
+                                  </span>
+                                }
+                                @if (processConfigurationForm.get('tableName')?.hasError('pattern')) {
+                                  <span class="text-danger"
+                                    >
+                                    Only alphanumeric and '_' are allowed.
+                                  </span>
+                                }
+                              </div>
+                            }
+
+                            @if (dataSource === DataSourceTypes.DataBricks) {
+                              <div class="mb-3">
+                                <label for="deltaStorageAccountId" class="form-label">Storage Account
+                                  <b class="text-danger">*</b>
+                                </label>
+                                <ng-select formControlName="deltaStorageAccountId" placeholder="Select Server"
+                                  [multiple]="false" [clearable]="false" (change)="onStorageAccountChange($event)">
+                                  <ng-option selected disabled value="">Select Server</ng-option>
+                                  @for (ac of storageAccount; track ac) {
+                                    <ng-option [value]="ac.storageAccountId.toString()">
+                                      {{ac.storageAccountName}}
+                                    </ng-option>
+                                  }
+                                </ng-select>
+                                @if ((processConfigurationForm.get('deltaStorageAccountId')?.touched || isSubmitted)) {
+                                  <div>
+                                    @if (processConfigurationForm.get('deltaStorageAccountId')?.hasError('required')) {
+                                      <span class="text-danger"
+                                        >
+                                        Storage Account is required.
+                                      </span>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                              <div class="mb-3">
+                                <label for="deltaContainerName" class="form-label">Container Name
+                                  <b class="text-danger">*</b>
+                                </label>
+                                <input type="text" class="form-control" aria-label="Base-Folder"
+                                  formControlName="deltaContainerName" placeholder="Enter Container Name"
+                                  (change)="onFoderNameChange($event)" readonly>
+                                  <!-- *ngIf="processConfigurationForm.get('deltaContainerName')?.touched  || isSubmitted" -->
+                                  @if ((processConfigurationForm.get('deltaContainerName')?.errors
+                                    && (processConfigurationForm.get('deltaContainerName')?.dirty ||  processConfigurationForm.get('deltaContainerName')?.touched)) || isSubmitted) {
+                                    <div>
+                                      @if (processConfigurationForm.get('deltaContainerName')?.hasError('required')) {
+                                        <span class="text-danger"
+                                          >
+                                          Container Name is required.
+                                        </span>
+                                      }
+                                      @if (processConfigurationForm.get('deltaContainerName')?.hasError('pattern')) {
+                                        <div class="text-danger"
+                                          >
+                                          The container name must start with a letter or number, use only
+                                          lowercase letters, numbers, and hyphens, and avoid consecutive hyphens.
+                                        </div>
+                                      }
+                                      @if (processConfigurationForm.get('deltaContainerName')?.hasError('minlength') || processConfigurationForm.get('deltaContainerName')?.hasError('maxlength')) {
+                                        <div class="text-danger"
+                                          >
+                                          The container name should be atleast 3 characters and at most 63 characters.
+                                        </div>
+                                      }
+                                    </div>
+                                  }
+                                </div>
+                                <div class="mb-3">
+                                  <label for="deltaSource" class="form-label">
+                                    Lineage Path <b class="text-danger">*</b>
+                                  </label>
+                                  <input type="text" class="form-control" aria-label="Base-Folder" formControlName="deltaSource"
+                                    placeholder="Enter Lineage Path" (blur)="onCloudSource()">
+                                    @if ((processConfigurationForm.get('deltaSource')?.errors && (processConfigurationForm.get('deltaSource')?.dirty ||  processConfigurationForm.get('deltaSource')?.touched)) || isSubmitted) {
+                                      <div
+                                        >
+                                        @if (processConfigurationForm.get('deltaSource')?.hasError('required') || processConfigurationForm.get('deltaSource')?.hasError('whitespace')) {
+                                          <span class="text-danger"
+                                            >
+                                            Lineage Path is required.
+                                          </span>
+                                        }
+                                        @if (processConfigurationForm.get('deltaSource')?.hasError('maxlength')) {
+                                          <div class="text-danger"
+                                            >
+                                            Max 100 characters
+                                          </div>
+                                        }
+                                        @if (processConfigurationForm.get('deltaSource')?.hasError('pattern')) {
+                                          <div class="text-danger"
+                                            >
+                                            Input must contain at least one letter or number. It can't be made up of only spaces,
+                                            underscores, or hyphens.
+                                          </div>
+                                        }
+                                      </div>
+                                    }
+                                  </div>
+                                  <div class="mb-3">
+                                    <label for="deltaTableName" class="form-label">
+                                      Delta Table Name
+                                      <b class="text-danger">*</b>
+                                    </label>
+                                    <input type="text" class="form-control" id="deltaTableName" placeholder="Enter Delta Table Name"
+                                      formControlName="deltaTableName" maxlength="101" (change)="onDeltaTableName()">
+                                      @if ((processConfigurationForm.get('deltaTableName')?.touched) && isSubmitted) {
+                                        <div>
+                                          @if (processConfigurationForm.get('deltaTableName')?.hasError('required')) {
+                                            <div class="text-danger"
+                                              >
+                                              Delta Table Name is required
+                                            </div>
+                                          }
+                                        </div>
+                                      }
+                                      @if (processConfigurationForm.get('deltaTableName')?.hasError('maxlength')) {
+                                        <div class="text-danger"
+                                          >Max 100
+                                        characters</div>
+                                      }
+                                      @if (processConfigurationForm.get('deltaTableName')?.hasError('pattern')) {
+                                        <div class="text-danger"
+                                          >
+                                          Only alphanumeric and '_' are allowed.
+                                        </div>
+                                      }
+                                    </div>
+                                    <div class="mb-3">
+                                      <label for="deltaServerNameId" class="form-label">
+                                        Unity Catalog
+                                        <b class="text-danger">*</b>
+                                      </label>
+                                      @if (formValues.flpConfigurationId === '') {
+                                        <ng-select formControlName="deltaServerNameId"
+                                          [clearable]="false" [items]="databaseNames" [editableSearchTerm]="true"
+                                          bindLabel="databaseName" bindValue="id" (change)="onDatabaseNameChange($event)"
+                                          [loading]="isDatabaseNamesLoading">
+                                          <ng-template ng-option-tmp let-item="item" let-index="index">
+                                            @if (item.defaultDB) {
+                                              <span class="ng-value-label">{{item.databaseName}} - Default</span>
+                                            }
+                                            @if (!item.defaultDB) {
+                                              <span class="ng-value-label">{{item.databaseName}} - Exclusive</span>
+                                            }
+                                          </ng-template>
+                                        </ng-select>
+                                      }
+                                      @if ((processConfigurationForm.get('deltaServerNameId')?.touched && isSubmitted)) {
+                                        <div>
+                                          @if (processConfigurationForm.get('deltaServerNameId')?.hasError('required')) {
+                                            <span class="text-danger"
+                                              >
+                                              Unity Catalog is required.
+                                            </span>
+                                          }
+                                        </div>
+                                      }
+                                      <input [type]="formValues.flpConfigurationId !== '' ? 'text' : 'hidden'" class="form-control"
+                                        id="databaseName" formControlName="databaseName">
+                                        <input type="hidden" class="form-control" id="deltaServerNameId"
+                                          formControlName="deltaServerNameId">
+                                        </div>
+                                        <div class="mb-3">
+                                          <label for="deltaJobId" class="form-label">
+                                            Job Id
+                                            <b class="text-danger">*</b>
+                                          </label>
+                                          <input type="text" class="form-control" id="txtDeltaJobId" formControlName="deltaJobId"
+                                            (change)="onDeltaJobId()" />
+                                            @if ((processConfigurationForm.get('deltaJobId')?.touched) || isSubmitted) {
+                                              <div>
+                                                @if (processConfigurationForm.get('deltaJobId')?.hasError('required')) {
+                                                  <span class="text-danger"
+                                                    >
+                                                    Job Id is required.
+                                                  </span>
+                                                }
+                                              </div>
+                                            }
+                                            @if (processConfigurationForm.get('deltaJobId')?.hasError('pattern')) {
+                                              <span class="text-danger"
+                                                >
+                                                Only numbers are allowed.
+                                              </span>
+                                            }
+                                          </div>
+                                        }
+
+                                        @if ([DataSourceTypes.Default, DataSourceTypes.DataBricks].includes(dataSource)) {
+                                          <div class="row">
+                                            <div class="mb-3 col-sm-6 d-flex align-items-center">
+                                              <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                                                aria-label="Drop Main Table" formControlName="drop_main_table"
+                                                (change)="onDropMainTable($event)">
+                                                <label class="form-label mb-0">Drop Main Table</label>
+                                              </div>
+                                              <div class="mb-3 col-sm-6 d-flex align-items-center">
+                                                <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                                                  aria-label="Validate Source File Schema with Target Table Schema"
+                                                  formControlName="is_validate_fileschema_with_target_table"
+                                                  (change)="onValidateSchema($event)">
+                                                  <label class="form-label mb-0">Validate Schema</label>
+                                                </div>
+                                                <div class="mb-3 col-sm-6 d-flex align-items-center" style="display: none !important;">
+                                                  <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                                                    aria-label="Drop History Table" formControlName="drop_history_table"
+                                                    (change)="onDropHistoryTable($event)">
+                                                    <label class="form-label mb-0">Drop History Table</label>
+                                                  </div>
+                                                </div>
+                                                <div class="row">
+                                                  <div class="mb-3 col-sm-6 d-flex align-items-center">
+                                                    <input class="form-check-input mt-0 me-1" type="checkbox" value="" aria-label="Merge Data"
+                                                      formControlName="mergeData" (click)="onMergeData($event)">
+                                                      <label class="form-label mb-0">Allow Overwrite(DB)</label>
+                                                    </div>
+                                                    <div class="note mb-3">If checked, Please make key column first in table header and then click
+                                                      on
+                                                    'Overwrite DB' button to Overwrite the changes.</div>
+                                                    <div class="mb-3 col-sm-6 d-flex align-items-center"
+                                                      [ngStyle]="{'visibility': (processConfigurationForm.get('mergeData')?.value === true ? 'visible' : 'hidden')}">
+                                                      <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                                                        aria-label="History Table" formControlName="createHistoryTable"
+                                                        (change)="onCreateHistoryTable($event)">
+                                                        <label class="form-label mb-0">Save Overwrite Log</label>
+                                                      </div>
+                                                      <div class="note"
+                                                        [ngStyle]="{'visibility': (processConfigurationForm.get('mergeData')?.value === true ? 'visible' : 'hidden')}">
+                                                        If checked, "Save Overwrite Log" Please make key column first in table header and then click
+                                                        on
+                                                      'Overwrite DB' and 'Save Overwrite Log' button to Overwrite the changes.</div>
+                                                    </div>
+                                                  }
+
+                                                  @if (dataSource === DataSourceTypes.LandingLayer) {
+                                                    <div class="mb-3">
+                                                      <label for="deltaStorageAccountId" class="form-label">Storage Account
+                                                        <b class="text-danger">*</b>
+                                                      </label>
+                                                      <ng-select formControlName="deltaStorageAccountId" placeholder="Select Server"
+                                                        [multiple]="false" [clearable]="false" (change)="onStorageAccountChange($event)">
+                                                        <ng-option selected disabled value="">Select Server</ng-option>
+                                                        @for (ac of storageAccount; track ac) {
+                                                          <ng-option [value]="ac.storageAccountId.toString()">
+                                                            {{ac.storageAccountName}}
+                                                          </ng-option>
+                                                        }
+                                                      </ng-select>
+                                                      @if ((processConfigurationForm.get('deltaStorageAccountId')?.touched || isSubmitted)) {
+                                                        <div>
+                                                          @if (processConfigurationForm.get('deltaStorageAccountId')?.hasError('required')) {
+                                                            <span class="text-danger"
+                                                              >
+                                                              Storage Account is required.
+                                                            </span>
+                                                          }
+                                                        </div>
+                                                      }
+                                                    </div>
+                                                    <div class="mb-3">
+                                                      <label for="deltaContainerName" class="form-label">Container Name
+                                                        <b class="text-danger">*</b>
+                                                      </label>
+                                                      <input type="text" class="form-control" aria-label="Base-Folder"
+                                                        formControlName="deltaContainerName" placeholder="Enter Container Name"
+                                                        (change)="onFoderNameChange($event)">
+                                                        @if (processConfigurationForm.get('deltaContainerName')?.touched  || isSubmitted) {
+                                                          <div>
+                                                            @if (processConfigurationForm.get('deltaContainerName')?.hasError('required') || processConfigurationForm.get('deltaContainerName')?.hasError('whitespace')) {
+                                                              <span class="text-danger"
+                                                                >
+                                                                Container Name is required.
+                                                              </span>
+                                                            }
+                                                            @if (processConfigurationForm.get('deltaContainerName')?.hasError('pattern')) {
+                                                              <div class="text-danger"
+                                                                >
+                                                                The container name must start with a letter or number, use only
+                                                                lowercase letters, numbers, and hyphens, and avoid consecutive hyphens.
+                                                              </div>
+                                                            }
+                                                            @if (processConfigurationForm.get('deltaContainerName')?.hasError('minlength') || processConfigurationForm.get('deltaContainerName')?.hasError('maxlength')) {
+                                                              <div class="text-danger"
+                                                                >
+                                                                The container name should be atleast 3 characters and at most 63 characters.
+                                                              </div>
+                                                            }
+                                                          </div>
+                                                        }
+                                                      </div>
+                                                      <div class="mb-3">
+                                                        <div class="mt-2">
+                                                          <h6 class="border-bottom">Lineage Path</h6>
+                                                        </div>
+                                                        <label for="landingLayerAcceptedPath" class="form-label">
+                                                          Landing Layer Path <b class="text-danger">*</b>
+                                                        </label>
+                                                        <div class="input-group mb-3">
+                                                          <input type="text" class="form-control" placeholder="Enter Landing Layer Path"
+                                                            formControlName="landingLayerAcceptedPath" aria-label="LandingLayerAcceptedPath">
+                                                            <button class="btn btn-outline-secondary" type="button" id="btnResetLandingLayer"
+                                                            (click)="resetLandingPath('landingLayerAcceptedPath')">Reset</button>
+                                                          </div>
+                                                          @if ((processConfigurationForm.get('landingLayerAcceptedPath')?.errors && (processConfigurationForm.get('landingLayerAcceptedPath')?.dirty ||  processConfigurationForm.get('landingLayerAcceptedPath')?.touched)) || isSubmitted) {
+                                                            <div
+                                                              >
+                                                              @if (processConfigurationForm.get('landingLayerAcceptedPath')?.hasError('required') || processConfigurationForm.get('landingLayerAcceptedPath')?.hasError('whitespace')) {
+                                                                <span class="text-danger"
+                                                                  >
+                                                                  Landing Layer Path is required.
+                                                                </span>
+                                                              }
+                                                              @if (processConfigurationForm.get('landingLayerAcceptedPath')?.hasError('maxlength')) {
+                                                                <div class="text-danger"
+                                                                  >
+                                                                  Max 100 characters
+                                                                </div>
+                                                              }
+                                                              @if (processConfigurationForm.get('landingLayerAcceptedPath')?.hasError('pattern')) {
+                                                                <div class="text-danger"
+                                                                  >
+                                                                  Input must contain at least one letter or number. It can't be made up of only spaces,
+                                                                  underscores, or hyphens.
+                                                                </div>
+                                                              }
+                                                            </div>
+                                                          }
+                                                          <label for="landingLayerRejectedPath" class="form-label">
+                                                            Rejected Layer Path<b class="text-danger">*</b>
+                                                          </label>
+                                                          <div class="input-group mb-3">
+                                                            <input type="text" class="form-control" placeholder="Enter Rejected Layer Path"
+                                                              formControlName="landingLayerRejectedPath" aria-label="landingLayerRejectedPath">
+                                                              <button class="btn btn-outline-secondary" type="button" id="btnResetLandingLayer"
+                                                              (click)="resetLandingPath('landingLayerRejectedPath')">Reset</button>
+                                                            </div>
+                                                            @if ((processConfigurationForm.get('landingLayerRejectedPath')?.errors && (processConfigurationForm.get('landingLayerRejectedPath')?.dirty ||  processConfigurationForm.get('landingLayerRejectedPath')?.touched)) || isSubmitted) {
+                                                              <div
+                                                                >
+                                                                @if (processConfigurationForm.get('landingLayerRejectedPath')?.hasError('required') || processConfigurationForm.get('landingLayerRejectedPath')?.hasError('whitespace')) {
+                                                                  <span class="text-danger"
+                                                                    >
+                                                                    Rejected Path is required.
+                                                                  </span>
+                                                                }
+                                                                @if (processConfigurationForm.get('landingLayerRejectedPath')?.hasError('maxlength')) {
+                                                                  <div class="text-danger"
+                                                                    >
+                                                                    Max 100 characters
+                                                                  </div>
+                                                                }
+                                                                @if (processConfigurationForm.get('landingLayerRejectedPath')?.hasError('pattern')) {
+                                                                  <div class="text-danger"
+                                                                    >
+                                                                    Input must contain at least one letter or number. It can't be made up of only spaces,
+                                                                    underscores, or hyphens.
+                                                                  </div>
+                                                                }
+                                                              </div>
+                                                            }
+                                                          </div>
+                                                        }
+                                                      </div>
+                                                    </div>
+                                                  </section>
+                                                  <section class="base-setting">
+                                                    @if (clientInfoForm) {
+                                                      <div [formGroup]="clientInfoForm">
+                                                        <div class="mb-3">
+                                                          <label for="txtprocessName" class="form-label">Process Name <b class="text-danger">*</b></label>
+                                                          <input type="text" class="form-control" name="txtprocessName" id="txtprocessName"
+                                                            placeholder="Process Name" formControlName="processName" readonly>
+                                                            <!-- <div class="text-danger"
+                                                            *ngIf="processConfigurationForm.get('clientInfoForm.processName')?.errors && processConfigurationForm.get('processName')?.hasError('required')">
+                                                            Process Name is required.
+                                                          </div>
+                                                          <div *ngIf="processConfigurationForm.get('processName')?.errors && processConfigurationForm.get('processName')?.errors?.['processNameExist']"
+                                                          class="text-danger">Process name already exists</div>
+                                                          <div *ngIf="processConfigurationForm.get('processName')?.errors && processConfigurationForm.get('processName')?.errors?.['maxlength']"
+                                                          class="text-danger">Process name length should be between 5 and 70 characters long only.</div>
+                                                          <div *ngIf="processConfigurationForm.get('processName')?.errors && processConfigurationForm.get('processName')?.errors?.['pattern']"
+                                                          class="text-danger">Only Alphabets and _ are allowed.</div> -->
+                                                        </div>
+                                                        <div class="mb-3">
+                                                          <label for="description" class="form-label">Process Description</label>
+                                                          <textarea class="form-control" id="description" rows="3" placeholder="Insert your description here"
+                                                          formControlName="description" maxlength="1001"></textarea>
+                                                          <!-- <input type="text" class="form-control" id="search_group" placeholder="Enter Search Group"
+                                                          formControlName="search_group" maxlength="1000"> -->
+                                                          @if (processConfigurationForm.get('description')?.errors && processConfigurationForm.get('description')?.errors?.['maxlength']) {
+                                                            <div
+                                                            class="text-danger">Description length should not exceed 1000 characters</div>
+                                                          }
+                                                          @if (processConfigurationForm.get('description')?.errors && processConfigurationForm.get('description')?.errors?.['pattern']) {
+                                                            <div
+                                                            class="text-danger">Only alphanumeric, spaces and ',._' are allowed</div>
+                                                          }
+                                                        </div>
+                                                      </div>
+                                                    }
+                                                  </section>
+                                                  <section class="button-section">
+                                                    @if (formValues?.flpConfigurationId === '' && (fileType === 'xls' || fileType === 'xlsx' || fileType === 'xlsb')) {
+                                                      <button [id]="sanitizedWorksheetId" class="btn btn-primary" type="submit"
+                                                        >
+                                                        Save {{currentWorkSheetName}} configuration
+                                                      </button>
+                                                    }
+                                                    @if (formValues?.flpConfigurationId === '' && (fileType === 'txt' || fileType === 'csv')) {
+                                                      <button class="btn btn-primary" type="submit"
+                                                        >
+                                                        Save configuration
+                                                      </button>
+                                                    }
+                                                    @if (formValues?.flpConfigurationId === '' && dataSource === DataSourceTypes.LandingLayer) {
+                                                      <button class="btn btn-primary" type="submit"
+                                                        >
+                                                        Save configuration
+                                                      </button>
+                                                    }
+
+                                                  </section>
+
+                                                  <!-- Validation Rule here -->
+                                                  <div class="offcanvas width-lg offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions"
+                                                    aria-labelledby="offcanvasWithBothOptionsLabel" data-bs-backdrop="static">
+                                                    <div class="offcanvas-header mt-5">
+                                                      <h5 class="offcanvas-title f-14" id="offcanvasWithBothOptionsLabel">
+                                                        <span class="material-symbols-outlined f-18  text-primary cursor-pointer" (click)="closeUIValidation()"
+                                                          aria-label="Close">
+                                                          arrow_back_ios
+                                                        </span>
+                                                        <!-- {{validation}} Validation Rules -->
+                                                        Validations
+                                                      </h5>
+                                                      <!-- data-bs-dismiss="offcanvas" -->
+                                                      <button type="button" class="btn-close" aria-label="Close" (click)="closeUIValidation()"></button>
+                                                    </div>
+                                                    <div class="offcanvas-body" [ngClass]="{'offcanvas-disabled':formValues?.flpConfigurationId?.length > 0}">
+                                                      @if (showUIValidationRule) {
+                                                        <div class="row validation-rule-setting h-100">
+                                                          <div class="col-sm-6 h-100 h-auto">
+                                                            <label for="ruleType" class="form-label">Rule <b class="text-danger">*</b></label>
+                                                            <!-- bindLabel="ruleTypeName" -->
+                                                            <ng-select formControlName="ruleType" placeholder="Select Rule" [items]="rules"
+                                                              bindLabel="ruleTypeName" bindValue="ruleTypeId" [clearable]="false"
+                                                              [loading]="isRuleTypesLoading" [multiple]="false" (change)="onRuleTypeChange($event)"
+                                                              [groupBy]="'category'">
+                                                              <!-- <ng-template ng-option-tmp let-item="item">
+                                                              - {{ item.ruleTypeName }}
+                                                            </ng-template> -->
+                                                            <ng-template ng-optgroup-tmp let-item="item">
+                                                              <div style="text-align:left; font-weight:bold; padding-left:8px;" class="categoryColor">
+                                                                {{ item.category }}
+                                                              </div>
+                                                            </ng-template>
+                                                            <ng-template ng-option-tmp let-item="item">
+                                                              <span [title]="item.description">{{item.ruleTypeName}}</span>
+                                                            </ng-template>
+                                                          </ng-select>
+                                                          @if (processConfigurationForm.get('ruleType').value === RuleTypes.Format || processConfigurationForm.get('ruleType').value === RuleTypes.Value) {
+                                                            <div
+                                                              >
+                                                              <label for="subRuleType" class="form-label">Sub-Rule <b class="text-danger">*</b></label>
+                                                              <ng-select formControlName="subRuleType" placeholder="Select Sub-Rule" [multiple]="false"
+                                                                bindValue="subRuleId" bindLabel="subRuleName" [items]="subRules"
+                                                                [loading]="isSubRuleTypesLoading" [clearable]="false"
+                                                                (change)="onSubRuleTypeChange($event)">
+                                                              </ng-select>
+                                                              @if (processConfigurationForm.get('ruleType')?.value === RuleTypes.Format && processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.Pattern) {
+                                                                <div class="mt-3"
+                                                                  >
+                                                                  <label for="patternType" class="form-label">Patterns <b class="text-danger">*</b></label>
+                                                                  <ng-select formControlName="patternType" placeholder="Select Pattern" [multiple]="false"
+                                                                    [clearable]="false" [items]="patterns" bindValue="patternId"
+                                                                    [loading]="isPatternTypesLoading" bindLabel="patternName">
+                                                                  </ng-select>
+                                                                </div>
+                                                              }
+                                                              @if (processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.Numeric
+                                                                || processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.Length
+                                                                || processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.Comparison) {
+                                                                <div class="mb-3">
+                                                                  <label for="conditionType" class="form-label">Condition <b class="text-danger">*</b></label>
+                                                                  <ng-select formControlName="conditionType" placeholder="Select Conditional Operator"
+                                                                    [multiple]="false" bindValue="conditionalOperatorId" bindLabel="conditionalOperatorName"
+                                                                    [items]="conditionalOperators" [clearable]="false">
+                                                                  </ng-select>
+                                                                </div>
+                                                              }
+                                                              @if (processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.Length
+                                                                || processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.Numeric) {
+                                                                <div class="mb-3">
+                                                                  <label for="formatType" class="form-label">{{selectedSubRule}} <b
+                                                                  class="text-danger">*</b></label>
+                                                                  <input type="text" class="form-control" id="formatType" formControlName="formatType"
+                                                                    maxlength="100" [placeholder]="'Enter ' + selectedSubRule"
+                                                                    (change)="enableBtnCreateRule()" appDecimalFourPlaces>
+                                                                  </div>
+                                                                }
+                                                                @if (processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.ExactMatch) {
+                                                                  <div>
+                                                                    <label for="formatType" class="form-label">{{selectedSubRule}} <b
+                                                                    class="text-danger">*</b></label>
+                                                                    <input type="text" class="form-control" id="formatType" formControlName="formatType"
+                                                                      (change)="enableBtnCreateRule()" maxlength="100"
+                                                                      [placeholder]="'Enter ' + selectedSubRule">
+                                                                    </div>
+                                                                  }
+                                                                  @if (processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.NumericRange) {
+                                                                    <div class="mb-3"
+                                                                      >
+                                                                      <label for="fromValue" class="form-label">
+                                                                        From
+                                                                        <b class="text-danger">*</b></label>
+                                                                        <input type="text" class="form-control" id="fromValue" formControlName="fromValue"
+                                                                          maxlength="100" [placeholder]="'Enter ' + selectedSubRule" appDecimalFourPlaces>
+                                                                        </div>
+                                                                      }
+                                                                      @if (processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.NumericRange) {
+                                                                        <div class="mb-3"
+                                                                          >
+                                                                          <label for="toValue" class="form-label">To
+                                                                            <b class="text-danger">*</b></label>
+                                                                            <input type="text" class="form-control" id="toValue" formControlName="toValue"
+                                                                              maxlength="100" [placeholder]="'Enter ' + selectedSubRule" appDecimalFourPlaces>
+                                                                            </div>
+                                                                          }
+                                                                        </div>
+                                                                      }
+                                                                      @if (processConfigurationForm.get('ruleType')?.value === RuleTypes.Custom) {
+                                                                        <div class="mb-3">
+                                                                          <label for="aiPrompt" class="form-label">
+                                                                            Enter Prompt
+                                                                            <b class="text-danger">*</b>
+                                                                          </label>
+                                                                          <div style="position: relative;">
+                                                                            <textarea #txtareaAiPrompt formControlName="aiPrompt" class="form-control"
+                                                                              (input)="onCustomColumnNameChange($event)" rows="5" cols="50"
+                                                                              placeholder="Type @ to mention column names"
+                                                                            (keydown)="onKeyDownCustomColumnName($event)"></textarea>
+                                                                            @if (suggestions.length > 0) {
+                                                                              <ul class="suggestions"
+                                                                                [ngStyle]="{ top: caretTop + 'px', left: caretLeft + 'px' }">
+                                                                                @for (suggestion of suggestions; track suggestion; let i = $index) {
+                                                                                  <li
+                                                                                    (mousedown)="selectSuggestion(suggestion)"
+                                                                                    [class.active]="i === activeSuggestionIndex">
+                                                                                    {{ suggestion }}
+                                                                                  </li>
+                                                                                }
+                                                                              </ul>
+                                                                            }
+                                                                          </div>
+                                                                          <div class="note mt-2">
+                                                                            The custom rules will be generated by artificial intelligence and may not always be perfect.
+                                                                          </div>
+                                                                        </div>
+                                                                      }
+                                                                      @if (processConfigurationForm.get('ruleType')?.value === RuleTypes.BEValidation) {
+                                                                        <div class="mb-3"
+                                                                          >
+                                                                          <label for="spName" class="form-label">
+                                                                            Stored Procedure Name
+                                                                            <b class="text-danger">*</b>
+                                                                          </label>
+                                                                          <ng-select formControlName="spName" placeholder="Select SP Name" bindLabel="spName"
+                                                                            [items]="spNames" bindValue="spNameId" [clearable]="true" [loading]="isSPNamesLoading"
+                                                                            [multiple]="false">
+                                                                          </ng-select>
+                                                                        </div>
+                                                                      }
+                                                                      @if (processConfigurationForm.get('ruleType')?.value !== RuleTypes.BEValidation &&
+                                                                        processConfigurationForm.get('ruleType')?.value !== RuleTypes.GenericRules) {
+                                                                        @if (processConfigurationForm.get('ruleType')?.value !== RuleTypes.Custom) {
+                                                                          <div class="mb-3">
+                                                                            <label for="ruleColumnName" class="form-label">Column Name <b
+                                                                            class="text-danger">*</b></label>
+                                                                            <ng-select formControlName="ruleColumnName" placeholder="Select Column Name"
+                                                                              [multiple]="setRuleColumnToMultiple()" [clearable]="false"
+                                                                              (change)="onColumnNameChange($event, 'ruleColumnName')" [items]="availableColumns1"
+                                                                              bindValue="DbColumnName" class="cust" bindLabel="ColumnName"
+                                                                              [loading]="isColumnNameLoading">
+                                                                              <ng-option selected disabled value="">Select Columns</ng-option>
+                                                                              <ng-template ng-option-tmp let-item="item">
+                                                                                <div [title]="item.ColumnName">{{item.DbColumnName}}</div>
+                                                                              </ng-template>
+                                                                            </ng-select>
+                                                                          </div>
+                                                                        }
+                                                                        @if (processConfigurationForm.get('subRuleType')?.value === SubRuleTypes.Comparison) {
+                                                                          <div class="mb-3"
+                                                                            >
+                                                                            <label for="ruleColumnName2" class="form-label">Column Name B <b
+                                                                            class="text-danger">*</b></label>
+                                                                            <ng-select formControlName="ruleColumnName2" placeholder="Select Column Name"
+                                                                              [multiple]="setRuleColumnToMultiple()" [clearable]="false"
+                                                                              (change)="onColumnNameChange($event, 'ruleColumnName2')" [items]="availableColumns2"
+                                                                              bindValue="ColumnName" class="cust" bindLabel="ColumnName"
+                                                                              [loading]="isColumnNameLoading">
+                                                                              <ng-option selected disabled value="">Select Columns</ng-option>
+                                                                            </ng-select>
+                                                                          </div>
+                                                                        }
+                                                                        @if (uiValidationRulesInvalid) {
+                                                                          <div class="mb-3 text-end float-end text-danger">
+                                                                            <label class="form-label">Column Names are required</label>
+                                                                          </div>
+                                                                        }
+                                                                      }
+                                                                      @if (validationHelper.showCombination(processConfigurationForm.get('ruleType')?.value)) {
+                                                                        <div class="mb-3 col-sm-6 d-flex align-items-center"
+                                                                          >
+                                                                          <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                                                                            formControlName="isCombinationRule" (change)="onCombinationRuleChange($event)">
+                                                                            <label class="form-label mb-0">Combination</label>
+                                                                          </div>
+                                                                        }
+                                                                        @if (processConfigurationForm.get('ruleType')?.value
+                                                                          && (processConfigurationForm.get('ruleType')?.value === RuleTypes.Format
+                                                                          || processConfigurationForm.get('ruleType')?.value === RuleTypes.Value)) {
+                                                                          <div class="mb-3 col-sm-6 d-flex align-items-center">
+                                                                            <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                                                                              formControlName="isAllowNullOrEmptySpaces">
+                                                                              <label class="form-label mb-0">Allow Null or Empty Spaces</label>
+                                                                            </div>
+                                                                          }
+                                                                          @if (processConfigurationForm.get('ruleType')?.value === RuleTypes.GenericRules) {
+                                                                            <div class="mb-3"
+                                                                              >
+                                                                              <label for="aiPrompt" class="form-label">
+                                                                                Generic Rules
+                                                                                <b class="text-danger">*</b>
+                                                                              </label>
+                                                                              <ng-select placeholder="Select A Generic Rule" [items]="ruleSetNames"
+                                                                                [loading]="isgetRuleSetBySecGrpIdsLoading || isgetRuleSetByRuleSetNameIdLoading"
+                                                                                bindLabel="ruleSetName" bindValue="ruleSetNameId" [multiple]="false" [clearable]="true"
+                                                                                formControlName="ruleSetNames" (blur)="onClearRuleSetName()" #ruleSetNameBox
+                                                                                (search)="onSearchRuleSetName($event.term)" [compareWith]="fnCompareWithRuleSetNames"
+                                                                                (clear)="onClearRuleSetName()">
+                                                                              </ng-select>
+                                                                              <!-- (change)="onChangeRuleSetNames($event)" -->
+                                                                            </div>
+                                                                          }
+                                                                          <div class="mb-3 text-end float-end">
+                                                                            <!-- && processConfigurationForm.get('ruleType')?.value !== RuleTypes.Custom -->
+                                                                            @if (existingRuleId === 0 ) {
+                                                                              <input type="button" class="btn btn-primary me-2" value="Create Rule" (click)="onAddRule()"
+                                                                                [disabled]="enableBtnCreateRule()">
+                                                                            }
+                                                                            <!-- <button type="button" class="btn btn-primary me-2" style="position: relative"
+                                                                            value="Generate Rule" (click)="onGenerateCustomRule()"
+                                                                            *ngIf="existingRuleId === 0 && !customRuleGenerated && processConfigurationForm.get('ruleType')?.value === RuleTypes.Custom"
+                                                                            [disabled]="enableBtnCreateRule()">
+                                                                            <span>{{ isGeneratingCustomRule ? 'Generating Rule' : 'Generate Rule'}}</span>
+                                                                            <div class="spinner ml-4" *ngIf="isGeneratingCustomRule"></div>
+                                                                          </button> -->
+                                                                          @if (existingRuleId !== 0) {
+                                                                            <input type="button" class="btn btn-primary me-2" value="Update Rule"
+                                                                              (click)="onEditRule(existingRuleId)"
+                                                                              [disabled]="enableBtnCreateRule()">
+                                                                          }
+                                                                          @if (processConfigurationForm.get('ruleType')?.value) {
+                                                                            <input type="button"
+                                                                              class="btn btn-primary" value="Cancel" (click)="onCancelRuleCreation()">
+                                                                          }
+                                                                        </div>
+                                                                      </div>
+                                                                      <div class="col-sm-6 h-100">
+                                                                        <div class="r-section h-100">
+                                                                          <div class="flex-str h-100">
+                                                                            <div class="h-94">
+                                                                              <div>
+                                                                                <div>
+                                                                                  <label for="" class="form-label">Rule Set Name<span
+                                                                                  class="text-danger">*</span></label>
+                                                                                  <input type="text" placeholder="Enter rule set name" class="form-control"
+                                                                                    formControlName="ruleSetName" maxlength="100" readonly>
+                                                                                  </div>
+                                                                                  <div>
+                                                                                    <label for="" class="form-label">Rule Set Description</label>
+                                                                                    <textarea class="form-control" placeholder="Enter rule set description"
+                                                                                    maxlength="1001" formControlName="ruleSetDescription"></textarea>
+                                                                                    @if (processConfigurationForm.get('ruleSetDescription')?.errors && processConfigurationForm.get('ruleSetDescription')?.errors?.['maxlength']) {
+                                                                                      <div
+                                                                                        class="text-danger">Description length should not exceed 1000 characters
+                                                                                      </div>
+                                                                                    }
+                                                                                    @if (processConfigurationForm.get('ruleSetDescription')?.errors && processConfigurationForm.get('ruleSetDescription')?.errors?.['pattern']) {
+                                                                                      <div
+                                                                                      class="text-danger">Only alphanumeric, spaces and ',._' are allowed</div>
+                                                                                    }
+                                                                                  </div>
+                                                                                  <!-- <div class="mt-2">
+                                                                                  <label for="" class="form-label mb-2">
+                                                                                    Generic Rule Sets
+                                                                                  </label>
+                                                                                  <ng-select formControlName="ruleSetNames" placeholder="Select A Rule"
+                                                                                    [multiple]="true" [clearable]="false" [items]="ruleSetNames"
+                                                                                    bindValue="ruleSetNameId" bindLabel="ruleSetName"
+                                                                                    (change)="onChangeRuleSetNames($event)"
+                                                                                    (search)="onSearchRuleSetName($event.term)"
+                                                                                    [loading]="isgetRuleSetBySecGrpIdsLoading || isgetRuleSetByRuleSetNameIdLoading"
+                                                                                    [clearable]="true" [compareWith]="fnCompareWithRuleSetNames">
+                                                                                  </ng-select>
+                                                                                </div> -->
+                                                                                <div [hidden]="true">
+                                                                                  <div class="alert alert-danger alert-dismissible mt-3 mb-0 fade show"
+                                                                                    role="alert">
+                                                                                    <div class="d-flex me-1">
+                                                                                      <div>
+                                                                                        <span class="material-symbols-outlined">
+                                                                                          error
+                                                                                        </span>
+                                                                                      </div>
+                                                                                      <div>
+                                                                                        <div>
+                                                                                          <strong>Validation Failed!</strong>
+                                                                                        </div>
+                                                                                        <div class="f-13">
+                                                                                          Download copy of the file <a href="#">here</a>
+                                                                                        </div>
+                                                                                      </div>
+                                                                                    </div>
+                                                                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                                                    aria-label="Close"></button>
+                                                                                  </div>
+                                                                                </div>
+                                                                              </div>
+                                                                              <div class="row mt-3">
+                                                                                <div class="col-sm-12">
+                                                                                  <label class="form-label ps-2">Total no. of Rules: <span
+                                                                                  class="text-blue">{{getTotalCountOfRules()}}</span></label>
+                                                                                </div>
+                                                                              </div>
+                                                                              @if (tmp_newlyAddedRules.length > 0 || excelFileRule.length > 0) {
+                                                                                <div class="rulesetarea mt-1"
+                                                                                  style="overflow: true;">
+                                                                                  <!-- cdkDropList (cdkDropListDropped)="drop($event)" -->
+                                                                                  <ul class="ruleset">
+                                                                                    @for (rule of excelFileRule; track rule; let i = $index) {
+                                                                                      @if (rule.isActive) {
+                                                                                        <li class="">
+                                                                                          <div class="individual-ruleset">
+                                                                                            <div class="ruleset-name">
+                                                                                              <!-- <span class="material-symbols-outlined draggable-row">
+                                                                                              drag_handle
+                                                                                            </span> -->
+                                                                                            <span class="me-2">{{i+1}}) </span>
+                                                                                            <div class="text-description-container">
+                                                                                              <span class="f-13 desc" [title]="rule.ruleDescription"
+                                                                                                [ngClass]="{'text-danger': rule.isIrrelevant}"
+                                                                                                [ngStyle]="!rule.isActive ? {'text-decoration' : 'line-through'} : {}">
+                                                                                                @if (rule.ruleSetType===2 || rule.isGlobal) {
+                                                                                                  <span class="material-symbols-outlined"
+                                                                                                    style="font-size: 16px;"
+                                                                                                    >
+                                                                                                    public
+                                                                                                  </span>
+                                                                                                }
+                                                                                                @if (rule.ruleTypeId === 6) {
+                                                                                                  <span class="material-symbols-outlined"
+                                                                                                    style="font-size: 16px;"
+                                                                                                    >
+                                                                                                    database
+                                                                                                  </span>
+                                                                                                }
+                                                                                                {{rule.ruleDescription}}
+                                                                                              </span>
+                                                                                            </div>
+                                                                                          </div>
+                                                                                          @if (formValues?.flpConfigurationId === '') {
+                                                                                            <div class="ruleset-action"
+                                                                                              >
+                                                                                              <span class="material-icons-round text-primary"
+                                                                                                [ngStyle]="(processConfigurationForm.get('ruleSetNames')?.value || (rule.ruleSetType === 2 || rule.isGlobal)) ? {} : {'cursor': 'pointer'}"
+                                                                                                (click)="(rule.ruleSetType === 2 || rule.isGlobal) ? null : editRule(rule.id)"
+                                                                                              data-toggle="tooltip" title="Edit">edit</span>
+                                                                                              @if (rule.isActive) {
+                                                                                                <span class="material-icons-round text-danger"
+                                                                                                  [ngStyle]="processConfigurationForm.get('ruleSetNames')?.value ? {} : {'cursor': 'pointer'}"
+                                                                                                  (click)="removeRule(rule.id)" data-toggle="tooltip"
+                                                                                                title="Remove">delete</span>
+                                                                                              }
+                                                                                            </div>
+                                                                                          }
+                                                                                        </div>
+                                                                                      </li>
+                                                                                    }
+                                                                                  }
+                                                                                </ul>
+                                                                              </div>
+                                                                            }
+                                                                          </div>
+                                                                          <div class="mt-3 mb-3 text-end">
+                                                                            <!-- <button class="btn btn-outline-primary me-1">Validate</button> -->
+                                                                            <button class="btn btn-primary me-2"
+                                                                              [ngClass]="{'d-none':formValues?.flpConfigurationId}" type="button"
+                                                                              (click)="onSaveValidation()">
+                                                                              Save Rule Set
+                                                                            </button>
+                                                                            <button class="btn btn-primary me-2"
+                                                                              [ngClass]="{'d-none':formValues?.flpConfigurationId}" type="button"
+                                                                              (click)="onResetUIValidation()">
+                                                                              Reset
+                                                                            </button>
+                                                                            <button type="button" class="btn btn-primary" (click)="closeUIValidation()">
+                                                                              Close
+                                                                            </button>
+                                                                          </div>
+                                                                        </div>
+                                                                      </div>
+                                                                    </div>
+                                                                  </div>
+                                                                }
+
+                                                                @if (showBEValidationRule) {
+                                                                  <div class="validation-rule-setting h-100">
+                                                                    <div class="flex-str h-100">
+                                                                      <div class="">
+                                                                        <div class="row">
+                                                                          <div class="mb-3 col-sm-6">
+                                                                            <label for="">DB server</label>
+                                                                            <select name="" id="" class="form-select">
+                                                                              <option value="DBServer">DB Server</option>
+                                                                            </select>
+                                                                          </div>
+                                                                          <div class="mb-3 col-sm-6">
+                                                                            <label for="">DB Name</label>
+                                                                            <select name="" id="" class="form-select">
+                                                                              <option value="DBName">DB Name</option>
+                                                                            </select>
+                                                                          </div>
+                                                                          <div class="mb-3 col-sm-6">
+                                                                            <label for="">DB server</label>
+                                                                            <select name="" id="" class="form-select">
+                                                                              <option value="DBName">DB Name</option>
+                                                                            </select>
+                                                                          </div>
+                                                                          <div class="mb-3 col-sm-6">
+                                                                            <label for="">Store Proc Name</label>
+                                                                            <select name="" id="" class="form-select">
+                                                                              <option value="StoreProcName">Store Proc Name</option>
+                                                                            </select>
+                                                                          </div>
+                                                                        </div>
+                                                                      </div>
+                                                                      <div>
+                                                                        <div class="row">
+                                                                          <div class="col-sm-12">
+                                                                            <div class="mt-3  text-end">
+                                                                              <!-- <button class="btn btn-outline-primary me-1">Validate</button> -->
+                                                                              <button class="btn btn-primary" [disabled]="formValues?.flpConfigurationId">Save and
+                                                                              Validate</button>
+                                                                            </div>
+                                                                          </div>
+                                                                        </div>
+                                                                      </div>
+                                                                    </div>
+                                                                  </div>
+                                                                }
+                                                              </div>
+                                                            </div>
+                                                          </form>

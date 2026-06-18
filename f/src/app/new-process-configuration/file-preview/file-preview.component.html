@@ -1,0 +1,241 @@
+<form [formGroup]="filePreviewForm" (ngSubmit)="onSubmit();">
+  <section class="base-setting">
+
+    <div class="background-gray">
+      <div class="row text-center ">
+        <div class="col-sm-3">
+          <input class="form-control btn btn-primary d-none" type="file" id="formFile" #formFile
+            (change)="onFileChange($event)" accept=".csv, .xlsx, .xls, .txt, .xlsb">
+            <label for="formFile" class="btn btn-primary upload">
+              Upload File
+            </label>
+          </div>
+
+          <div class="col-sm-9">
+            <input class="text-upload" formControlName="formFile">
+          </div>
+
+
+          @if (filePreviewForm.get('formFile')?.errors && filePreviewForm.get('formFile')?.errors?.['fileIsValid']) {
+            <span
+              class="invalid-feedback">
+              File is invalid.
+            </span>
+          }
+          <!-- <span
+          *ngIf="filePreviewForm.get('formFile')?.errors && filePreviewForm.get('formFile')?.errors?.['fileIsTooLarge']"
+          class="invalid-feedback">
+          File is too big.
+        </span> -->
+      </div>
+      <div class="mt-3" style="font-style: italic;">
+        File size should not be <strong>0KB</strong> or exceeds <strong>10MB</strong>
+      </div>
+    </div>
+
+    <div class="attach-preview overflow-x">
+      @if (hasColumnExcluded()) {
+        <div class="mb-2">
+          You've excluded a column. Please enable Validate Schema in the Database Settings
+          to apply this exclusion.
+          <a class="text-end link-btn text-sm align-self-center" (click)="onApplyValidateSchema()">Click here if
+            you want to apply it
+            now?
+          </a>
+        </div>
+      }
+      @if (recordHeaders) {
+        Found {{recordHeaders.length}} Column(s)
+      }
+      <div class="scroll-div">
+        <table class="table table-striped table-hover" id="preview">
+          <thead class="table-light">
+            <tr>
+              @if (filePreviewValues.hasHeaders) {
+                <th>File Column Name</th>
+              }
+              <th>DB Column Name</th>
+              <!-- <th>Key Column</th>
+              <th>Column For Dedup</th>
+              <th>Data Type</th> -->
+              <th>Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (header of recordHeaders; track header; let i = $index) {
+              <tr
+                [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}">
+                @if (filePreviewValues.hasHeaders) {
+                  <td style="word-break: break-all;">
+                    <div class="d-flex align-items-center">
+                      <!-- <ng-container *ngIf="filePreviewValues.hasHeaders"> -->
+                      {{header.ColumnName}}
+                    <!-- </ng-container> -->
+                    <!-- <ng-container *ngIf="!filePreviewValues.hasHeaders">
+                    <input type="text" class="form-control" placeholder=""
+                      value="{{header.ColumnName}}" (change)="onColumnNameChange($event, i)"
+                      appNospaces
+                      [ngStyle]="{'border-color' : (header.invalidColumnName ? 'red' : '#dee2e6')}"
+                      [disabled]="!header.willInclude">
+                    </ng-container> -->
+                  </div>
+                </td>
+              }
+              <td class="ps-0 pe-0">
+                <!-- <td *ngIf="filePreviewValues.hasHeaders"> -->
+                <input type="text" class="form-control" placeholder="" value="{{header.DbColumnName}}"
+                  (change)="onDBColumnNameChange($event, i)" appNospaces
+                  [ngStyle]="{'border-color' : (header.invalidColumnName ? 'red' : '#dee2e6')}"
+                  [disabled]="!header.willInclude">
+                  @if (header.DbColumnName.length > 255) {
+                    <span class="text-danger">* Maximum character
+                    length should be 255.</span>
+                  }
+                </td>
+                <td class="text-center">
+                  <div class="dropdown table-drop">
+                    <div class="btn-table-drop dropdown-toggle" role="button" data-bs-toggle="dropdown"
+                      aria-expanded="false">
+                      <!-- (click)="stopPropagation($event)" -->
+                      <span class="material-icons-round icon">
+                        settings
+                      </span>
+                    </div>
+                    <div class="dropdown-menu p-2">
+                      <div class="d-flex align-items-center mb-1">
+                        <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                          aria-label="Exclude Column" id="checkExcludeColumn{{i+1}}"
+                          value="{{header.willInclude}}" [checked]="!header.willInclude"
+                          (click)="onExcludeColumn($event, header.ColumnName)">
+                          <label for="checkExcludeColumn{{i+1}}"
+                            (click)="stopPropagation($event)">Exclude
+                          Column</label>
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                          <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                            aria-label="Key Column" id="checkKeyColumn{{i+1}}"
+                            value="{{!header.ColumnKey}}" [checked]="header.ColumnKey"
+                            (change)="onColumnKeyListChecked($event, header.ColumnName)"
+                            (click)="stopPropagation($event)">
+                            <label (click)="stopPropagation($event)"
+                              [ngClass]="{disabled : !header.willInclude}"
+                            for="checkKeyColumn{{i+1}}">Key Column</label>
+                          </div>
+                          <div class="d-flex align-items-center mb-1">
+                            <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                              aria-label="Dedup" id="checkKeyColumnForDedup{{i+1}}"
+                              value="{{!header.columnForDedeup}}" [checked]="header.columnForDedeup"
+                              (change)="onColumnForDedupListChecked($event, header.ColumnName)"
+                              [disabled]="true" (click)="stopPropagation($event)">
+                              <label (click)="stopPropagation($event)"
+                                [ngClass]="{disabled : !header.willInclude}"
+                                for="checkKeyColumnForDedup{{i+1}}">Column For
+                              Dedup</label>
+                            </div>
+                            <div class="dropdown-submenu"
+                              [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}">
+                              <select class="form-select" aria-label=""
+                                [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}"
+                                (change)="onGetSelectedDatatypes($event, header.ColumnName, i)"
+                                (click)="onClickDataTypes($event)">
+                                @for (datatype of dataTypeNames; track datatype) {
+                                  <option
+                                    [selected]="datatype.datatypeName.toUpperCase() === header.DatatypeName.toUpperCase()"
+                                    [disabled]="flpConfigurationId && flpConfigurationId != '' && !drop_main_table">
+                                    <!-- [selected]="datatype.datatypeName === (config.flpConfigurationId !== '' ? header.DatatypeName : 'string')"> -->
+                                    {{datatype.datatypeName}}
+                                  </option>
+                                }
+                              </select>
+                              <!-- <label *ngIf="config.flpConfigurationId !== '' && header.DatatypeName === 'date' || header.DatatypeName === 'datetime' || header.DatatypeName === 'time'" id="lblDateTimeOptions{{i+1}}">
+                              {{findDateTimeFormatForDisplay(header.dateTimeFormatId)}}
+                            </label> -->
+                            <!--  style="display: none"-->
+                                            <select id="showDateTimeOptions{{i+1}}" [ngStyle]="{'display':header.DatatypeName === 'date' || header.DatatypeName === 'time' 
+                                            || header.DatatypeName === 'datetime' ? 'block' : 'none'}"
+                              class="form-select mt-2"
+                              (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                              @for (dateTimeOption of findDateTimeValues(header, header.DatatypeName); track dateTimeOption) {
+                                <option
+                                  value="{{dateTimeOption.formatId}}"
+                                  [selected]="dateTimeOption.formatId === header.dateTimeFormatId">
+                                  {{dateTimeOption.format}}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <!-- <td>
+                    <div class="d-flex align-items-center mb-1">
+                      <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                        aria-label="Key Column" id="checkKeyColumn{{i+1}}"
+                        (click)="onColumnKeyListChecked($event, header.ColumnName)"
+                        [disabled]="!header.willInclude" [checked]="header.ColumnKey">
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center mb-1">
+                        <input class="form-check-input mt-0 me-1" type="checkbox" value=""
+                          aria-label="Column For Dedup" id="checkKeyColumnForDedup{{i+1}}"
+                          (click)="onColumnForDedupListChecked($event, header.ColumnName)"
+                          [disabled]="!header.willInclude" [checked]="header.columnForDedeup">
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center mb-1">
+                          <select class="form-select me-1" aria-label="" id="selDataType{{i+1}}"
+                            style="width: auto;"
+                            [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}"
+                            (change)="onGetSelectedDatatypes($event, header.ColumnName, i)"
+                            [disabled]="!header.willInclude">
+                            <option *ngFor=" let datatype of dataTypeNames"
+                              [selected]="datatype.datatypeName === header.DatatypeName">
+                            {{datatype.datatypeName}}</option>
+                          </select>
+                          <select id="showDateTimeOptions{{i+1}}" style="display: none; width: auto"
+                            class="form-select"
+                            [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}"
+                            (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                            <option *ngFor="let dateTimeOption of findDateTimeValues(header, header.DatatypeName)"
+                              value="{{dateTimeOption.formatId}}"
+                              [selected]="dateTimeOption.formatId === header.dateTimeFormatId">
+                              {{dateTimeOption.format}}
+                            </option>
+                          </select>
+                        </div>
+                      </td> -->
+                    </tr>
+                  }
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- <div class="row">
+          Key Column List Selected:
+          {{keyColumnNamesSelected}}
+        </div>
+
+        <div class="row">
+          Column Names Selected:
+          {{columnNamesSelected}}
+        </div>
+
+        <div class="row">
+          Columns for Dedup Selected:
+          {{columnsForDedupSelected}}
+        </div> -->
+      </section>
+
+      <div class="modal-footer p-3">
+        <button type="button" class="btn btn-default" (click)="onClose()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+          Ok
+        </button>
+      </div>
+    </form>

@@ -1,0 +1,25 @@
+﻿-- SharePoint-only stored procedure: sel_applicationtypes
+-- Safe to recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[sel_applicationtypes_backup18June2026]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sel_applicationtypes_backup18June2026];
+IF OBJECT_ID(N'[dbo].[sel_applicationtypes]', N'P') IS NOT NULL
+    EXEC sp_rename N'dbo.sel_applicationtypes', N'sel_applicationtypes_backup18June2026', N'OBJECT';
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sel_applicationtypes
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT  applicationtypeid   AS ApplicationTypeId,
+            code                AS Code,
+            displayname         AS DisplayName,
+            description         AS Description
+    FROM    dbo.di_applicationtype
+    WHERE   isactive = 1
+    ORDER BY applicationtypeid;
+END;
+GO

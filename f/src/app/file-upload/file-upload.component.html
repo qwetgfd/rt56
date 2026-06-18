@@ -1,0 +1,1562 @@
+<div id="fileUploadPage" [class.ff-sharepoint-active]="showSharepoint">
+
+  <!-- <div id="dataExplorer" class="hide">
+  <app-data-explorer />
+</div> -->
+
+<!------------------------------------------------------------------------------->
+<!-----------------------------Upload Data Steps--------------------------------->
+<!------------------------------------------------------------------------------->
+<div id="uploadPanel" [ngClass]="{'width-adjust': modifySettings === true}"
+  [ngClass]="{'width-adjust': modifySettings === true}">
+  <div class="page-title">Upload New Data</div>
+
+  <ul id="uploadTab" role="tablist">
+    <button class="nav-link" id="fileSubmission-tab" data-bs-toggle="tab" data-bs-target="#fileSubmission-pane"
+      type="button" role="tab" aria-controls="fileSubmission-tab-pane" aria-selected="false"
+      (click)="onTabChanged('fileSubmission-tab', $event)">
+      <span class="step-indicator"><span>3</span></span>
+      <span class="sm-hide">File Submission</span></button>
+      <button class="nav-link" id="databaseSchema-tab" data-bs-toggle="tab"
+        data-bs-target="#databaseSchema-tab-pane" type="button" role="tab"
+        aria-controls="databaseSchema-tab-pane" aria-selected="false"
+        (click)="onTabChanged('databaseSchema-tab',$event)"><span class="step-indicator"><span>2</span></span>
+        <span class="sm-hide">Preview</span></button>
+        <button class="nav-link active" id="attachFile-tab" data-bs-toggle="tab"
+          data-bs-target="#attachFile-tab-pane" type="button" role="tab" aria-controls="attachFile-tab-pane"
+          aria-selected="true" (click)="onTabChanged('attachFile-tab',$event)"><span
+          class="step-indicator"><span>1</span></span>
+          <span class="sm-hide">Attach File</span></button>
+        </ul>
+        <div class="tab-content" id="uploadContent">
+          <div [ngClass]="{'active':activeTab=== 'attachFile-tab', 'ff-sharepoint-mode': showSharepoint}" class="tab-pane fade show active"
+            id="attachFile-tab-pane" role="tabpanel" aria-labelledby="attachFile-tab" tabindex="0">
+            <!-- Source toggle -->
+            <div class="ff-source-toggle" *ngIf="!isFileUploaded">
+              <button type="button" class="ff-source-btn" [class.ff-source-btn--active]="!showSharepoint" (click)="toggleFileSource('local')">
+                <span class="material-symbols-outlined">cloud_upload</span>
+                {{ spFileFirst.localUpload }}
+              </button>
+              <button type="button" class="ff-source-btn" [class.ff-source-btn--active]="showSharepoint" (click)="toggleFileSource('sharepoint')">
+                <span class="ff-sp-logo-xs" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="22" cy="14" r="9.5" fill="#036C70"/>
+                    <circle cx="31" cy="23" r="9.5" fill="#1A9BA1"/>
+                    <circle cx="22" cy="32" r="9.5" fill="#37C6D0"/>
+                    <circle cx="13" cy="23" r="9.5" fill="#038387"/>
+                  </svg>
+                </span>
+                {{ spWorkspaceNavTitle }}
+              </button>
+            </div>
+
+            @if (!showSharepoint) {
+            <form [formGroup]="fileUploadForm">
+
+              <div class="attach-form col-sm-12 mb-2">
+                <div class="alert alert-info mb-sm p-2 d-none" role="alert">
+                  <div class="disclaimer">
+                    <span class="material-icons-round pe-1">info</span>
+                    <div>
+                      <!--<b>
+                      Upload File Disclaimer
+                    </b> -->
+                    <ul class="smaller-text mb-0">
+                      <li>Only files in .CSV , .TXT, .XLS, .XLSX or .XLSB format to be uploaded</li>
+                      <!-- <li>Please wait for 15 minutes once the file is uploaded for process to run and
+                    complete</li> -->
+                    <li>No PCI Data to be uploaded</li>
+                    <li>File size should not be 0KB or exceeds 300MB</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            @if (isFileUploaded) {
+              <div class="row">
+                <div class="mb-3 col-sm-6">
+                  @if (dataSource !== DataSourceTypes.LandingLayer) {
+                    <div class="d-flex ">
+                      <input class="inputbox-as-label w-82 me-2" hidden formControlName="formFile">
+                      <span class="mb-0 me-2 w-82">{{ fileUploadForm.get('formFile')?.value }}</span>
+                      <span for="formFile" class="text-end w-88 d-flex link-btn text-sm "
+                        (click)="onChangeFile($event)">
+                        <!-- <label for="formFile" class="form-label choose-btn">
+                        <a href="#" (click)="onChangeFile($event)">Change file</a>
+                      </label> -->
+                      <span class="material-symbols-outlined me-1 f-20">
+                        article_shortcut
+                      </span>
+                      Change file
+                    </span>
+                  </div>
+                }
+              </div>
+              <div class="mb-3 col-sm-6">
+                <div class="d-flex justify-content-between">
+                  <label for="exampleFormControlTextarea1" class="form-label"
+                    id="lblSelectAProcess">Select a Process <b class="text-danger">*</b></label>
+                    <div class="text-end d-flex link-btn text-sm align-self-center"
+                      (click)="notFoundSheetMessage.trim().length === 0 ? modifySettingsOpen() : null"
+                      [hidden]="file === null">
+                      <span class="material-symbols-outlined f-20 me-1">
+                        reset_settings
+                      </span>
+                      Modify Settings
+                    </div>
+                  </div>
+                  <ng-select [items]="processNames" bindLabel="processNames"
+                    placeholder="Select a Process Name" bindValue="flpConfigurationId"
+                    formControlName="configuration" [multiple]="false" [clearable]="false"
+                    (change)="onConfigurationChange($event)" [loading]="isProcessNameLoading"
+                    [searchFn]="processNameSearchFn" (search)="onSearchProcessName($event.term)"
+                    [compareWith]="compareWithFn">
+                    <ng-template ng-option-tmp let-item="item" let-search="searchTerm">
+                      <div>
+                        <span>Process Name: </span> <span>{{item.processNames}}</span>
+                      </div>
+                      <small><b>Description: </b>{{item.description}}</small>
+                    </ng-template>
+                  </ng-select>
+                </div>
+              </div>
+            }
+            @if (!isFileUploaded || dataSource === DataSourceTypes.LandingLayer) {
+              <div class="row">
+                <div class="mb-3 col-sm-12">
+                  <label for="formFile" class="form-label choose-btn">Choose a file <i
+                    class="text-xs d-none">(CSV,
+                    TXT,
+                    XLS, XLSX,XLSB)</i>&nbsp;<b class="text-danger">*</b></label>
+                    <div>
+                      <!-- <input class="form-control" type="file" id="formFile" #formFile
+                      (change)="onFileChange($event)" accept=".csv, .xlsx, .xls, .txt">
+                      <input class="text-upload" formControlName="formFile"> -->
+                      <div class="form-control" class="d-flex file-drop-area flex-direction-column"
+                        (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+                        (drop)="onDrop($event)" [class.dragover]="isDragOver">
+                        <!-- Place this above your file input area -->
+                        <span class="material-symbols-outlined icon-font">cloud_upload</span>
+                        <label for="file-upload file-upload-label">
+                          Drop a file to upload or
+                        </label>
+                        <span class="text-primary">
+                          <input type="file" id="formFile" #formFile (change)="onFileChange($event)"
+                            [accept]="dataSource !== DataSourceTypes.LandingLayer ? '.csv, .xlsx, .xls, .txt, .xlsb' : '*/*'"
+                            style="display: none;"
+                            [multiple]="dataSource === DataSourceTypes.LandingLayer">
+                            <!-- Custom label styled as a button -->
+                            <label for="formFile" class="cursor-pointer">click here to upload</label>
+                            <!-- <input class="text-upload" formControlName="formFile"> -->
+                          </span>
+                          @if (dataSource !== DataSourceTypes.LandingLayer) {
+                            <p class="smaller-text">
+                              Only files in <strong>.CSV , .TXT, .XLS, .XLSX</strong> or
+                              <strong>.XLSB</strong> format to be uploaded.<br />
+                              .XLSB file size should not exceed <strong>30MB</strong>.<br />
+                              .XLS file size should not exceed <strong>100MB</strong>.<br />
+                              .CSV, .TXT, .XLSX file size should not be <strong>0KB</strong> or exceeds
+                              <strong>300MB</strong>.<br />
+                              <strong>No PCI Data</strong> to be uploaded.
+                            </p>
+                          }
+                        </div>
+                        @if (fileUploadForm.get('formFile')?.errors && fileUploadForm.get('formFile')?.hasError('required')) {
+                          <span class="text-danger"
+                            >
+                            A file is required.
+                          </span>
+                        }
+                        @if (fileUploadForm.get('formFile').hasError('fileIsTooLarge')) {
+                          <div
+                            class="text-danger">
+                            File size should not be 0KB or exceeds 300MB, Please validate and re-upload.
+                          </div>
+                        }
+                        @if (fileUploadForm.get('formFile').hasError('fileIsTooLargeForXLSB')) {
+                          <div
+                            class="text-danger">
+                            File size should not be 0KB or exceeds 30MB, Please validate and re-upload.
+                          </div>
+                        }
+                        @if (fileUploadForm.get('formFile').hasError('fileIsTooLargeForXLS')) {
+                          <div
+                            class="text-danger">
+                            File size should not be 0KB or exceeds 100MB, Please validate and re-upload.
+                          </div>
+                        }
+                        @if (fileUploadForm.get('formFile').hasError('fileIsValid')) {
+                          <div
+                            class="text-danger">
+                            File is invalid.
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+
+
+              </div>
+              @if (isNewProcess && dataSource !== DataSourceTypes.LandingLayer) {
+                <div class="attach-preview">
+                  <div class="table-topBar">
+                    <div class="attachment-info">
+                      <i class="material-icons">timelapse</i>
+                      <label>{{parsingTime?.toPrecision(4)}} Milliseconds</label>
+                      <i class="material-icons">task</i>
+                      <label>{{fileSize}}</label>
+                    </div>
+                    <!-- <div id="{{header.ColumnName}}" style="color:#ff7575"
+                                                        *ngIf="!header.missingColumn && header.newColumn && config.validate_fileschema
+                                                        && config.flpConfigurationId !== ''">
+                  {{header.ColumnName}}</div> -->
+                  <div class="data-info">
+                    Showing only <label class="row-shown">
+                    @if (noOfDuplicates == 0) {
+                      @if (recordsArrayForDisplay.length < 20) {
+                        {{recordsArrayForDisplay.length}}
+                        <!-- {{rowCountForDisplay}} -->
+                      }
+                      @if (recordsArrayForDisplay.length >= 20) {
+                        20
+                      }
+                    }
+                    @if (noOfDuplicates > 0 && (rowCountForDisplay - noOfDuplicates) < 20) {
+                      {{rowCountForDisplay - noOfDuplicates}}
+                    }
+                    @if ((noOfDuplicates > 0 && (rowCountForDisplay - noOfDuplicates) >= 20)) {
+                      20
+                    }
+                    rows
+                  </label> of
+                  @if ((fileType === 'xls' || fileType === 'xlsx' || fileType === 'xlsb')) {
+                    <label class="row-total"
+                      >
+                      {{totalRowCountEXL}}
+                    </label>
+                  }
+                  @if ((fileType !== 'xls' && fileType !== 'xlsx' && fileType !== 'xlsb')) {
+                    <label class="row-total"
+                      >
+                      @if (noOfDuplicates > 0) {
+                        {{rowCountForDisplay - noOfDuplicates}}
+                      }
+                      @if (noOfDuplicates == 0) {
+                        {{rowCountForDisplay}}
+                      }
+                    </label>
+                  }
+                </div>
+              </div>
+              @if ((parseComplete && (fileType === 'csv' || fileType === 'txt')) && (noOfDuplicates > 0 || InvalidDataSource && config.validate_fileschema || NewColumnFoundOnSource
+                && !InvalidDataSource && config.validate_fileschema || MissingColumnFoundOnSource
+                && !NewColumnFoundOnSource && !InvalidDataSource && !config.validate_fileschema || !MissingColumnFoundOnSource
+                && NewColumnFoundOnSource && !InvalidDataSource && !config.validate_fileschema || MissingColumnFoundOnSource
+                && NewColumnFoundOnSource && !InvalidDataSource && !config.validate_fileschema)) {
+                <div class="table-notification">
+                  <i class="material-symbols-outlined">notification_important</i>
+                  <div class="list justify-content-between" style="width: 100%">
+                    @if (noOfDuplicates > 0) {
+                      <div style="float:left">
+                        {{noOfDuplicates}} {{ noOfDuplicates === 1 ? 'duplicate' : 'duplicates' }} found and
+                        {{recordsArrayForDisplay.length}} unique values remain.
+                      </div>
+                    }
+                    <!-- <div style="float:right"
+                    *ngIf="(fileType === 'xls' || fileType === 'xlsx' || fileType === 'xlsb')">We are
+                  providing validation only on {{rowCountForDisplay}} records</div> -->
+                  @if (InvalidDataSource && config.validate_fileschema) {
+                    <div>
+                      <!-- <div class="data-info alert alert-warning" style="padding: 5px;"> -->
+                      Oops! We hit a snag because the schema validation threw a tantrum.
+                      The rebellious columns are highlighted in violet. Let's fix them and try again!
+                    </div>
+                  }
+                  @if (NewColumnFoundOnSource && !InvalidDataSource && config.validate_fileschema) {
+                    <div>
+                      Looks like you're trying to sneak in a new column!
+                      The red-highlighted columns are not having it.
+                      No data will be inserted from this column. Nice try though!
+                    </div>
+                  }
+                  @if (MissingColumnFoundOnSource && !NewColumnFoundOnSource && !InvalidDataSource && !config.validate_fileschema) {
+                    <div
+                      >
+                      <!-- There's an additional column found. -->
+                      Uh-oh! Some data for a few columns decided to play hide and seek and are highlighted
+                      in violet. No worries, we'll still process them!
+                    </div>
+                  }
+                  @if (!MissingColumnFoundOnSource && NewColumnFoundOnSource && !InvalidDataSource && !config.validate_fileschema) {
+                    <div
+                      >
+                      <!-- There's an additional column found. -->
+                      Green means go! The new column is highlighted, and we're ready to add data.
+                      Let's do this!
+                    </div>
+                  }
+                  @if (MissingColumnFoundOnSource && NewColumnFoundOnSource && !InvalidDataSource && !config.validate_fileschema) {
+                    <div
+                      >
+                      <!-- There's an additional column found. -->
+                      Uh-oh! Some data is playing hide and seek in violet, and we found new columns in
+                      green.
+                      No worries, we'll process them all!
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+            <!-- <div class="scroll-div"> -->
+            @if (hasErrors && parseComplete) {
+              <table class="table table-striped table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Code</th>
+                    <th>Index</th>
+                    <th>Message</th>
+                    <th>Row</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of arrayWithError.slice(0,20); track row; let j = $index) {
+                    <tr>
+                      @for (cell of (row | keyvalue) ; track cell) {
+                        <td>
+                          {{cell.value}}
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+            @if (parseComplete && (fileType === 'csv' || fileType === 'txt')) {
+              <div class="table-notification">
+                @if (hasColumnExcluded() && !isNewProcess) {
+                  <div>
+                    You've excluded a column. Please enable Validate Schema in the Database Settings
+                    to apply this exclusion.
+                    <a class="text-end link-btn text-sm align-self-center"
+                    (click)="onApplyValidateSchema()">Click here if you want to apply it now?</a>
+                  </div>
+                }
+              </div>
+              <div class="table-notification">
+                @if (hasColumnExcluded()) {
+                  <div>
+                    You've excluded a column. Please enable Validate Schema in the Database Settings
+                    to apply this exclusion.
+                    <a class="text-end link-btn text-sm align-self-center"
+                    (click)="onApplyValidateSchema()">Click here if you want to apply it now?</a>
+                  </div>
+                }
+              </div>
+              <div class="scroll-div">
+                @if (parseComplete && recordsArrayForDisplay.length > 0 && !hasErrors && !showDatabasePreview) {
+                  <table class="table table-striped table-hover" id="preview"
+                    >
+                    <thead class="table-light">
+                      <tr>
+                        <th></th>
+                        @for (header of columnDatatype; track header; let i = $index) {
+                          <th>
+                            <div class="d-flex align-items-center">
+                              <!-- <label id="{{header.ColumnName}}" style=""
+                              *ngIf="!header.missingColumn && !header.newColumn"
+                              [ngClass]="{disabledGreen : !header.willInclude && config.flpConfigurationId !== ''}">
+                            {{header.ColumnName}}</label> -->
+                            @if (header.ColumnKey) {
+                              <i class="material-icons-round key" id="key_{{header.ColumnName}}"
+                                style="position: static !important;">
+                                key
+                              </i>
+                            }
+                            @if (!header.missingColumn && !header.newColumn) {
+                              <label id="{{header.ColumnName}}"
+                                [ngStyle]="{'color' : (header.invalidDataType || header.invalidColumnName? 'red' : 'black')}"
+                                >
+                                {{header.ColumnName}}
+                              </label>
+                            }
+                            @if (header.missingColumn && header.newColumn && config.flpConfigurationId !== '') {
+                              <label id="{{header.ColumnName}}" style="color: violet"
+                                >
+                              {{header.ColumnName}}</label>
+                            }
+                            @if (!header.missingColumn && header.newColumn && config.validate_fileschema
+                              && config.flpConfigurationId !== '') {
+                              <label id="{{header.ColumnName}}" style="color:#ff7575">
+                              {{header.ColumnName}}</label>
+                            }
+                            @if (!header.missingColumn && header.newColumn && !config.validate_fileschema
+                              && config.flpConfigurationId !== '') {
+                              <label id="{{header.ColumnName}}" style="color:green">
+                              {{header.ColumnName}}</label>
+                            }
+                            <div class="dropdown table-drop">
+                              <div class="btn-table-drop dropdown-toggle" role="button"
+                                tabindex="0" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <!-- (click)="stopPropagation($event)" -->
+                                <span class="material-icons-round icon">
+                                  settings
+                                </span>
+                              </div>
+                              <div class="dropdown-menu">
+                                <div class="d-flex align-items-center mb-1">
+                                  <input class="form-check-input mt-0 me-1"
+                                    type="checkbox" value="" aria-label="Exclude Column"
+                                    id="checkExcludeColumn{{i+1}}"
+                                    value="{{header.willInclude}}"
+                                    [checked]="!header.willInclude"
+                                    (click)="onExcludeColumn($event, header.ColumnName)"
+                                    [disabled]="config.flpConfigurationId !== '' && !header.newColumn">
+                                    <label for="checkExcludeColumn{{i+1}}"
+                                      (click)="stopPropagation($event)">Exclude
+                                    Column</label>
+                                  </div>
+                                  <div class="d-flex align-items-center mb-1">
+                                    <input class="form-check-input mt-0 me-1"
+                                      type="checkbox" value="" aria-label="Key Column"
+                                      id="checkKeyColumn{{i+1}}"
+                                      value="{{!header.ColumnKey}}"
+                                      [checked]="header.ColumnKey"
+                                      (change)="onColumnKeyListChecked($event, header.ColumnName)"
+                                      [disabled]="(!header.willInclude || config.flpConfigurationId !== '') && !header.newColumn"
+                                      (click)="stopPropagation($event)">
+                                      <label (click)="stopPropagation($event)"
+                                        [ngClass]="{disabled : !header.willInclude}"
+                                      for="checkKeyColumn{{i+1}}">Key Column</label>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-1">
+                                      <input class="form-check-input mt-0 me-1"
+                                        type="checkbox" value="" aria-label="Dedup"
+                                        id="checkKeyColumnForDedup{{i+1}}"
+                                        value="{{!header.columnForDedeup}}"
+                                        [checked]="header.columnForDedeup"
+                                        (change)="onColumnForDedupListChecked($event, header.ColumnName)"
+                                        [disabled]="header.willInclude"
+                                        (click)="stopPropagation($event)">
+                                        <label (click)="stopPropagation($event)"
+                                          [ngClass]="{disabled : !header.willInclude}"
+                                          for="checkKeyColumnForDedup{{i+1}}">Column For
+                                        Dedup</label>
+                                      </div>
+                                      <div>
+                                        <select class="form-select" aria-label=""
+                                          [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}"
+                                          (change)="onGetSelectedDatatypes($any($event.target).value, header.ColumnName, i)"
+                                          [disabled]="!header.willInclude || config.flpConfigurationId !== ''"
+                                          (click)="stopPropagation($event)">
+                                          @for (datatype of datatypeNames; track datatype) {
+                                            <option
+                                              [selected]="datatype.datatypeName === header.DatatypeName">
+                                            {{datatype.datatypeName}}</option>
+                                          }
+                                        </select>
+                                        <!-- <label *ngIf="config.flpConfigurationId !== '' && header.DatatypeName === 'date' || header.DatatypeName === 'datetime' || header.DatatypeName === 'time'" id="lblDateTimeOptions{{i+1}}">
+                                        {{findDateTimeFormatForDisplay(header.dateTimeFormatId)}}
+                                      </label> -->
+                                      <!-- <select id="showDateTimeOptions{{i+1}}"
+                                      style="display: none" class="form-select mt-2"
+                                      (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                      <option
+                                        *ngFor="let dateTimeOption of dateTimeNamesValues"
+                                        value="{{dateTimeOption.formatId}}">
+                                        {{dateTimeOption.format}}
+                                      </option>
+                                    </select> -->
+                                    <select id="selectTimeOptions{{i+1}}"
+                                      class="form-select mt-2"
+                                      [ngStyle]="{'display': header.DatatypeName.toLowerCase() === 'time' ? 'block' : 'none'}"
+                                      (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                      @for (opt of findDateTimeValues('time'); track opt) {
+                                        <option
+                                          [selected]="header.dateTimeFormatId === opt.formatId"
+                                          value="{{opt.formatId}}">
+                                          {{opt.format}}
+                                        </option>
+                                      }
+                                    </select>
+                                    <select id="selectDateOptions{{i+1}}"
+                                      class="form-select mt-2"
+                                      [ngStyle]="{'display': header.DatatypeName.toLowerCase() === 'date' ? 'block' : 'none'}"
+                                      (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                      @for (opt of findDateTimeValues('date'); track opt) {
+                                        <option
+                                          [selected]="header.dateTimeFormatId === opt.formatId"
+                                          value="{{opt.formatId}}">
+                                          {{opt.format}}
+                                        </option>
+                                      }
+                                    </select>
+                                    <select id="selectDateTimeOptions{{i+1}}"
+                                      class="form-select mt-2"
+                                      [ngStyle]="{'display': header.DatatypeName.toLowerCase() === 'datetime' ? 'block' : 'none'}"
+                                      (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                      @for (opt of findDateTimeValues('datetime'); track opt) {
+                                        <option
+                                          [selected]="header.dateTimeFormatId === opt.formatId"
+                                          value="{{opt.formatId}}">
+                                          {{opt.format}}
+                                        </option>
+                                      }
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @if (!flexCheckHasHeaders) {
+                        @for (record of recordsArrayForDisplay.slice(0,20); track record; let j = $index) {
+                          <tr
+                            >
+                            <td>{{j+1}}</td>
+                            @for (row of record; track row; let k = $index) {
+                              <td
+                                [ngClass]="{excluded: columnDatatype[k].willInclude === false}">
+                                {{record[k]}}
+                              </td>
+                            }
+                          </tr>
+                        }
+                      }
+                      @if (flexCheckHasHeaders) {
+                        @for (row of recordsArrayForDisplay.slice(0,20); track row; let j = $index) {
+                          <tr>
+                            <!-- <tr *ngFor="let row of recordsArrayForDisplay; let j = index"> -->
+                            <!-- <tr *ngFor="let row of recordsArrayForDisplay | paginate: { itemsPerPage: 20, currentPage: page }; let j =index"> -->
+                            <td>{{j+1}}</td>
+                            <!-- [ngClass]="{excluded : columnDatatype[i].willInclude === false}" -->
+                            @for (header of headersRow; track header; let i = $index) {
+                              <td
+                                [ngClass]="{excluded: columnDatatype[i].willInclude === false}">
+                                {{row[header]}}
+                              </td>
+                            }
+                          </tr>
+                        }
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            }
+            <!-- <pagination-controls (pageChange)="page = $event"></pagination-controls> -->
+            @if (parseComplete && dataxlsx.length > 0 && (fileType === 'xls' || fileType === 'xlsx'|| fileType === 'xlsb')) {
+              @if (getSheetNameforNotification(selectedWorkSheetName); as notification) {
+                @if ((notification.noOfDuplicates > 0
+                  || notification.InvalidDataSource && notification.validate_fileschema
+                  || notification.NewColumnFoundOnSource && !notification.InvalidDataSource && notification.validate_fileschema
+                  || notification.MissingColumnFoundOnSource && !notification.NewColumnFoundOnSource && !notification.InvalidDataSource && !notification.validate_fileschema
+                  || !notification.MissingColumnFoundOnSource && notification.NewColumnFoundOnSource && !notification.InvalidDataSource && !notification.validate_fileschema
+                  || notification.MissingColumnFoundOnSource && notification.NewColumnFoundOnSource && !notification.InvalidDataSource && !notification.validate_fileschema)) {
+                  <div class="table-notification"
+                    >
+                    <!-- <i class="material-symbols-outlined">notification_important</i> -->
+                    <div class="list">
+                      @if (notification.noOfDuplicates > 0) {
+                        <div>
+                          {{notification.noOfDuplicates}} {{notification.noOfDuplicates === 1 ?
+                          'duplicate' : 'duplicates'}} found
+                          {{totalRowCountEXL <= 20000 ? `and ${notification.totalCountForDisplay}
+                        unique values remain.` : '' }} </div>
+                      }
+                      @if (notification.InvalidDataSource && notification.validate_fileschema) {
+                        <div
+                          >
+                          Oops! We hit a snag because the schema validation threw a tantrum.
+                          The
+                          rebellious columns are highlighted in violet. Let's fix them and try
+                          again!
+                        </div>
+                      }
+                      @if (notification.NewColumnFoundOnSource && !notification.InvalidDataSource && notification.validate_fileschema) {
+                        <div
+                          >
+                          Looks like you're trying to sneak in a new column! The
+                          red-highlighted
+                          columns are not having it. No data will be inserted from this
+                          column.
+                          Nice try though!
+                        </div>
+                      }
+                      @if (notification.MissingColumnFoundOnSource && !notification.NewColumnFoundOnSource && !notification.InvalidDataSource && !notification.validate_fileschema) {
+                        <div
+                          >
+                          Uh-oh! Some data for a few columns decided to play hide and seek and
+                          are
+                          highlighted in violet. No worries, we'll still process them!
+                        </div>
+                      }
+                      @if (!notification.MissingColumnFoundOnSource && notification.NewColumnFoundOnSource && !notification.InvalidDataSource && !notification.validate_fileschema) {
+                        <div
+                          >
+                          Green means go! The new column is highlighted, and we're ready to
+                          add
+                          data. Let's do this!
+                        </div>
+                      }
+                      @if (notification.MissingColumnFoundOnSource && notification.NewColumnFoundOnSource && !notification.InvalidDataSource && !notification.validate_fileschema) {
+                        <div
+                          >
+                          Uh-oh! Some data is playing hide and seek in violet, and we found
+                          new
+                          columns in green. No worries, we'll process them all!
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+              @if (hasColumnExcluded()) {
+                <div class="table-notification">
+                  You've excluded a column. Please enable Validate Schema in the Database Settings
+                  to apply this exclusion.
+                  <a class="text-end link-btn text-sm align-self-center"
+                    (click)="onApplyValidateSchema()">Click here if you want to apply it
+                  now?</a>
+                </div>
+              }
+              <div class="mb-sm tab-content">
+                @if (isSelectedExistingProcess && hasMissingColumns()) {
+                  <div class="notification-row row">
+                    @for (entry of getSheetValidationEntries(); track entry) {
+                      <div class="col-sm-6 mb-2">
+                        @if (entry.hasMissingColumn) {
+                          <ng-container class="d-flex">
+                            <span class="material-symbols-outlined text-danger me-2">
+                              close
+                            </span>
+                            <strong class="me-2">{{entry.sheetName }}</strong>
+                            <span class="text-danger">contains missing column and selected
+                            validate schema.</span>.
+                          </ng-container>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+                @if (isSelectedExistingProcess && excelUploadedErrorMessages.length > 0) {
+                  <div class="table-notification row">
+                    <div class="col-sm-12">
+                      <ul style="margin:7px;">
+                        @for (msg of excelUploadedErrorMessages; track msg) {
+                          <li [innerHTML]="msg">
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  </div>
+                }
+                <div class="list">
+                  <ul class="nav nav-tabs" id="sheetTab" role="tablist">
+                    @for (wk of wksheets; track wk; let i = $index) {
+                      <li class="nav-item" role="presentation"
+                        [ngClass]="getTabClasses(wk)">
+                        <button class="nav-link"
+                          [class.active]="selectedWorkSheetName === wk.sheetName"
+                          id="sheet-tab-{{i}}" data-bs-toggle="tab"
+                          [attr.data-bs-target]="'#sheet-tab-pane-' + i" type="button" role="tab"
+                          [attr.aria-controls]="'sheet-tab-pane-' + i"
+                          [attr.aria-selected]="selectedWorkSheetName === wk.sheetName"
+                          (click)="displayRecordByWorkSheetName(wk.sheetName)"
+                          [disabled]="wk.newSheet">
+                          <input type="checkbox" class="form-check-input me-1"
+                            [id]="'sheetCheck' + i" [value]="wk.sheetName"
+                            [checked]="wk.selected" (change)="onSheetCheckboxChange($event, wk)"
+                            (click)="$event.stopPropagation()" />
+                            {{ wk.sheetName }}
+                          </button>
+                          @if (selectedWorkSheetName == wk.sheetName) {
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                </div>
+                <div class="scroll-div">
+                  <table class="table table-striped table-hover" id="preview"
+                    [ngClass]="{ 'excluded':  checkIgnoreSheet(selectedWorkSheetName)===true }">
+                    @if (!flexCheckHasHeaders) {
+                      <thead class="table-light">
+                        @if (headersRow) {
+                          <tr>
+                            <th></th>
+                            @for (header of columnDatatype; track header; let i = $index) {
+                              <th>
+                                <div class="d-flex align-items-center">
+                                  @if (header.ColumnKey) {
+                                    <i class="material-icons-round key"
+                                      id="key_{{header.ColumnName}}"
+                                      style="position: static !important;"
+                                      >
+                                      key
+                                    </i>
+                                  }
+                                  @if (!header.missingColumn && !header.newColumn) {
+                                    <label id="{{header.ColumnName}}"
+                                      [ngStyle]="{'color' : (header.invalidDataType || header.invalidColumnName? 'red' : 'black')}"
+                                      >
+                                      {{header.ColumnName}}
+                                    </label>
+                                  }
+                                  @if (header.missingColumn && header.newColumn && config.flpConfigurationId !== '') {
+                                    <label id="{{header.ColumnName}}" style="color: violet"
+                                      >
+                                    {{header.ColumnName}}</label>
+                                  }
+                                  @if (!header.missingColumn && header.newColumn && config.validate_fileschema
+                                    && config.flpConfigurationId !== '') {
+                                    <label id="{{header.ColumnName}}" style="color:#ff7575">
+                                    {{header.ColumnName}}</label>
+                                  }
+                                  @if (!header.missingColumn && header.newColumn && !config.validate_fileschema
+                                    && config.flpConfigurationId !== '') {
+                                    <label id="{{header.ColumnName}}" style="color:green">
+                                    {{header.ColumnName}}</label>
+                                  }
+                                  <div class="dropdown table-drop">
+                                    <div class="btn-table-drop dropdown-toggle" role="button"
+                                      data-bs-toggle="dropdown" aria-expanded="false">
+                                      <!-- (click)="stopPropagation($event)" -->
+                                      <span class="material-icons-round icon">
+                                        settings
+                                      </span>
+                                    </div>
+                                    <div class="dropdown-menu">
+                                      <div class="d-flex align-items-center mb-1">
+                                        <input class="form-check-input mt-0 me-1"
+                                          type="checkbox" value=""
+                                          aria-label="Exclude Column"
+                                          id="checkExcludeColumn{{i+1}}"
+                                          value="{{header.willInclude}}"
+                                          [checked]="!header.willInclude"
+                                          (click)="onExcludeColumn($event, header.ColumnName)"
+                                          [disabled]="config.flpConfigurationId !== '' && !header.newColumn">
+                                          <label for="checkExcludeColumn{{i+1}}"
+                                            (click)="stopPropagation($event)">Exclude
+                                          Column</label>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-1">
+                                          <input class="form-check-input mt-0 me-1"
+                                            type="checkbox" value="" aria-label="Key Column"
+                                            id="checkKeyColumn{{i+1}}"
+                                            value="{{!header.ColumnKey}}"
+                                            [checked]="header.ColumnKey"
+                                            (change)="onExcelColumnKeyListChecked($event, header.ColumnName, i)"
+                                            [disabled]="(!header.willInclude || config.flpConfigurationId !== '') && !header.newColumn"
+                                            (click)="stopPropagation($event)">
+                                            <label (click)="stopPropagation($event)"
+                                              [ngClass]="{disabled : !header.willInclude}"
+                                              for="checkKeyColumn{{i+1}}">Key
+                                            Column</label>
+                                          </div>
+                                          <div class="d-flex align-items-center mb-1">
+                                            <input class="form-check-input mt-0 me-1"
+                                              type="checkbox" value="" aria-label="Dedup"
+                                              id="checkKeyColumnForDedup{{i+1}}"
+                                              value="{{!header.columnForDedeup}}"
+                                              [checked]="header.columnForDedeup"
+                                              (change)="onExcelColumnForDedupListChecked($event, header.ColumnName)"
+                                              [disabled]="header.useMultipleSheets || !header.willInclude"
+                                              (click)="stopPropagation($event)">
+                                              <label (click)="stopPropagation($event)"
+                                                [ngClass]="{disabled : !header.willInclude}"
+                                                for="checkKeyColumnForDedup{{i+1}}">Column
+                                                For
+                                              Dedup</label>
+                                            </div>
+                                            <div>
+                                              <select class="form-select" aria-label=""
+                                                id="selectDataTypeOptions {{i+1}}"
+                                                [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}"
+                                                (change)="onGetSelectedDatatypes($any($event.target).value, header.ColumnName, i)"
+                                                [ngClass]="{disabled : !header.willInclude}"
+                                                [disabled]="!header.willInclude || config.flpConfigurationId !== ''"
+                                                (click)="stopPropagation($event)">
+                                                @for (datatype of datatypeNames; track datatype) {
+                                                  <option
+                                                    [value]="datatype.datatypeName"
+                                                    [selected]="datatype.datatypeName === header.DatatypeName">
+                                                  {{datatype.datatypeName}}</option>
+                                                }
+                                              </select>
+                                              <!-- <label *ngIf="config.flpConfigurationId !== '' && header.DatatypeName === 'date' || header.DatatypeName === 'datetime' || header.DatatypeName === 'time'" id="lblDateTimeOptions{{i+1}}">
+                                              {{findDateTimeFormatForDisplay(header.dateTimeFormatId)}}
+                                            </label> -->
+                                            <!-- <select id="showDateTimeOptions{{i+1}}"
+                                            style="display: none" class="form-select mt-2"
+                                            (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                            <option
+                                              *ngFor="let dateTimeOption of dateTimeNamesValues"
+                                              value="{{dateTimeOption.formatId}}">
+                                              {{dateTimeOption.format}}
+                                            </option>
+                                          </select> -->
+                                          <select id="selectTimeOptions{{i+1}}"
+                                            class="form-select mt-2"
+                                            [ngStyle]="{'display': header.DatatypeName.toLowerCase() === 'time' ? 'block' : 'none'}"
+                                            (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                            @for (opt of findDateTimeValues('time'); track opt) {
+                                              <option
+                                                [selected]="header.dateTimeFormatId === opt.formatId"
+                                                value="{{opt.formatId}}">
+                                                {{opt.format}}
+                                              </option>
+                                            }
+                                          </select>
+                                          <select id="selectDateOptions{{i+1}}"
+                                            class="form-select mt-2"
+                                            [ngStyle]="{'display': header.DatatypeName.toLowerCase() === 'date' ? 'block' : 'none'}"
+                                            (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                            @for (opt of findDateTimeValues('date'); track opt) {
+                                              <option
+                                                [selected]="header.dateTimeFormatId === opt.formatId"
+                                                value="{{opt.formatId}}">
+                                                {{opt.format}}
+                                              </option>
+                                            }
+                                          </select>
+                                          <select id="selectDateTimeOptions{{i+1}}"
+                                            class="form-select mt-2"
+                                            [ngStyle]="{'display': header.DatatypeName.toLowerCase() === 'datetime' ? 'block' : 'none'}"
+                                            (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                            @for (opt of findDateTimeValues('datetime'); track opt) {
+                                              <option
+                                                [selected]="header.dateTimeFormatId === opt.formatId"
+                                                value="{{opt.formatId}}">
+                                                {{opt.format}}
+                                              </option>
+                                            }
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </th>
+                              }
+                            </tr>
+                          }
+                        </thead>
+                      }
+                      @if (flexCheckHasHeaders) {
+                        <thead>
+                          @for (row of dataxlsx.slice(0,1); track row; let i = $index) {
+                            <tr>
+                              <th></th>
+                              @for (header of columnDatatype; track header; let i = $index) {
+                                <th>
+                                  <div class="d-flex align-items-center">
+                                    @if (header.ColumnKey) {
+                                      <i class="material-icons-round key"
+                                        id="key_{{header.ColumnName}}"
+                                        style="position: static !important;"
+                                        >
+                                        key
+                                      </i>
+                                    }
+                                    @if (!header.missingColumn && !header.newColumn) {
+                                      <label id="{{header.ColumnName}}"
+                                        [ngStyle]="{'color' : (header.invalidDataType || header.invalidColumnName ? 'red' : 'black')}"
+                                        >
+                                        {{header.ColumnName}}
+                                      </label>
+                                    }
+                                    @if (header.missingColumn && header.newColumn && config.flpConfigurationId !== '') {
+                                      <label id="{{header.ColumnName}}" style="color: violet"
+                                        >
+                                      {{header.ColumnName}}</label>
+                                    }
+                                    @if (!header.missingColumn && header.newColumn && config.validate_fileschema
+                                      && config.flpConfigurationId !== '') {
+                                      <label id="{{header.ColumnName}}" style="color:#ff7575">
+                                      {{header.ColumnName}}</label>
+                                    }
+                                    @if (!header.missingColumn && header.newColumn && !config.validate_fileschema
+                                      && config.flpConfigurationId !== '') {
+                                      <label id="{{header.ColumnName}}" style="color:green">
+                                      {{header.ColumnName}}</label>
+                                    }
+                                    <div class="dropdown table-drop">
+                                      <div class="btn-table-drop dropdown-toggle" role="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                        <!-- (click)="stopPropagation($event)" -->
+                                        <span class="material-icons-round icon">
+                                          settings
+                                        </span>
+                                      </div>
+                                      <div class="dropdown-menu">
+                                        <div class="d-flex align-items-center mb-1">
+                                          <input class="form-check-input mt-0 me-1"
+                                            type="checkbox" value=""
+                                            aria-label="Exclude Column"
+                                            id="checkExcludeColumn{{i+1}}"
+                                            value="{{header.willInclude}}"
+                                            [checked]="!header.willInclude"
+                                            (click)="onExcludeColumn($event, header.ColumnName)"
+                                            [disabled]="config.flpConfigurationId !== '' && !header.newColumn">
+                                            <label for="checkExcludeColumn{{i+1}}"
+                                              (click)="stopPropagation($event)">Exclude
+                                            Column</label>
+                                          </div>
+                                          <div class="d-flex align-items-center mb-1">
+                                            <input class="form-check-input mt-0 me-1"
+                                              type="checkbox" value="" aria-label="Key Column"
+                                              id="checkKeyColumn{{i+1}}"
+                                              value="{{!header.ColumnKey}}"
+                                              [checked]="header.ColumnKey"
+                                              (change)="onExcelColumnKeyListChecked($event, header.ColumnName, i)"
+                                              [disabled]="(!header.willInclude || config.flpConfigurationId !== '') && !header.newColumn"
+                                              (click)="stopPropagation($event)">
+                                              <label (click)="stopPropagation($event)"
+                                                [ngClass]="{disabled : !header.willInclude}"
+                                                for="checkKeyColumn{{i+1}}">Key
+                                              Column</label>
+                                            </div>
+                                            <div class="d-flex align-items-center mb-1">
+                                              <input class="form-check-input mt-0 me-1"
+                                                type="checkbox" value="" aria-label="Dedup"
+                                                id="checkKeyColumnForDedup{{i+1}}"
+                                                value="{{!header.columnForDedeup}}"
+                                                [checked]="header.columnForDedeup"
+                                                (change)="onExcelColumnForDedupListChecked($event, header.ColumnName)"
+                                                [disabled]="!header.willInclude"
+                                                (click)="stopPropagation($event)">
+                                                <label (click)="stopPropagation($event)"
+                                                  [ngClass]="{disabled : !header.willInclude}"
+                                                  for="checkKeyColumnForDedup{{i+1}}">Column
+                                                  For
+                                                Dedup</label>
+                                              </div>
+                                              <div class="dropdown-submenu">
+                                                <select class="form-select" aria-label=""
+                                                  [ngStyle]="{'border-color' : (header.invalidDataType ? 'red' : '#dee2e6')}"
+                                                  (change)="onGetSelectedDatatypes($any($event.target).value, header.ColumnName, i)"
+                                                  (click)="stopPropagation($event)"
+                                                  [disabled]="!header.willInclude || config.flpConfigurationId !== ''">
+                                                  @for (datatype of datatypeNames; track datatype) {
+                                                    <option
+                                                      [selected]="datatype.datatypeName === header.DatatypeName">
+                                                      <!-- [selected]="datatype.datatypeName === (config.flpConfigurationId !== '' ? header.DatatypeName : 'string')"> -->
+                                                      {{datatype.datatypeName}}
+                                                    </option>
+                                                  }
+                                                </select>
+                                                <!-- <label *ngIf="config.flpConfigurationId !== '' && header.DatatypeName === 'date' || header.DatatypeName === 'datetime' || header.DatatypeName === 'time'" id="lblDateTimeOptions{{i+1}}">
+                                                {{findDateTimeFormatForDisplay(header.dateTimeFormatId)}}
+                                              </label> -->
+                                              <!-- <select id="showDateTimeOptions{{i+1}}"
+                                              style="display: none" class="form-select mt-2"
+                                              (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                              <option
+                                                *ngFor="let dateTimeOption of findDateTimeValues(header.DatatypeName)"
+                                                value="{{dateTimeOption.formatId}}">
+                                                {{dateTimeOption.format}}
+                                              </option>
+                                            </select> -->
+                                            <select id="selectTimeOptions{{i+1}}"
+                                              class="form-select mt-2"
+                                              [ngStyle]="{'display': header.DatatypeName?.toLowerCase() === 'time' ? 'block' : 'none'}"
+                                              (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                              @for (opt of findDateTimeValues('time'); track opt) {
+                                                <option
+                                                  [selected]="header.dateTimeFormatId === opt.formatId"
+                                                  value="{{opt.formatId}}">
+                                                  {{opt.format}}
+                                                </option>
+                                              }
+                                            </select>
+                                            <select id="selectDateOptions{{i+1}}"
+                                              class="form-select mt-2"
+                                              [ngStyle]="{'display': header.DatatypeName?.toLowerCase() === 'date' ? 'block' : 'none'}"
+                                              (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                              @for (opt of findDateTimeValues('date'); track opt) {
+                                                <option
+                                                  [selected]="header.dateTimeFormatId === opt.formatId"
+                                                  value="{{opt.formatId}}">
+                                                  {{opt.format}}
+                                                </option>
+                                              }
+                                            </select>
+                                            <select id="selectDateTimeOptions{{i+1}}"
+                                              class="form-select mt-2"
+                                              [ngStyle]="{'display': header.DatatypeName?.toLowerCase() === 'datetime' ? 'block' : 'none'}"
+                                              (change)="onValidateDateTimeFormat($event, header.ColumnName, i)">
+                                              @for (opt of findDateTimeValues('datetime'); track opt) {
+                                                <option
+                                                  [selected]="header.dateTimeFormatId === opt.formatId"
+                                                  value="{{opt.formatId}}">
+                                                  {{opt.format}}
+                                                </option>
+                                              }
+                                            </select>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </th>
+                                }
+                              </tr>
+                            }
+                          </thead>
+                        }
+                        <tbody>
+                          @if (!flexCheckHasHeaders) {
+                            @for (row of recordsArrayForDisplay.slice(0,20); track row; let i = $index) {
+                              <tr>
+                                <td>{{i +1}}</td>
+                                <!-- <td
+                                *ngFor="let val of row.slice(0, columnDatatype.length) | keyvalue, let j = index">
+                                {{val.value}}
+                              </td> -->
+                              @for (val of columnDatatype; track val; let j = $index) {
+                                <td
+                                  [ngClass]="{excluded: greyTheColumnForExcel(i)}">
+                                  {{row[j]}}
+                                </td>
+                              }
+                            </tr>
+                          }
+                        }
+                        @if (flexCheckHasHeaders) {
+                          <!-- <tr *ngFor="let row of dataxlsx.slice(1,21), let i = index">-->
+                          @for (row of recordsArrayForDisplay; track row; let i = $index) {
+                            <tr>
+                              <td>
+                              {{i+1}}</td>
+                              @if (columnDatatype.length > 0) {
+                                <!-- <td *ngFor="let val of row.slice(0,columnDatatype.length), let j = index"
+                                [ngClass]="{excluded: columnDatatype[j].willInclude === false}">
+                                {{val}}
+                              </td> -->
+                              @for (item of row | keyvalue : keepOrder; track item) {
+                                @if (item.key !== '__origIndex') {
+                                  <td
+                                    [ngClass]="{excluded: greyTheColumnForExcel(+$any(item.key))}">
+                                    {{item.value}}
+                                  </td>
+                                }
+                              }
+                            }
+                            @if (columnDatatype.length === 0 && flexCheckHasHeaders) {
+                              @for (val of row; track val) {
+                                <td>{{val}}
+                                </td>
+                              }
+                            }
+                          </tr>
+                        }
+                        <!-- <tr *ngFor="let row of recordsArrayForDisplay.slice(0,20); let j = index">
+                        <td>{{j+1}}</td>
+                        <td *ngFor="let header of dataxlsx[0] | keys; let i = index">
+                          {{row[header]}}
+                        </td>
+                      </tr>   -->
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          <!-- </div> -->
+        </div>
+      }
+
+      @if (dataSource === DataSourceTypes.LandingLayer) {
+        <div class="attach-preview">
+          <div style="display:flex; justify-content:space-between">
+            <div>Total File Size: <span
+              [ngStyle]="totalFileSizeInMb > landingLayerConfiguration?.totalFileSize ? {'color':'red'} : {}">{{
+              totalFileSizeInMb | number:'1.1-4' }} MB / {{
+            landingLayerConfiguration?.totalFileSize }} MB</span></div>
+            <div>File count: <span
+              [ngStyle]="selectedFiles.length > landingLayerConfiguration?.noOfAllowedFilesToUpload ? {'color':'red'} : {}">{{
+              selectedFiles.length }} / {{ landingLayerConfiguration?.noOfAllowedFilesToUpload
+            }}</span></div>
+          </div>
+          <p-table styleClass="p-datatable-striped mt-2" [value]="selectedFiles" [paginator]="true"
+            [rows]="10" [rowsPerPageOptions]="[10,20,30]" [loading]="false" [scrollable]="true"
+            responsiveLayout="stack"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+            showCurrentPageReport="true">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>#</th>
+                <th>File Name</th>
+                <th>Type</th>
+                <th>Size (MB)</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-file let-rowIndex="rowIndex">
+              @if (confirmIndex !== rowIndex) {
+                <tr>
+                  <td>{{ rowIndex + 1 }}</td>
+                  <td>{{ file.File.name }}</td>
+                  <td>{{ file.File.type || 'N/A' }}</td>
+                  <td>{{ (file.File.size / (1024 * 1024)) | number:'1.1-4' }}</td>
+                  <td>
+                    @if (file.status === 'invalid') {
+                      <span>
+                        <span class="material-symbols-outlined text-danger">
+                          error
+                        </span>
+                      </span>
+                    }
+                    @if (file.status === 'valid') {
+                      <span>
+                        <span class="material-symbols-outlined text-success">
+                          check_circle
+                        </span>
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    <span (click)="askRemove(rowIndex)" class="cursor-pointer" title="Delete">
+                      <span class="material-symbols-outlined text-danger">
+                        delete
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              }
+              <!-- Slide‑in confirmation row -->
+              @if (confirmIndex === rowIndex) {
+                <tr [@slideIn]>
+                  <td colspan="6" class="bg-light p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>Remove this file?</strong>&nbsp;
+                        <small>{{ file.File.name }}</small>
+                      </div>
+                      <!-- Right side: make this a horizontal flex row -->
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-dark cursor-pointer"
+                          title="No" (click)="cancelRemove()">
+                          close
+                        </span>
+                        <span class="material-symbols-outlined text-success cursor-pointer"
+                          title="Yes" (click)="removeFile(rowIndex)">
+                          check
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center">
+                  <img src="no-data-found.svg" class="no-data" />
+                  <h3 class="pb-2">No Files Found!</h3>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          <!-- <table class="table mt-3" *ngIf="selectedFiles.length > 0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>File Name</th>
+              <th>Type</th>
+              <th>Size (KB)</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let file of selectedFiles; let i = index">
+              <tr *ngIf="confirmIndex !== i" [class]="{'invalid-row': file.status === 'invalid'}">
+                <td>{{ i + 1 }}</td>
+                <td>{{ file.file.name }}</td>
+                <td>{{ file.file.type || 'N/A' }}</td>
+                <td>{{ (file.file.size / 1024) | number:'1.0-2' }}</td>
+                <td>{{file.status}}</td>
+                <td>
+                  <span (click)="askRemove(i)" class="cursor-pointer" title="Delete">
+                    <span class="material-symbols-outlined text-danger">
+                      delete
+                    </span>
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="confirmIndex === i" [@slideIn]>
+                <td colspan="6" class="bg-light p-3">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong>Remove this file?</strong>&nbsp;
+                      <small>{{ file.file.name }}</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="material-symbols-outlined " title="No"
+                        (click)="cancelRemove()">
+                        close
+                      </span>
+                      <span class="material-symbols-outlined " title="Yes"
+                        (click)="removeFile(i)">
+                        check
+                      </span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table> -->
+      </div>
+    }
+  </form>
+}
+
+@if (showSharepoint) {
+  <app-file-first-sharepoint-attach
+    (fileSelected)="onSharepointFileSelected($event)"
+    (back)="toggleFileSource('local')">
+  </app-file-first-sharepoint-attach>
+}
+</div>
+
+@if (activeTab === 'databaseSchema-tab') {
+  <div [ngClass]="{'active':activeTab=== 'databaseSchema-tab'}" class="tab-pane fade show"
+    id="databaseSchema-tab-pane" role="tabpanel" aria-labelledby="databaseSchema-tab" tabindex="0"
+    >
+    @if ([DataSourceTypes.DataBricks, DataSourceTypes.Default].includes(dataSource)) {
+      @if ((!hasErrors && !processConfigurationFormHasError)) {
+        <div class="schema-header col-xl-12 col-lg-12"
+          >
+          <div class="row">
+            <div class="col-md-6"><span class="text-sm">Database Name:</span>&nbsp;
+            <b>{{config?.databaseName}}</b>
+          </div>
+          <div class="col-md-6 text-end"><span class="text-sm">Table Name:</span>&nbsp;
+          <b>{{dataSource === DataSourceTypes.DataBricks ? config?.deltaTableName : config?.tableName}}</b>
+        </div>
+      </div>
+    </div>
+  }
+  <div class="schema-content col-xl-12 col-lg-12">
+    <div class="list">
+      <ul class="nav nav-tabs" id="sheetTab" role="tablist">
+        @for (wk of submittedSheets; track wk; let i = $index) {
+          <li class="nav-item" role="presentation"
+            >
+            <button class="nav-link" [class.active]="i === 0" id="sheet-tab-{{i}}"
+              data-bs-toggle="tab" [attr.data-bs-target]="'#sheet-tab-pane-' + i"
+              type="button" role="tab" [attr.aria-controls]="'sheet-tab-pane-' + i"
+              [attr.aria-selected]="i === 0"
+              (click)="displayRecordByWorkSheetName(wk.sheetName,false)">
+              {{ wk.sheetName }}
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+    <table class="table table-striped table-hover mb-0">
+      <thead>
+        <tr>
+          <th width="10%"></th>
+          <th class="cname">File Column Name</th>
+          <!-- <th *ngIf="config.flexCheckHasHeaders">DB Column Name</th> -->
+          <th class="w-200">DB Column Name</th>
+          <th class="w-150">Data Type</th>
+          <th width="10%"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of columnDatatype; track item; let i = $index) {
+          <tr
+            [ngClass]="{columnKey: item.ColumnKey === true}">
+            @if (item.willInclude) {
+              <td></td>
+              <td class="cname" valign="middle">
+                @if (item.ColumnKey) {
+                  <i class="material-icons-round key">
+                    key
+                  </i>
+                }
+                @if (config.flexCheckHasHeaders) {
+                  <label
+                  [ngStyle]="{'border-color' : (item.invalidColumnName ? 'red' : '#dee2e6')}">{{item.ColumnName}}</label>
+                }
+                @if (!config.flexCheckHasHeaders ) {
+                  @if (item.newColumn) {
+                    <input type="checkbox" class="me-2 form-control-check"
+                      title="Check to add new column"
+                      id="chkAddNewColumn" value="{{item.willAddNewColumn}}"
+                      [checked]="item.willAddNewColumn"
+                      (change)="onAddNewColumn($event, item.index)">
+                  }
+                  <label
+                  [ngStyle]="{'border-color' : (item.invalidColumnName ? 'red' : '#dee2e6')}">{{item.ColumnName}}</label>
+                  <!-- <input type="text" class="form-control" placeholder=""
+                  value="{{item.ColumnName}}" (change)="onColumnNameChange($event, i)"
+                  appNospaces
+                  [readOnly]="config.flpConfigurationId !== '' && !item.newColumn"
+                  [ngStyle]="{'border-color' : (item.invalidColumnName ? 'red' : '#dee2e6')} "> -->
+                }
+                <!-- <input type="email" class="form-control" id="exampleFormControlInput1"
+                placeholder="name@example.com"> -->
+              </td>
+              <td>
+                @if (config.flpConfigurationId === '') {
+                  <input type="text" class="form-control" placeholder=""
+                    value="{{item.DbColumnName}}"
+                    (change)="onDBColumnNameChange($event, i)" appNospaces
+                    [ngStyle]="{'border-color' : (item.invalidColumnName ? 'red' : '#dee2e6')} ">
+                  }
+                  @if (config.flpConfigurationId !== '') {
+                    @if (item.newColumn === false) {
+                      <label>{{item.DbColumnName}}</label>
+                    }
+                    @if (item.newColumn === true) {
+                      <input type="text" class="form-control" placeholder=""
+                        value="{{item.DbColumnName}}"
+                        (change)="onDBColumnNameChange($event, i)" appNospaces
+                        [ngStyle]="{'border-color' : (item.invalidColumnName ? 'red' : '#dee2e6')} ">
+                      }
+                    }
+                    @if (item.DbColumnName.length > 255) {
+                      <span class="text-danger">* Maximum character length should be
+                      255.</span>
+                    }
+                  </td>
+                  <td>
+                    <select class="form-select" aria-label=""
+                      [ngStyle]="{'border-color' : (item.invalidDataType ? 'red' : '#dee2e6')}"
+                      (change)="onGetSelectedDatatypes($any($event.target).value, item.ColumnName, i)"
+                      [disabled]="config.flpConfigurationId !== ''">
+                      @for (datatype of datatypeNames; track datatype) {
+                        <option
+                          [selected]="datatype.datatypeName === item.DatatypeName">
+                        {{datatype.datatypeName}}</option>
+                      }
+                    </select>
+                    <!-- {{item.DatatypeName}} -->
+                  </td>
+                  <td>
+                    <select id="showDBDateTimeOptions{{i+1}}" class="form-select"
+                      [ngStyle]="{'display' : (item.DatatypeName === 'date' || item.DatatypeName === 'time' || item.DatatypeName === 'datetime') ? 'block' : 'none'}"
+                      (change)="onValidateDateTimeFormat($event, item.ColumnName, i)"
+                      [disabled]="config.flpConfigurationId !== ''">
+                      @for (dateTimeOption of findDateTimeValues(item.DatatypeName); track dateTimeOption) {
+                        <option
+                          value="{{dateTimeOption.formatId}}"
+                          [selected]="item.dateTimeFormatId === dateTimeOption.formatId">
+                          {{dateTimeOption.format}}
+                        </option>
+                      }
+                    </select>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    @if (dataSource === DataSourceTypes.LandingLayer) {
+      <div class="schema-content col-xl-12 col-lg-12">
+        <p-table styleClass="p-datatable-striped" [value]="selectedFiles" [paginator]="true" [rows]="10"
+          [rowsPerPageOptions]="[10,20,30]" [loading]="false" [scrollable]="true" responsiveLayout="stack"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+          showCurrentPageReport="true">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>#</th>
+              <th>File Name</th>
+              <th>Type</th>
+              <th>Size (MB)</th>
+              <th>Status</th>
+              <!-- <th>Action</th> -->
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-file let-rowIndex="rowIndex">
+            @if (confirmIndex !== rowIndex) {
+              <tr>
+                <td>{{ rowIndex + 1 }}</td>
+                <td>{{ file.File.name }}</td>
+                <td>{{ file.File.type || 'N/A' }}</td>
+                <td>{{ (file.File.size / (1024 * 1024)) | number:'1.1-4' }}</td>
+                <td>
+                  @if (file.status === 'invalid') {
+                    <span>
+                      <span class="material-symbols-outlined text-danger">
+                        error
+                      </span>
+                    </span>
+                  }
+                  @if (file.status === 'valid') {
+                    <span>
+                      <span class="material-symbols-outlined text-success">
+                        check_circle
+                      </span>
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+            <!-- Slide‑in confirmation row -->
+            @if (confirmIndex === rowIndex) {
+              <tr [@slideIn]>
+                <td colspan="6" class="bg-light p-3">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong>Remove this file?</strong>&nbsp;
+                      <small>{{ file.File.name }}</small>
+                    </div>
+                    <!-- Right side: make this a horizontal flex row -->
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="material-symbols-outlined text-dark" title="No"
+                        (click)="cancelRemove()">
+                        close
+                      </span>
+                      <span class="material-symbols-outlined text-success" title="Yes"
+                        (click)="removeFile(rowIndex)">
+                        check
+                      </span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center">
+                <img src="no-data-found.svg" class="no-data" />
+                <h3 class="pb-2">No Files Found!</h3>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </div>
+}
+
+<div [ngClass]="{'active':activeTab=== 'fileSubmission-tab'}" class="tab-pane fade show"
+  id="fileSubmission-pane" role="tabpanel" aria-labelledby="fileSubmission-tab" tabindex="0">
+
+  <div class="success-banner">
+    <img src="success-icon.svg" />
+    <h2 class="text-success">File Submitted!</h2>
+    <p>Your file <span id="filename">{{this.fileName}}</span> has been sent to Processing</p>
+  </div>
+  <div class="file-summary d-none">
+    <div class="file-icon"><i class="material-symbols-rounded">draft</i></div>
+    <div>
+      <div class="file-name">{{this.fileName}}</div>
+      <div class="file-size">{{this.fileSize}}</div>
+    </div>
+  </div>
+  <div class="text-center">
+    <a class="btn btn-outline-primary me-3" routerLink="/file-processing-status">Check File Process
+    Status</a>
+    <a class="btn btn-primary" routerLink="/file-upload">Add New File</a>
+  </div>
+</div>
+</div>
+<div class="d-flex justify-content-end mt-2">
+  @if (showDatabasePreview) {
+    <button class="btn btn-primary me-2">Back</button>
+  }
+  <!-- [disabled]="(hasErrors || processConfigurationFormHasError)" -->
+
+  <!-- <button class="btn btn-primary" type="button" id="btnNext" *ngIf="file" (click)="onShowDatabaseSchema()"
+[disabled]="(InvalidDataSource && config.validate_fileschema) || (!isAllSheetsSubmitted())">Next</button> -->
+<button class="btn btn-primary" type="button" id="btnNext" (click)="onShowDatabaseSchema()"
+[disabled]="(!isAllSheetsSubmitted())">Next</button>
+<!-- <button class="btn btn-primary" type="button" id="btnCheckConsole" *ngIf="file" (click)="onShowModelData()"
+[disabled]="(InvalidDataSource && config.validate_fileschema)">Check Model data</button> -->
+
+</div>
+</div>
+
+
+
+<!------------------------------------------------------------------------------->
+<!----------------------------Process Configuration------------------------------>
+<!------------------------------------------------------------------------------->
+<!-- {{isNewProcess}} -->
+@if (isNewProcess) {
+  <div id="modifySettings" [ngClass]="{'slide-left open': modifySettings === true}">
+    <div class="panel-header">
+      <div class="page-title">
+        @if (config?.flpConfigurationId === '') {
+          Modify
+        }
+        Process Configuration
+        @if (dataSource !== DataSourceTypes.LandingLayer && parseComplete && dataxlsx.length > 0 && (fileType === 'xls' || fileType === 'xlsx' || fileType==='xlsb')) {
+          <label
+            >
+          :{{selectedWorkSheetName}}</label>
+        }
+      </div>
+      <i class="material-icons-round close-icon" data-bs-dismiss="modal" aria-label="Close"
+      (click)="modifySettingsClose()">close</i>
+    </div>
+    <!-- [formValues]="configSubject.asObservable()" -->
+    <!-- [rowCount]="dataxlsx.length" -->
+    <!-- [showEnglishConversionOnProcess]="showEnglishConversionOnProcess" -->
+    @if ((fileType === 'csv' || fileType === 'txt') && dataSource !== DataSourceTypes.LandingLayer) {
+      <app-process-configuration
+        [clientInfoForm]="clientInfoForm" [formValues]="config" [columnDatatype]="columnDatatype"
+        [fileType]="fileType" (updateConfigOnly)="updateConfigOnly($event)"
+        (useRomanNumeralsOnlyEvent)="onDisplayOnlyRomanNumerals($event)"
+        (ignoreYNSortBy)="sortAndRemove(null, null, null, null)" (closeWindow)="modifySettingsClose()"
+        [keyColumns]="keyColumnsSubject.asObservable()" [dedupColumns]="dedupColumnsSubject.asObservable()"
+        [rowCount]="originalRowCount" [dataSource]="dataSource"
+        (processConfigurationFormHasError)="processConfigurationFormHasError = $event" class="panel-config"
+        [file]="file" [previewToParent2]="onPreview">
+      </app-process-configuration>
+    }
+    <!-- [clientInfoForm]="fileUploadForm.get('clientInfo')" -->
+    <!-- (previewToParent)="onPreview($event)" -->
+    @if ((dataxlsx.length > 0 && (fileType === 'xls' || fileType === 'xlsx'|| fileType === 'xlsb')) && dataSource !== DataSourceTypes.LandingLayer) {
+      <app-process-configuration
+        [clientInfoForm]="clientInfoForm" [formValues]="multiSheetConfigs[selectedWorkSheetName]"
+        [processConfigurationForm]="multiSheetForms[selectedWorkSheetName]"
+        [currentWorkSheetName]="selectedWorkSheetName"
+        [columnDatatype]="columnDatatypePerSheet[selectedWorkSheetName]" [fileType]="fileType"
+        (updateConfigOnly)="updateConfigOnly($event)" (convertSpanishToEnglishChar)="onSheetConfigChanged($event)"
+        (useRomanNumeralsOnlyEvent)="onDisplayOnlyRomanNumerals($event)"
+        (ignoreYNSortBy)="(fileType === 'xls' || fileType === 'xlsx' || fileType === 'xlsb') ? sortAndRemoveForExcel(null, null, null, null) : sortAndRemove(null, null, null, null)"
+        (closeWindow)="modifySettingsClose()" [keyColumns]="keyColumnsSubject.asObservable()"
+        [dedupColumns]="dedupColumnsSubject.asObservable()" [rowCount]="originalRowCount" [dataSource]="dataSource"
+        (processConfigurationFormHasError)="processConfigurationFormHasError = $event" class="panel-config"
+        [previewToParent2]="onPreview">
+      </app-process-configuration>
+    }
+    @if (dataSource === DataSourceTypes.LandingLayer) {
+      <app-process-configuration [formValues]="config"
+        [clientInfoForm]="clientInfoForm" [dataSource]="dataSource" [dateTimeNames]="dateTimeNames"
+        (updateselectedFiles)="updateselectedFiles($event)" (updateConfigOnly)="updateConfigOnly($event)"
+        (processConfigurationFormHasError)="processConfigurationFormHasError = $event"
+        (validateFileNamesWithRegex)="validateFileNamesWithRegex($event)" (closeWindow)="modifySettingsClose()">
+      </app-process-configuration>
+    }
+    <!-- Place this after all your sheet/tab content, but inside your main form/div -->
+    <!-- <div class="d-flex justify-content-end mt-3">
+    <button class="btn btn-primary"
+      type="button"
+      (click)="onSubmitAllSheets()">
+      Save
+    </button>
+  </div> -->
+  <!-- <div class="d-flex justify-content-end mt-3 text-danger small">
+  hasErrors: {{hasErrors}}<br>
+  processConfigurationFormHasError: {{processConfigurationFormHasError}}
+</div> -->
+</div>
+}
+
+</div>

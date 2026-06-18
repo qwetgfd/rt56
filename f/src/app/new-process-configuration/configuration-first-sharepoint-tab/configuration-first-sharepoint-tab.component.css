@@ -1,0 +1,225 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: transparent;
+  color: var(--sp-text, #1a1f36);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+button { font-family: inherit; }
+
+/* Unified wizard panel */
+.npc-sp-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  background: var(--sp-surface, #fff);
+  border: 1px solid var(--sp-border, #e4e7ec);
+  border-radius: var(--sp-radius-xl, 16px);
+  box-shadow: var(--sp-shadow-sm, 0 1px 2px rgba(16, 24, 40, 0.06));
+  overflow: hidden;
+  animation: npc-panel-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes npc-panel-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Compact top bar — intro + source chips in minimal height */
+.npc-sp-topbar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #fff 0%, var(--sp-surface-2, #f5f6f8) 100%);
+  border-bottom: 1px solid var(--sp-border, #e4e7ec);
+}
+
+.npc-sp-topbar--complete {
+  background: linear-gradient(180deg, #fff 0%, var(--sp-primary-bg, #f5f7fb) 100%);
+  border-bottom-color: rgba(46, 68, 177, 0.14);
+}
+
+.npc-sp-topbar__hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--sp-text-muted, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.npc-sp-topbar__chips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.npc-sp-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--sp-border, #e4e7ec);
+  border-radius: var(--sp-radius-md, 10px);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.npc-sp-topbar--complete .npc-sp-chip {
+  border-color: rgba(46, 68, 177, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.npc-sp-chip:hover {
+  border-color: rgba(46, 68, 177, 0.22);
+  box-shadow: 0 2px 8px rgba(46, 68, 177, 0.06);
+}
+
+.npc-sp-chip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--sp-primary, #2e44b1);
+  background: var(--sp-primary-light, #e8edff);
+}
+
+.npc-sp-chip__icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.npc-sp-chip__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.npc-sp-chip__body dt {
+  margin: 0;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-text-3, #6b7280);
+  line-height: 1.2;
+}
+
+.npc-sp-chip__body dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sp-text, #1a1f36);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.npc-sp-topbar--complete .npc-sp-chip__body dd {
+  color: var(--sp-primary, #2e44b1);
+}
+
+/* Workspace embed */
+.npc-sp-embed {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  border-radius: 0;
+  background: var(--sp-surface, #fff);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.npc-sp-embed--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.npc-sp-embed > app-sharepoint-workspace {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.npc-sp-embed ::ng-deep .sp-workspace-host--process-config {
+  border-radius: 0;
+}
+
+.npc-sp-embed ::ng-deep .sp-workspace-host--process-config .sp-workspace-toolbar {
+  border-top: none;
+  border-bottom: 1px solid var(--sp-border, #e4e7ec);
+  padding: 8px 14px;
+  min-height: 48px;
+}
+
+.npc-sp-embed ::ng-deep .sp-workspace-host--process-config .sp-workspace-sidebar {
+  border-left: 1px solid var(--sp-border, #e4e7ec);
+}
+
+.npc-sp-embed ::ng-deep .sp-workspace-host--process-config .sp-explorer-context {
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--sp-border, #e4e7ec);
+}
+
+.npc-sp-embed ::ng-deep .sp-workspace-host--process-config .sp-explorer-context__title {
+  font-size: 18px;
+}
+
+@media (max-width: 1100px) {
+  .npc-sp-topbar__chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .npc-sp-topbar {
+    padding: 8px 10px;
+  }
+
+  .npc-sp-topbar__hint {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .npc-sp-topbar__chips {
+    grid-template-columns: 1fr;
+  }
+
+  .npc-sp-chip__body dd {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .npc-sp-panel,
+  .npc-sp-embed--hidden {
+    animation: none !important;
+    transition: none !important;
+  }
+}

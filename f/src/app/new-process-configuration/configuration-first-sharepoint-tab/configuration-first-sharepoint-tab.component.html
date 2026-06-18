@@ -1,0 +1,60 @@
+@if (shouldRender) {
+  <section class="npc-sp-panel">
+    <div class="npc-sp-topbar" [class.npc-sp-topbar--complete]="selectionSummary.isComplete">
+      <p class="npc-sp-topbar__hint">{{ m.intro }}</p>
+      <dl class="npc-sp-topbar__chips">
+        <div class="npc-sp-chip">
+          <span class="npc-sp-chip__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h6"/></svg>
+          </span>
+          <div class="npc-sp-chip__body">
+            <dt>{{ listDetail.application }}</dt>
+            <dd [title]="selectionSummary.application">{{ selectionSummary.application }}</dd>
+          </div>
+        </div>
+        <div class="npc-sp-chip">
+          <span class="npc-sp-chip__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>
+          </span>
+          <div class="npc-sp-chip__body">
+            <dt>{{ listDetail.site }}</dt>
+            <dd [title]="selectionSummary.site">{{ selectionSummary.site }}</dd>
+          </div>
+        </div>
+        <div class="npc-sp-chip">
+          <span class="npc-sp-chip__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M5 5v14M9 5v14M9 5h8l2 3v11H9"/></svg>
+          </span>
+          <div class="npc-sp-chip__body">
+            <dt>{{ listDetail.library }}</dt>
+            <dd [title]="selectionSummary.library">{{ selectionSummary.library }}</dd>
+          </div>
+        </div>
+        <div class="npc-sp-chip">
+          <span class="npc-sp-chip__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v9A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11Z"/></svg>
+          </span>
+          <div class="npc-sp-chip__body">
+            <dt>{{ listDetail.folder }}</dt>
+            <dd [title]="selectionSummary.folder">{{ selectionSummary.folder }}</dd>
+          </div>
+        </div>
+      </dl>
+    </div>
+
+    @if (workspaceMounted) {
+      <div class="npc-sp-embed" [class.npc-sp-embed--hidden]="!isActive">
+        <app-sharepoint-workspace
+          #sharepointWorkspace
+          [processConfigMode]="true"
+          [filePickMode]="true"
+          [initialApplicationId]="initialApplicationId"
+          [initialApplicationSiteId]="initialApplicationSiteId"
+          [initialLibraryName]="initialLibraryName"
+          [initialFolderPath]="initialFolderPath"
+          (processConfigSelectionChange)="onWorkspaceSelectionChange()">
+        </app-sharepoint-workspace>
+      </div>
+    }
+  </section>
+}

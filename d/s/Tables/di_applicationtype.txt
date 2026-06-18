@@ -1,0 +1,38 @@
+﻿-- SharePoint-only table: di_applicationtype
+-- Safe to backup, drop, recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[di_applicationtype]', N'U') IS NOT NULL
+BEGIN
+    IF OBJECT_ID(N'[dbo].[di_applicationtype_backup18June2026]', N'U') IS NOT NULL
+        DROP TABLE [dbo].[di_applicationtype_backup18June2026];
+    EXEC sp_rename N'dbo.di_applicationtype', N'di_applicationtype_backup18June2026', N'OBJECT';
+END
+GO
+
+CREATE TABLE [dbo].[di_applicationtype] (
+    [applicationtypeid] INT IDENTITY(1,1) NOT NULL,
+    [code] VARCHAR(32) NOT NULL,
+    [displayname] NVARCHAR(64) NOT NULL,
+    [description] NVARCHAR(256),
+    [isactive] BIT NOT NULL DEFAULT ((1)),
+    [createdon] DATETIME2(3) NOT NULL DEFAULT (getutcdate()),
+    CONSTRAINT [PK_di_applicationtype] PRIMARY KEY CLUSTERED ([applicationtypeid])
+);
+CREATE UNIQUE NONCLUSTERED INDEX [ix_uq_di_applicationtype_code] ON [dbo].[di_applicationtype] ([code]);
+GO
+
+SET IDENTITY_INSERT [dbo].[di_applicationtype] ON;
+IF NOT EXISTS (SELECT 1 FROM [dbo].[di_applicationtype] WHERE [applicationtypeid] = 2)
+    INSERT INTO [dbo].[di_applicationtype] ([applicationtypeid], [code], [displayname], [description], [isactive], [createdon])
+    VALUES (2, N'tp_external', N'External', N'External application.', 1, '2026-05-20T09:09:47');
+IF NOT EXISTS (SELECT 1 FROM [dbo].[di_applicationtype] WHERE [applicationtypeid] = 3)
+    INSERT INTO [dbo].[di_applicationtype] ([applicationtypeid], [code], [displayname], [description], [isactive], [createdon])
+    VALUES (3, N'tp_internal', N'Internal', N'Internal site registration.', 1, '2026-05-20T09:09:47');
+IF NOT EXISTS (SELECT 1 FROM [dbo].[di_applicationtype] WHERE [applicationtypeid] = 4)
+    INSERT INTO [dbo].[di_applicationtype] ([applicationtypeid], [code], [displayname], [description], [isactive], [createdon])
+    VALUES (4, N'tp_user_delegated', N'Logged In User', N'Logged in user site registration.', 1, '2026-05-20T09:09:47');
+SET IDENTITY_INSERT [dbo].[di_applicationtype] OFF;
+GO

@@ -1,0 +1,33 @@
+.flex-div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.center {
+  text-align: center;
+  max-width: 500px;
+}
+
+.center img {
+  max-width: 200px;
+  margin-bottom: 1rem;
+}
+
+.center h4 {
+  font-size: 1.1rem;
+  color: #6b7280;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+
+.max-200 {
+  max-width: 200px;
+}

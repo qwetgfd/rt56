@@ -1,0 +1,202 @@
+<div id="dashboardPage">
+
+  <div class="row">
+    <div class="col-xl-8 banner-area">
+      <div class="d-flex justify-content-between d-none">
+        <div class="page-title">Dashboard Overview</div>
+        <div class="d-flex">
+          <div class="form-control form-control-sm overview me-2">
+            <input type="date" /> - <input type="date" />
+          </div>
+          <select class="form-select form-select-sm overview" aria-label=".form-select-sm example">
+            <option selected>All</option>
+            <option value="1">Region</option>
+            <option value="2">Sub-region</option>
+            <option value="3">Client</option>
+          </select>
+        </div>
+      </div>
+      <div class="hello-banner">
+        <div class="hb-left">
+          <h3>Hello, {{userFullName}}</h3>
+          <div>Have a nice day!</div>
+        </div>
+        <div class="hb-right">
+          <span>{{todayDate | date:'MMMM d, y'}}</span>
+          <i class="material-icons-round">today</i>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-4 mb-md">
+          <div class="create-card">
+            <div class="d-flex">
+              <div class="material-symbols-rounded icon">
+                edit_document
+              </div>
+              <div>
+                <div class="graph-title">Processes Created</div>
+                <div class="create-total">{{processListResponse?.processRowCount}}</div>
+              </div>
+            </div>
+            <div class="new">
+              <span>{{processListResponse?.currentMonthName}}</span>
+              <span>{{processListResponse?.newProcessCount}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4 mb-md">
+          <div class="processed-card">
+            <div class="d-flex">
+              <div class="material-symbols-rounded icon">
+                fact_check
+              </div>
+              <div>
+                <div class="graph-title">Files Processed</div>
+                <div class="create-total">{{fileListResponse?.totalUploadedFiles}}</div>
+              </div>
+            </div>
+            <div class="new">
+              <span>{{fileListResponse?.currentMonthName}}</span>
+              <span>{{fileListResponse?.newFileProcessCount}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4 mb-md">
+          <div class="client-card">
+            <div class="d-flex">
+              <div class="material-symbols-rounded icon">
+                domain
+              </div>
+              <div>
+                <div class="graph-title">Active Clients</div>
+                <div class="create-total">{{clientListResponse?.activeClients}}</div>
+              </div>
+            </div>
+            <div class="new">
+              <span>{{clientListResponse?.currentMonthName}}</span>
+              <span>{{clientListResponse?.totalClients}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-md">
+          <div class="client-graph">
+            <div class="graph-title">Utilization By Client</div>
+            <div class="text-center">
+              <app-di-utilization></app-di-utilization>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-md">
+          <div class="data-graph">
+            <div class="graph-title">Utilization By Data Source</div>
+            <div class="text-center min-h">
+              <app-di-uploads></app-di-uploads>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="graph-title mb-md">File Processing Status</div>
+
+        @for (file of realTimeProcessing; track file; let i = $index) {
+          <div class="col-xl-4">
+            @if (i < 3) {
+<div class="file-status-card" [ngClass]="{
+            completed: file.processStatusName == 'Processed',
+            processing: file.processStatusName == 'Processing',
+            error: file.processStatusName == 'Error',
+            started: file.processStatusName ==
+              'Stopped Processing - Error multiple times'
+          }">
+                <div class="process-name d-flex justify-content-between">
+                  <div class="wrap-text">{{file.processName}}</div>
+                  <div class="link-btn text-xs">
+                    <span class="material-symbols-rounded">pageview</span>
+                    <a class="text-xs" (click)="openStatusDetails(file.uploadFileId)">Detailed
+                    Status</a>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-3 pb-3 pe-1 ps-1">
+                  <div class="d-flex align-items-center">
+                    <div class="file-icon"><img [src]="getFileExtension(file.fileName)" /></div>
+                    <div>
+                      <div class="file-name">{{getFileName(file.fileName)}}<br>
+                        <span class="status-date">{{file.creationDateTime | date}}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="file-size badge rounded-pill">{{ file.processStatusName }}</div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+    <div class="col-xl-4">
+      <div class="right-column">
+        <div class="pb-4">
+          <div class="graph-title">File Processing Performance</div>
+          <div class="text-center position-relative p-3 d-contents">
+            <!-- <img src="graph2.svg" /> -->
+            <!-- <canvas style="max-height: 75px;" #fileProcessStatusChart id="fileProcessStatusChart"></canvas> -->
+            <div class="chart-container p-graph">
+              <app-file-status-chart [series]="fileProcessChartData"></app-file-status-chart>
+            </div>
+            <!-- <span class="percent">{{successPercentage}}%</span> -->
+            <div >
+              <div>
+                <span class="small-descriptive">Total File Processed:</span>&nbsp;
+                <b>{{fileListResponse?.totalUploadedFiles}}</b>
+              </div>
+              <div class="d-flex">
+                <div class="file-success">
+                  <span class="material-symbols-rounded">
+                    task_alt
+                  </span>
+                  <div>
+                    <div class="status-title">File Processing Success</div>
+                    <div class="status-value">{{fileListResponse?.successCount}}</div>
+                  </div>
+                </div>
+
+
+                <div class="file-failed">
+                  <span class="material-symbols-rounded">
+                    error
+                  </span>
+                  <div>
+                    <div class="status-title">File Processing Failed</div>
+                    <div class="status-value">{{fileListResponse?.failureCount}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr />
+        <div class="pt-4">
+          <div class="graph-title">Utilization By Region</div>
+          <div class="text-center">
+
+            <app-di-region></app-di-region>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+</div>

@@ -1,0 +1,28 @@
+﻿-- SharePoint-only table: di_applicationsite
+-- Safe to backup, drop, recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[di_applicationsite]', N'U') IS NOT NULL
+BEGIN
+    IF OBJECT_ID(N'[dbo].[di_applicationsite_backup18June2026]', N'U') IS NOT NULL
+        DROP TABLE [dbo].[di_applicationsite_backup18June2026];
+    EXEC sp_rename N'dbo.di_applicationsite', N'di_applicationsite_backup18June2026', N'OBJECT';
+END
+GO
+
+CREATE TABLE [dbo].[di_applicationsite] (
+    [applicationsiteid] UNIQUEIDENTIFIER NOT NULL DEFAULT (newid()),
+    [applicationid] UNIQUEIDENTIFIER NOT NULL,
+    [hostname] NVARCHAR(256) NOT NULL,
+    [sitename] NVARCHAR(256) NOT NULL,
+    [libraryname] NVARCHAR(256),
+    [folderpath] NVARCHAR(512),
+    [sortorder] INT NOT NULL DEFAULT ((0)),
+    [isactive] BIT NOT NULL DEFAULT ((1)),
+    [createdon] DATETIME2(3) NOT NULL DEFAULT (getutcdate()),
+    [modifiedon] DATETIME2(3),
+    CONSTRAINT [PK_di_applicationsite] PRIMARY KEY CLUSTERED ([applicationsiteid])
+);
+CREATE NONCLUSTERED INDEX [ix_di_applicationsite_applicationid] ON [dbo].[di_applicationsite] ([applicationid]);

@@ -1,0 +1,33 @@
+﻿-- SharePoint-only stored procedure: sel_flpSharePointSourceByConfigId
+-- Safe to recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[sel_flpSharePointSourceByConfigId_backup18June2026]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sel_flpSharePointSourceByConfigId_backup18June2026];
+IF OBJECT_ID(N'[dbo].[sel_flpSharePointSourceByConfigId]', N'P') IS NOT NULL
+    EXEC sp_rename N'dbo.sel_flpSharePointSourceByConfigId', N'sel_flpSharePointSourceByConfigId_backup18June2026', N'OBJECT';
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sel_flpSharePointSourceByConfigId
+    @flpConfigurationId NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        s.flpConfigurationId,
+        s.sharePointApplicationId,
+        s.sharePointApplicationSiteId,
+        s.sharePointLibraryName,
+        s.sharePointFolderPath,
+        a.displayname AS sharePointApplicationName,
+        site.sitename AS sharePointSiteName
+    FROM dbo.di_flpSharePointSource s
+    LEFT JOIN dbo.di_application a ON a.applicationid = s.sharePointApplicationId
+    LEFT JOIN dbo.di_applicationsite site ON site.applicationsiteid = s.sharePointApplicationSiteId
+    WHERE s.flpConfigurationId = @flpConfigurationId
+      AND s.active = 1;
+END;
+GO

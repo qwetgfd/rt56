@@ -1,0 +1,10 @@
+@if (error) {
+  <div id="errorBox" class="error-box">
+    <span class="error-text">
+      {{error}}
+    </span>
+    <button class="close-btn" type="button" (click)="hideError($event)" aria-label="Close error">
+      &times;
+    </button>
+  </div>
+}

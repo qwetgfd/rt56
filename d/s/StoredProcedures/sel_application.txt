@@ -1,0 +1,49 @@
+﻿-- SharePoint-only stored procedure: sel_application
+-- Safe to recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[sel_application_backup18June2026]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[sel_application_backup18June2026];
+IF OBJECT_ID(N'[dbo].[sel_application]', N'P') IS NOT NULL
+    EXEC sp_rename N'dbo.sel_application', N'sel_application_backup18June2026', N'OBJECT';
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sel_application
+    @Ownerkey           NVARCHAR(128) = NULL,
+    @Applicationtypeid  INT           = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT  a.applicationid       AS ApplicationId,
+            a.applicationtypeid   AS ApplicationTypeId,
+            t.code                AS ApplicationTypeCode,
+            t.displayname         AS ApplicationTypeName,
+            a.ownerkey            AS OwnerKey,
+            a.displayname         AS DisplayName,
+            a.tenantid            AS TenantId,
+            a.clientid            AS ClientId,
+            a.clientsecret        AS ClientSecret,
+            a.hostname            AS HostName,
+            a.sitename            AS SiteName,
+            a.libraryname         AS LibraryName,
+            a.consumerclientid    AS ConsumerClientId,
+            a.consumersecret      AS ConsumerSecret,
+            a.owner               AS Owner,
+            a.ownerupn            AS OwnerUpn,
+            a.coowner             AS CoOwner,
+            a.coownerupn          AS CoOwnerUpn,
+            a.notes               AS Notes,
+            a.isactive            AS IsActive,
+            a.createdon           AS CreatedOn,
+            a.modifiedon          AS ModifiedOn
+    FROM    dbo.di_application AS a
+            INNER JOIN dbo.di_applicationtype AS t
+                ON t.applicationtypeid = a.applicationtypeid
+    WHERE   a.isactive = 1
+      AND   (@Ownerkey IS NULL OR a.ownerkey = @Ownerkey)
+      AND   (@Applicationtypeid IS NULL OR a.applicationtypeid = @Applicationtypeid)
+    ORDER BY a.displayname;
+END;
+GO

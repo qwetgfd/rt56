@@ -1,0 +1,4 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" role="img" aria-label="Graph">
+  <rect width="200" height="120" rx="8" fill="#0d6efd"/>
+  <text x="100" y="64" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600">Graph</text>
+</svg>

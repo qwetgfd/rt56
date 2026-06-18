@@ -1,0 +1,28 @@
+<!-- <div class="modal-header">
+  <h4 class="modal-title">Plot View Columns</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
+</div>
+<div class="modal-body">
+  <table>
+    <thead>
+      <th>View name</th>
+      <th>From Column</th>
+      <th>To Column</th>
+    </thead>
+    <tbody>
+      <tr *ngFor="let view of data; let i = index">
+        <td>
+          {{view.viewName}}
+        </td>
+        <td><input type="number" min="1" [(ngModel)]="view.fromColumn" name="fromColumn{{i}}" pattern="^[1-9][0-9]*$"
+            [disabled]="!isRowEditable(i)" (ngModelChange)="onFromColumnChange($event, i)"></td>
+        <td><input type="number" min="1" [(ngModel)]="view.toColumn" name="toColumnn{{i}}" [disabled]="!isRowEditable(i)"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-primary" (click)="onYesClick()">Yes</button>
+  <button type="button" class="btn btn-secondary">No</button>
+
+</div> -->

@@ -1,0 +1,47 @@
+﻿-- SharePoint-only stored procedure: commit_applicationsites
+-- Safe to recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[commit_applicationsites_backup18June2026]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[commit_applicationsites_backup18June2026];
+IF OBJECT_ID(N'[dbo].[commit_applicationsites]', N'P') IS NOT NULL
+    EXEC sp_rename N'dbo.commit_applicationsites', N'commit_applicationsites_backup18June2026', N'OBJECT';
+GO
+
+CREATE OR ALTER PROCEDURE dbo.commit_applicationsites
+    @Applicationid UNIQUEIDENTIFIER,
+    @SitesJson     NVARCHAR(MAX)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE  dbo.di_applicationsite
+    SET     isactive   = 0,
+            modifiedon = GETUTCDATE()
+    WHERE   applicationid = @Applicationid;
+
+    IF @SitesJson IS NOT NULL AND LTRIM(RTRIM(@SitesJson)) <> N'' AND ISJSON(@SitesJson) = 1
+    BEGIN
+        INSERT INTO dbo.di_applicationsite
+            (applicationid, hostname, sitename, libraryname, folderpath, sortorder)
+        SELECT  @Applicationid,
+                j.hostname,
+                j.sitename,
+                NULLIF(LTRIM(RTRIM(j.libraryname)), N''),
+                NULLIF(LTRIM(RTRIM(j.folderpath)), N''),
+                ISNULL(j.sortorder, 0)
+        FROM OPENJSON(@SitesJson)
+        WITH (
+            hostname    NVARCHAR(256) '$.hostName',
+            sitename    NVARCHAR(256) '$.siteName',
+            libraryname NVARCHAR(256) '$.libraryName',
+            folderpath  NVARCHAR(512) '$.folderPath',
+            sortorder   INT           '$.sortOrder'
+        ) AS j
+        WHERE j.sitename IS NOT NULL AND LTRIM(RTRIM(j.sitename)) <> N'';
+    END
+
+    EXEC dbo.sel_applicationsites @Applicationid;
+END;
+GO

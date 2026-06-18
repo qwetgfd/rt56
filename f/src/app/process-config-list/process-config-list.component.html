@@ -1,0 +1,503 @@
+<div class="content">
+  <div id="processListPage">
+    <div class="process-list-title">
+      <div class="page-title">Process Configuration List</div>
+      <a class="btn btn-outline-primary new" routerLink="/add">
+        <i title="Add New" class="material-icons-round">add</i> New
+      </a>
+    </div>
+    <div class="process-list-panel">
+      <a href="#topOfTable" id="topOfTable"></a>
+      <div class="table-details mb-sm">
+        <div class="table-actions">
+          <div id="daterange">
+            <p-datepicker dateFormat="mm/dd/yy" [showIcon]="false" [(ngModel)]="searchDate" iconDisplay="input"
+              selectionMode="range" inputId="filter_date" [readonlyInput]="true" [showButtonBar]="true"
+              [placeholder]="'Start date - End date'">
+            </p-datepicker>
+
+            <div class="clear" (click)="clearDateFilter()">
+              <i class="material-icons">close</i>
+            </div>
+          </div>
+          <div class="mb-3 me-2 ">
+            <ng-select [items]="searchOnFields" bindLabel="databaseLabel" searchable="false" placeholder="Search by"
+              bindValue="databaseColumnName" [multiple]="true" [clearable]="false" [(ngModel)]="selectedNgModelValue"
+              (change)="onDropdownChange($event)" class="min-220">
+            </ng-select>
+          </div>
+          <div class="d-flex   sm-block">
+            <span class="d-flex">
+              <div id="search">
+                <input type="text" placeholder="Search" placeholder="Search input" class="form-control"
+                  [(ngModel)]="searchTerm" [disabled]="disableInput" />
+                  <div class="clear" (click)="clearSearch()">
+                    <i class="material-icons">close</i>
+                  </div>
+                </div>
+                <button class="btn btn-primary icon-btn me-2" title="Search"
+                  (click)="GetSearchedProcessConfigList('search', this.showActiveProcesses)"
+                  [disabled]="(searchTerm?.length === 0 || !searchTerm) && !searchDate">
+                  <i class="material-icons">search</i>
+                </button>
+                <button class="btn btn-outline-primary icon-btn me-2" title="Reset" (click)="resetData()">
+                  <!-- [disabled]="searchTerm?.length === 0 || !searchTerm" -->
+                  <i class="material-icons-outlined">cached</i>
+                </button>
+              </span>
+              <button class="btn btn-primary"
+                [title]="!showActiveProcesses ? 'Show Active Processes' : 'Show Inactive Processes'" style="height: 40px;"
+                (click)="GetSearchedProcessConfigList('showActiveInactive', !this.showActiveProcesses)">
+                Show
+                @if (!this.showActiveProcesses) {
+                  Active
+                }
+                @if (this.showActiveProcesses) {
+                  Inactive
+                }
+                Processes
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          @if (selectedProcessForDelete.length > 0) {
+            <div class="alert alert-warning">
+              <div class="row">
+                <div class="col-sm-10">
+                  You have selected <strong>{{selectedProcessForDelete.length}} rows</strong>.
+                  Do you want to
+                  @if (this.showActiveProcesses) {
+                    Disable
+                  }
+                  @if (!this.showActiveProcesses) {
+                    Enable
+                  }
+                  it?
+                </div>
+                <div class="col-sm-2 text-end">
+                  <button type="button" class="btn btn-primary me-1" style="padding:2px 5px;"
+                  (click)="UpdateActiveStatusByFlpConfigurationId(!this.showActiveProcesses)">Yes</button>
+                  <button type="button" class="btn btn-danger" style="padding:2px 5px;"
+                  (click)="emptySelectedProcessForDelete(false)">No</button>
+                </div>
+              </div>
+            </div>
+          }
+          <p-table #dt2 styleClass="p-datatable-striped" [value]="processConfigList"
+            [tableStyle]="{ 'min-width': '50rem' }" [paginator]="false" [loading]="loading" [scrollable]="false">
+            <ng-template pTemplate="header">
+              <tr>
+                <th width="100px"></th>
+                <th width="100px">
+
+                  @if (this.showActiveProcesses) {
+                    Disable
+                  }
+                  @if (!this.showActiveProcesses) {
+                    Enable
+                  }
+                  <input type="checkbox" class="ms-2 form-check-input" id="checkboxDeleteAll"
+                    [title]="!showActiveProcesses ? 'Enable All' : 'Disable All'" (click)="onDeleteAll($event)">
+                  </th>
+                  <th width="175px">Process Name</th>
+                  <th width="150px">Description</th>
+                  <th width="150px">Process Type</th>
+                  <th width="140px">Region</th>
+                  <th width="150px">Sub Region</th>
+                  <th width="220px">Client</th>
+                  <th width="140px">Ingestion Type</th>
+                  <!-- <th>Table</th> -->
+                  <!-- <th>Creation Date</th>
+                  <th>Created By</th> -->
+                  <!-- <th>Updated Date</th>
+                  <th>Updated By</th> -->
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-product let-rowIndex="rowIndex">
+                <tr>
+                  <td style="text-align: right;">
+                    <button type="button" class="btn btn-sm rounded-0"
+                      (click)="viewDetails(product.configurationId,product.tabName)">
+                      <span class="material-icons-outlined sm-font" title="View" data-toggle="tooltip">
+                        visibility
+                      </span>
+                    </button>
+                    <!-- (product.tabName && product.tabName.trim() !== '') -->
+                    <button type="button" class="btn btn-link btn-sm rounded-0" [disabled]="!this.showActiveProcesses"
+                      (click)="editDetails(product.configurationId,product.tabName)">
+                      <span class="material-icons-outlined sm-font" data-toggle="tooltip" title="Edit">
+                        edit
+                      </span>
+                    </button>
+
+                  </td>
+                  <td style="text-align: left;">
+                    <input type="checkbox" class="form-check-input" id="checkbox_{{product.configurationId}}"
+                      [disabled]="product.rowNo !==1" (change)="onDeleteSelected(product.configurationId)"
+                      [title]="!showActiveProcesses ? 'Enable' : 'Disable'">
+                    </td>
+                    <td>
+                      <div>
+
+                        {{ product.processName }}{{ product.multiSheet && product.tabName && product.tabName.trim() !== '' ? '
+                        - ' + product.tabName : '' }}
+                        <!-- <div class="tooltiptext title">
+                        <p class="mb-1"><strong>Process Name:</strong> {{ product.processName }}</p>
+                        <p class="mb-0"><strong>Process Description:</strong> {{product.description}}</p>
+                      </div> -->
+                    </div>
+                  </td>
+                  <td>
+                    <div class="text-description-container" [class.expanded]="expandedTd === rowIndex"
+                      (click)="toggleText(rowIndex)">
+
+
+                      @if (expandedTd !== rowIndex) {
+                        <span>{{product.description | slice:0:100}}</span>
+                      }
+                      @if (expandedTd === rowIndex) {
+                        <span>{{product.description}}</span>
+                      }
+
+                    </div>
+
+
+                  </td>
+                  <td>
+                    <div>{{ product.processTypeName }}
+                      <!-- <div class="tooltiptext title">
+                      <p class="mb-1"><strong>Process Name:</strong> {{ product.processName }}</p>
+                      <p class="mb-0"><strong>Process Description:</strong> {{product.description}}</p>
+                    </div> -->
+                  </div>
+                </td>
+                <td>
+                  <div>{{ product.regionName }}
+                    <!-- <div class="tooltiptext title">
+                    <p class="mb-1"><strong>Process Name:</strong> {{ product.processName }}</p>
+                    <p class="mb-0"><strong>Process Description:</strong> {{product.description}}</p>
+                  </div> -->
+                </div>
+              </td>
+              <td>
+                <div>{{ product.subRegionName }}
+                  <!-- <div class="tooltiptext title">
+                  <p class="mb-1"><strong>Process Name:</strong> {{ product.processName }}</p>
+                  <p class="mb-0"><strong>Process Description:</strong> {{product.description}}</p>
+                </div> -->
+              </div>
+            </td>
+            <td>
+              <div>{{ product.clientName }}
+                <!-- <div class="tooltiptext title">
+                <p class="mb-1"><strong>Process Name:</strong> {{ product.processName }}</p>
+                <p class="mb-0"><strong>Process Description:</strong> {{product.description}}</p>
+              </div> -->
+            </div>
+          </td>
+          <td>
+            <div>{{ product.ingestionType }}
+              <!-- <div class="tooltiptext title">
+              <p class="mb-1"><strong>Process Name:</strong> {{ product.processName }}</p>
+              <p class="mb-0"><strong>Process Description:</strong> {{product.description}}</p>
+            </div> -->
+          </div>
+        </td>
+      </tr>
+      @if (product.configurationId == fileConfigurationId && product.tabName == tabName) {
+        <tr style="background-color:transparent;"
+          >
+          <td colspan="9">
+            <fieldset class="border rounded-3 p-3">
+              <legend class="float-none w-auto px-2 f-14 text-primary"><strong>Details</strong></legend>
+              {{product.dataSource}}
+              <table>
+                @if (product.ingestionTypeId !== DataSourceTypes.LandingLayer) {
+                  <tr>
+                    <td>Key Columns </td>
+                    <td colspan="2"><textarea disabled class="form-control"
+                    [value]="configurationDetails?.fileConfigurationDetails[0]?.keyColumnList"></textarea></td>
+                    <td class="w-cust">Column Names</td>
+                    <td colspan="2">
+                      <textarea class="form-control" disabled
+                      [value]="configurationDetails?.fileConfigurationDetails[0]?.columnNameList"></textarea>
+                    </td>
+                  </tr>
+                }
+                <tr></tr>
+                <!-- <tr><td colspan="2">Database: {{configurationDetails?.configurationTableMappingDetails[0]?.databaseName}}</td><td></td>
+              </tr> -->
+              <tr>
+                <td colspan="6">Email: {{configurationDetails?.sender_communication_email}}</td>
+              </tr>
+              <tr>
+                <td colspan="3"> Updated Date: {{ product.updatedOn?.split(" ")[0] }}</td>
+                <td colspan="3"> Updated By: {{ product.updatedBy }}</td>
+              </tr>
+              <tr>
+                <td colspan="3"> Created Date: {{ product.createdDate.split(" ")[0] }}</td>
+                <td colspan="3"> Created By: {{ product.createdBy }}</td>
+              </tr>
+            </table>
+          </fieldset>
+        </td>
+      </tr>
+    }
+    @if (product.configurationId == fileConfigurationId && product.tabName == tabName) {
+      <tr style="background-color:transparent;"
+        >
+        <td colspan="9">
+          <fieldset class="border rounded-3 p-3">
+            <legend class="float-none w-auto px-2 f-14 text-primary">File Configuration</legend>
+            @if (configurationDetails?.dataSource !== DataSourceTypes.LandingLayer) {
+              <table>
+                <tr>
+                  <td class="w-cust">Delimiter:
+                    <b>{{configurationDetails?.fileConfigurationDetails[0]?.delimiter}}</b>
+                  </td>
+                  <td class="w-cust">Quote Character:
+                    <b>{{configurationDetails?.fileConfigurationDetails[0]?.quoteCharacter}}</b>
+                  </td>
+                  <td class="w-cust">Header Provided: <input class="form-check-input" disabled type="checkbox"
+                  [checked]="configurationDetails?.fileConfigurationDetails[0]?.isHeaderProvided"></td>
+                  <td class="w-cust">Skip Header Rows:
+                    <b>{{configurationDetails?.fileConfigurationDetails[0]?.skipRows}}</b>
+                  </td>
+                  <td class="w-cust">Skip Footer Rows:
+                    <b>{{configurationDetails?.fileConfigurationDetails[0]?.skipFooterRows}}</b>
+                  </td>
+                  <td class="w-cust">Ignore Duplicate Rows: <input class="form-check-input" disabled type="checkbox"
+                    [checked]="configurationDetails?.fileConfigurationDetails[0]?.ignoreDuplicateRows">
+                    By: <b>{{configurationDetails?.fileConfigurationDetails[0]?.keepFirstRow == true ? 'asc':
+                  'desc'}}</b>
+                  &nbsp;&nbsp;Do not Archive: <input class="form-check-input" disabled type="checkbox"
+                  [checked]="configurationDetails?.fileConfigurationDetails[0]?.doNotArchiveFile">
+                </td>
+              </tr>
+              <tr>
+                <td>Convert Spanish to English Characters: <input class="form-check-input" type="checkbox"
+                disabled [checked]="configurationDetails?.fileConfigurationDetails[0]?.spanishToEnglish"></td>
+                <td class="w-cust">Use Roman Numerals Only: <input class="form-check-input" type="checkbox"
+                  disabled [checked]="configurationDetails?.fileConfigurationDetails[0]?.romanNumeralsOnly">
+                </td>
+              </tr>
+            </table>
+          }
+          @if (configurationDetails?.dataSource == DataSourceTypes.LandingLayer) {
+            <div>Validation Criteria:</div>
+            <table>
+              <tr>
+                <td>Extension : {{fileNameExtensionDisplay}}</td>
+              </tr>
+              <tr>
+                <td>Regex :
+                  <ol style="margin:0l; padding-left:18px;">
+                    @for (regex of landingLayerRegexDisplay; track regex) {
+                      <li>
+                        <strong>{{regex.regex}}</strong> - {{regex.description}}
+                      </li>
+                    }
+                  </ol>
+                </td>
+              </tr>
+            </table>
+            <div>Naming Convention:</div>
+            <table>
+              <tr>
+                <td>Prefix : {{configurationDetails.fileConfigurationDetails[0]?.landingLayerPrefix || 'None'}}</td>
+                <td>Date : {{dateFormatDisplay}}</td>
+                <td>Time : {{timeFormatDisplay}}</td>
+              </tr>
+            </table>
+          }
+        </fieldset>
+      </td>
+    </tr>
+  }
+  @if (product.configurationId == fileConfigurationId && product.tabName == tabName) {
+    <tr style="background-color:transparent;"
+      >
+      <td colspan="9">
+        <fieldset class="border rounded-3 p-3">
+          <legend class="float-none w-auto px-2 f-14 text-primary">
+            {{ configurationDetails?.dataSource == 1 ?
+          'Database Settings' : 'Destination Settings' }}</legend>
+          <table>
+            @if (configurationDetails?.dataSource == 2) {
+              <tr>
+                <td class="w-cust">Storage Account: {{configurationDetails?.deltaStorageAccountName}}</td>
+                <td class="w-cust">Container: {{configurationDetails?.deltaContainerName}}</td>
+                <td class="w-cust">Lineage Path: {{configurationDetails?.deltaSource}}</td>
+              </tr>
+            }
+            <tr>
+              <td class="w-cust">{{configurationDetails?.dataSource == 1 ? 'Database' : 'Destination'}}:
+                <!-- {{configurationDetails?.configurationTableMappingDetails[0]?.databaseName}} -->
+                {{configurationDetails?.deltaStorageAccountName}}
+              </td>
+              @if (configurationDetails?.dataSource !== DataSourceTypes.LandingLayer) {
+                <td class="w-cust">
+                  Table: {{configurationDetails?.configurationTableMappingDetails[0]?.tableName}}
+                </td>
+              }
+              @if (configurationDetails?.dataSource == 2) {
+                <td class="w-cust">Job Id:
+                  {{configurationDetails?.configurationTableMappingDetails[0]?.deltaJobId}}
+                </td>
+              }
+              @if (configurationDetails?.dataSource === DataSourceTypes.LandingLayer) {
+                <td class="w-cust">Container Name: {{configurationDetails?.deltaContainerName}}</td>
+              }
+            </tr>
+            @if (configurationDetails?.dataSource === DataSourceTypes.LandingLayer) {
+              <tr>
+                <td class="w-cust">Landing Layer Path:
+                {{configurationDetails?.configurationTableMappingDetails[0]?.landingLayerAcceptedPath}}</td>
+                <td class="w-cust">Rejected Layer Path:
+                {{configurationDetails?.configurationTableMappingDetails[0]?.landingLayerRejectedPath}}</td>
+              </tr>
+            }
+            @if (configurationDetails?.dataSource !== DataSourceTypes.LandingLayer) {
+              <tr>
+                <td class="w-cust">Drop Main Table: <input class="form-check-input" type="checkbox" disabled
+                [checked]="configurationDetails?.configurationTableMappingDetails[0]?.dropMainTable"></td>
+                <!-- <td>Drop History Table: <input class="form-check-input" type="checkbox" disabled [checked]="configurationDetails?.configurationTableMappingDetails[0]?.dropHistoryTable"></td> -->
+                <td class="w-cust">Validate Schema: <input class="form-check-input" disabled type="checkbox"
+                  [checked]="configurationDetails?.configurationTableMappingDetails[0]?.validateFileSchema">
+                </td>
+                <td class="w-cust">Allow Overwrite(DB): <input class="form-check-input" type="checkbox" disabled
+                [checked]="configurationDetails?.configurationTableMappingDetails[0]?.mergeData"></td>
+                <td class="w-cust">Save Overwrite Log: <input class="form-check-input" type="checkbox" disabled
+                  [checked]="configurationDetails?.configurationTableMappingDetails[0]?.createHistoryTable">
+                </td>
+              </tr>
+            }
+          </table>
+        </fieldset>
+      </td>
+    </tr>
+  }
+  @if (product.configurationId == fileConfigurationId && configurationDetails?.processTypeId != 1 && product.tabName == tabName) {
+    <tr style="background-color:transparent;"
+      >
+      <td colspan="9">
+        <fieldset class="border rounded-3 p-3">
+          <legend class="float-none w-auto px-2 f-14 text-primary">Scheduler Configuration</legend>
+          <table>
+            @if (configurationDetails?.processTypeId == 3) {
+              <tr>
+                <td colspan="2">
+                  Storage Account: <b> {{configurationDetails?.blobStorageAccountName}}</b></td>
+                  <td colspan="2">
+                    Container Name: <b>{{configurationDetails?.blobStorageContainerName}}</b></td>
+                    <td colspan="2">
+                      Source: <b>{{configurationDetails?.sourcePath}}</b>
+                    </td>
+                  </tr>
+                }
+                @if (configurationDetails?.processTypeId == sharePointProcessTypeId) {
+                  <tr>
+                    <td colspan="2">
+                      {{ spListDetail.application }} <b>{{configurationDetails?.sharePointApplicationName || configurationDetails?.sharePointApplicationId}}</b></td>
+                    <td colspan="2">
+                      {{ spListDetail.site }} <b>{{configurationDetails?.sharePointSiteName || configurationDetails?.sharePointApplicationSiteId}}</b></td>
+                    <td colspan="2">
+                      {{ spListDetail.library }} <b>{{configurationDetails?.sharePointLibraryName}}</b></td>
+                  </tr>
+                  <tr>
+                    <td colspan="6">
+                      {{ spListDetail.folder }} <b>{{configurationDetails?.sharePointFolderPath || configurationDetails?.sourcePath}}</b>
+                    </td>
+                  </tr>
+                }
+                @if (configurationDetails?.processTypeId == 2) {
+                  <tr>
+                    <td colspan="2">
+                      Server: <b>{{configurationDetails?.sharedServerName}}</b></td>
+                      <td colspan="2">
+                        Base Folder: <b>{{configurationDetails?.folderName}}</b></td>
+                        <td colspan="2">
+                          Source: <b>{{configurationDetails?.sourcePath}}</b>
+                        </td>
+                      </tr>
+                    }
+                    @if (configurationDetails?.processTypeId != 1) {
+                      <tr>
+                        <td colspan="2">
+                          Scheduler Type: <b>{{configurationDetails?.schedulerType}}</b></td>
+                          <td colspan="2">
+                            Date: <b>{{configurationDetails?.scheduleStartDate}}</b></td>
+                            <td colspan="2">
+                              Time: <b>{{configurationDetails?.scheduleStartTime}}</b>
+                            </td>
+                          </tr>
+                        }
+                      </table>
+                    </fieldset>
+                  </td>
+                </tr>
+              }
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="13" class="text-center">
+                  <img src="no-data-found.svg" class="no-data" />
+                  <h3 class="pb-2">No Data Found!</h3>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+        <div class="mt-md">
+          <p-paginator (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows" [totalRecords]="totalRecords"
+            [showCurrentPageReport]="true" [showPageLinks]="true" [showJumpToPageDropdown]="false"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+            [rowsPerPageOptions]="[20, 50, 100]" />
+          </div>
+        </div>
+      </div>
+
+      <!------------------------------------------------------------------------------->
+      <!----------------------------Process Configuration------------------------------>
+      <!------------------------------------------------------------------------------->
+      <!-- {{isNewProcess}} -->
+      <!-- <div id="modifySettings" [ngClass]="{ 'slide-left open': modifySettings === true }">
+      <div class="panel-header">
+        <div class="page-title">Modify Process Configuration</div>
+        <i class="material-icons-round close-icon" data-bs-dismiss="modal" aria-label="Close"
+        (click)="modifySettingsClose()">close</i>
+      </div>
+
+      <app-process-configuration class="panel-config">
+      </app-process-configuration>
+    </div> -->
+
+
+
+
+
+  </div>
+
+
+
+  <!-- Modal -->
+  <div class="modal fade" id="staticBackdropConfirm" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="staticBackdropLabel">DataIngestion - Delete Process</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to disable this process?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>

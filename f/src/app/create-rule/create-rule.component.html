@@ -1,0 +1,468 @@
+<form class="config-form h-100" [formGroup]="ruleCreationFormGroup" (submit)="onSubmit()">
+
+
+  <div class="row validation-rule-setting h-100">
+    <div class="col-sm-6 h-100 h-auto">
+      <div>
+        <label for="ruleType" class="form-label">Rule <b class="text-danger">*</b></label>
+        <!-- -->
+        <ng-select formControlName="ruleType" placeholder="Select Rule" [multiple]="false" [clearable]="false"
+          [items]="rulesTypes" (change)="onRuleTypeChange($event)" [loading]="isRuleTypesLoading"
+          bindLabel="ruleTypeName" bindValue="ruleTypeId" [groupBy]="'category'">
+          <!-- <ng-template ng-option-tmp let-item="item">
+          - {{ item.ruleTypeName }}
+        </ng-template> -->
+        <ng-template ng-optgroup-tmp let-item="item">
+          <div style="text-align:left; font-weight:bold; padding-left:8px;" class="categoryColor">
+            {{ item.category }}
+          </div>
+        </ng-template>
+      </ng-select>
+    </div>
+    @if (ruleCreationFormGroup.get('ruleType').value === RuleTypes.Format || ruleCreationFormGroup.get('ruleType').value === RuleTypes.Value) {
+      <div
+        >
+        <label for="subRuleType" class="form-label">Sub-Rule <b class="text-danger">*</b></label>
+        <ng-select formControlName="subRuleType" placeholder="Select Sub-Rule" [multiple]="false"
+          bindValue="subRuleId" bindLabel="subRuleName" [items]="subRules" [loading]="isSubRuleTypesLoading"
+          placeholder="Select Sub-Rule" [clearable]="false" (change)="onSubRuleTypeChange($event)">
+        </ng-select>
+        @if (ruleCreationFormGroup.get('ruleType')?.value === RuleTypes.Format && ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.Pattern) {
+          <div
+            >
+            <label for="patternType" class="form-label">Patterns <b class="text-danger">*</b></label>
+            <ng-select formControlName="patternType" placeholder="Select Pattern" [multiple]="false"
+              [clearable]="false" [items]="patterns" bindValue="patternId" bindLabel="patternName"
+              [loading]="isPatternTypesLoading">
+            </ng-select>
+          </div>
+        }
+        @if (ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.Numeric
+          || ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.Length
+          || ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.Comparison) {
+          <div>
+            <label for="conditionType" class="form-label">Condition <b class="text-danger">*</b></label>
+            <ng-select formControlName="conditionType" placeholder="Select Conditional Operator"
+              [multiple]="false" bindValue="conditionalOperatorId" bindLabel="conditionalOperatorName"
+              [items]="conditionalOperators" [clearable]="false">
+            </ng-select>
+          </div>
+        }
+        @if (ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.Length
+          || ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.Numeric) {
+          <div>
+            <label for="formatType" class="form-label">{{selectedSubRule}} <b class="text-danger">*</b></label>
+            <input type="text" class="form-control" id="formatType" formControlName="formatType"
+              (change)="enableBtnCreateRule()" maxlength="100" [placeholder]="'Enter ' + selectedSubRule"
+              appDecimalFourPlaces>
+            </div>
+          }
+          @if (ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.ExactMatch) {
+            <div>
+              <label for="formatType" class="form-label">{{selectedSubRule}} <b class="text-danger">*</b></label>
+              <input type="text" class="form-control" id="formatType" formControlName="formatType"
+                (change)="enableBtnCreateRule()" maxlength="100" [placeholder]="'Enter ' + selectedSubRule">
+              </div>
+            }
+            @if (ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.NumericRange) {
+              <div>
+                <label for="fromValue" class="form-label">
+                  From
+                  <b class="text-danger">*</b></label>
+                  <input type="text" class="form-control" id="fromValue" formControlName="fromValue" maxlength="100"
+                    [placeholder]="'Enter ' + selectedSubRule" appDecimalFourPlaces>
+                  </div>
+                }
+                @if (ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.NumericRange) {
+                  <div>
+                    <label for="toValue" class="form-label">To
+                      <b class="text-danger">*</b></label>
+                      <input type="text" class="form-control" id="toValue" formControlName="toValue" maxlength="100"
+                        [placeholder]="'Enter ' + selectedSubRule" appDecimalFourPlaces>
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (ruleCreationFormGroup.get('ruleType')?.value === RuleTypes.Custom) {
+                  <div>
+                    <label for="aiPrompt" class="form-label">
+                      Enter Prompt
+                      <b class="text-danger">*</b>
+                    </label>
+                    <!-- <input type="text" class="form-control" id="aiPrompt" placeholder="Enter Prompt"
+                    formControlName="aiPrompt" maxlength="1000" > -->
+                    @if (pageName === PageNames.Generic_RuleList) {
+                      <textarea #txtareaAiPrompt formControlName="aiPrompt" class="form-control" rows="5" cols="50"
+                        placeholder="Enter your custom rule here"
+                      ></textarea>
+                    }
+                    @if (pageName === PageNames.Offline_Process) {
+                      <div style="position: relative;">
+                        <textarea #txtareaAiPrompt formControlName="aiPrompt" class="form-control"
+                          (input)="onCustomColumnNameChange($event)" rows="5" cols="50"
+                          placeholder="Type @ to mention column names"
+                        (keydown)="onKeyDownCustomColumnName($event)"></textarea>
+                        @if (suggestions.length > 0) {
+                          <ul class="suggestions"
+                            [ngStyle]="{ top: caretTop + 'px', left: caretLeft + 'px' }">
+                            @for (suggestion of suggestions; track suggestion; let i = $index) {
+                              <li
+                                (mousedown)="selectSuggestion(suggestion)" [class.active]="i === activeSuggestionIndex">
+                                {{ suggestion }}
+                              </li>
+                            }
+                          </ul>
+                        }
+                      </div>
+                    }
+                    <div class="note mt-2">
+                      The custom rules will be generated by artificial intelligence and may not always be perfect.
+                    </div>
+                  </div>
+                }
+
+                @if (ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.Custom
+                  && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.GenericRules
+                  && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.BEValidation) {
+                  <div>
+                    <label for="columnNames" class="form-label">Column Name <b class="text-danger">*</b></label>
+                    @if (columnNames.length > 0) {
+                      <ng-select [items]="availableColumns1" [clearable]="false"
+                        bindLabel="columnName" bindValue="columnName" placeholder="Select Column Name"
+                        [multiple]="setRuleColumnToMultiple()" formControlName="columnNames"
+                        [loading]="isColumnNameLoading" (change)="onColumnNameChange($event,'columnNames')">
+                      </ng-select>
+                    }
+                    <!-- <input type="text" class="form-control" id="columnNames" formControlName="columnNames"> -->
+                    @if (columnNames.length === 0) {
+                      <textarea id="columnNames" formControlName="columnNames"
+                        class="form-control" (change)="onColumnNameChange($event, 'columnNames')" rows="5" cols="50"
+                      placeholder="Enter column names" (keydown.enter)="$event.preventDefault()"></textarea>
+                    }
+                    @if (pageName === PageNames.Generic_RuleList && ruleCreationFormGroup.get('subRuleType')?.value != SubRuleTypes.Comparison) {
+                      <div class="note mt-2"
+                        >
+                        Column names should be comma separated
+                      </div>
+                    }
+                    @if (hasError('columnNames', 'required')) {
+                      <div class="text-danger">
+                        Column Name is required.
+                      </div>
+                    }
+                    @if (hasError('columnNames', 'pattern')) {
+                      <div class="text-danger">
+                        Only One Column Name is required for this rule type.
+                      </div>
+                    }
+                    @if (ruleCreationFormGroup.hasError('columnNamesNotUnique') && ruleCreationFormGroup.dirty) {
+                      <div
+                        class="text-danger">
+                        Column Name should be unique.
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.Custom && ruleCreationFormGroup.get('subRuleType')?.value === SubRuleTypes.Comparison) {
+                  <div
+                    >
+                    <label for="ruleColumnName2" class="form-label">Column Name B <b class="text-danger">*</b></label>
+                    @if (columnNames.length > 0) {
+                      <ng-select [items]="availableColumns2" [clearable]="false"
+                        bindLabel="columnName" bindValue="columnName" placeholder="Select Column Name"
+                        [multiple]="setRuleColumnToMultiple()" formControlName="columnNames2"
+                      [loading]="isColumnNameLoading"></ng-select>
+                    }
+                    <!-- <input type="text" class="form-control" id="columnNames" formControlName="columnNames"> -->
+                    @if (columnNames.length === 0) {
+                      <textarea id="columnNames2" formControlName="columnNames2"
+                        class="form-control" (change)="onColumnNameChange($event, 'columnNames2')" rows="5" cols="50"
+                      placeholder="Enter column names" (keydown.enter)="$event.preventDefault()"></textarea>
+                    }
+                    @if (pageName === PageNames.Generic_RuleList && ruleCreationFormGroup.get('subRuleType')?.value != SubRuleTypes.Comparison) {
+                      <div class="note"
+                        >
+                        Column names should be comma separated
+                      </div>
+                    }
+                    @if (hasError('columnNames2', 'required')) {
+                      <div class="text-danger">
+                        Column Name is required.
+                      </div>
+                    }
+                    @if (hasError('columnNames2', 'pattern')) {
+                      <div class="text-danger">
+                        Only One Column Name is required for this rule type.
+                      </div>
+                    }
+                    @if (ruleCreationFormGroup.hasError('columnNamesNotUnique') && ruleCreationFormGroup.dirty) {
+                      <div
+                        class="text-danger">
+                        Column Name should be unique.
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (ruleCreationFormGroup.get('ruleType')?.value === RuleTypes.BEValidation) {
+                  <div class="mb-3">
+                    <label for="spName" class="form-label">
+                      Stored Procedure Name
+                      <b class="text-danger">*</b>
+                    </label>
+                    <ng-select formControlName="spName" placeholder="Select SP Name" bindLabel="spName" [items]="spNames"
+                      bindValue="spNameId" [clearable]="false" [loading]="isSPNamesLoading" [multiple]="false">
+                    </ng-select>
+                  </div>
+                }
+
+                @if (ruleCreationFormGroup.get('ruleType')?.value === RuleTypes.GenericRules) {
+                  <div>
+                    <label for="aiPrompt" class="form-label">
+                      Generic Rules
+                      <b class="text-danger">*</b>
+                    </label>
+                    <!-- (change)="onChangeRuleSetNames($event)" -->
+                    <ng-select formControlName="ruleSetNames" placeholder="Select A Validation Rule" [multiple]="false"
+                      [clearable]="false" [items]="ruleSetNames" bindValue="ruleSetNameId" bindLabel="ruleSetName"
+                      (search)="onSearchRuleSetName($event.term)" [loading]="isgetRuleSetBySecGrpIdsLoading" (clear)="onClearRuleSetNames()"
+                      [clearable]="true" [compareWith]="fnCompareWithRuleSetNames">
+                    </ng-select>
+                  </div>
+                }
+
+                <!-- check why this was commented -->
+                <!-- <div class="d-none" *ngIf="ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.Custom">
+                <label for="ruleColumnName" class="form-label">Column Name <b class="text-danger">*</b></label>
+                <textarea name="columnNames" class="form-control" id="columnNames" formControlName="columnNames"
+                (change)="onColumnNameChange($event)"></textarea>
+              </div> -->
+
+
+
+              @if (ruleCreationFormGroup.get('ruleType')?.value
+                && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.Custom
+                && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.Value
+                && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.Format
+                && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.GenericRules
+                && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.BEValidation) {
+                <div class="d-flex mt-3 align-items-center">
+                  <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                    formControlName="isCombinationRule">
+                    <label class="form-label mb-0">Combination</label>
+                  </div>
+                }
+
+                @if (ruleCreationFormGroup.get('ruleType')?.value
+                  && (ruleCreationFormGroup.get('ruleType')?.value === RuleTypes.Format
+                  || ruleCreationFormGroup.get('ruleType')?.value === RuleTypes.Value)) {
+                  <div class="mb-3 col-sm-6 d-flex align-items-center">
+                    <input class="form-check-input mt-0 me-2" type="checkbox" value="" aria-label=""
+                      formControlName="isAllowNullOrEmptySpaces">
+                      <label class="form-label mb-0">Allow Null or Empty Spaces</label>
+                    </div>
+                  }
+
+                  <div class="mb-3 mt-3 text-end float-end">
+                    <!-- && ruleCreationFormGroup.get('ruleType')?.value !== RuleTypes.Custom -->
+                    @if (existingRuleId === 0 ) {
+                      <input type="button" class="btn btn-primary me-2" value="Create Rule" (click)="onAddRule()"
+                        [disabled]="enableBtnCreateRule()">
+                    }
+                    <!-- <button type="button" class="btn btn-primary me-2"
+                    style="position: relative"
+                    value="Generate Rule" (click)="onGenerateCustomRule()"
+                    *ngIf="existingRuleId === 0 && !customRuleGenerated && ruleCreationFormGroup.get('ruleType')?.value === RuleTypes.Custom"
+                    [disabled]="enableBtnCreateRule()">
+                    <span>{{ isGeneratingCustomRule ? 'Generating Rule' : 'Generate Rule'}}</span>
+                    <div class="spinner ml-4" *ngIf="isGeneratingCustomRule"></div>
+                  </button> -->
+                  @if (existingRuleId !== 0) {
+                    <input type="button" class="btn btn-primary me-2" value="Update Rule"
+                      (click)="onEditRule(existingRuleId)" [disabled]="enableBtnCreateRule()">
+                  }
+                  @if (ruleCreationFormGroup.get('ruleType')?.value) {
+                    <input type="button" class="btn btn-primary"
+                      value="Cancel" (click)="onResetRule()">
+                  }
+                </div>
+
+
+
+
+              </div>
+
+              <div class="col-sm-6 h-100">
+                <div class="r-section">
+                  <div class="flex-str">
+                    <div class="h-100">
+                      <div class="col-sm-12 textbox-wrapper">
+                        <label for="" class="form-label">
+                          Rule Set Name<span class="text-danger">*</span>
+                        </label>
+
+                        <div class="position-relative">
+                          <div class="input-group">
+                            @if (!isEditing) {
+                              <span class="input-group-text" id="basic-addon1">RSN_</span>
+                            }
+                            <input type="text" placeholder="Enter rule set name" class="form-control"
+                              formControlName="ruleSetName" maxlength="100" [readOnly]="isCheckingName"
+                              (blur)="onRuleSetNameChange($event)" />
+                            </div>
+                            @if (isCheckingName) {
+                              <div class="spinner"></div>
+                            }
+                          </div>
+
+                          @if (hasError('ruleSetName', 'required')) {
+                            <div class="text-danger">
+                              Rule Set Name is required.
+                            </div>
+                          }
+                          @if (ruleCreationFormGroup.get('ruleSetName')?.errors && ruleCreationFormGroup.get('ruleSetName')?.errors?.['ruleSetNameExist']) {
+                            <div
+                              class="text-danger">
+                              Rule Set Name already exists.
+                            </div>
+                          }
+                        </div>
+                        <div class="col-sm-12">
+                          <label for="" class="form-label mt-2">
+                            Rule Set Description <!-- <span class="text-danger">*</span> -->
+                          </label>
+                          <!-- <input type="text" placeholder="Enter rule set description" class="form-control"
+                          formControlName="description"> -->
+
+                          <textarea formControlName="description" class="form-control" rows="5" cols="50"
+                            maxlength="1001" placeholder="Enter rule set description"
+                          formControlName="description"></textarea>
+
+                          @if (hasError('description', 'maxlength')) {
+                            <div class="text-danger">
+                              Description length should not exceed 1000 characters
+                            </div>
+                          }
+
+                          @if (hasError('description', 'pattern')) {
+                            <div class="text-danger">
+                              Only alphanumeric, spaces and ',._' are allowed
+                            </div>
+                          }
+
+                        </div>
+
+                        <!-- <div class="mt-3 col-sm-12" *ngIf="pageName === PageNames.Offline_Process">
+                        <label for="" class="form-label mb-3">
+                          Existing Rule Sets
+                        </label>
+                        <ng-select formControlName="ruleSetNames" placeholder="Select A Validation Rule"
+                          [multiple]="true" [clearable]="false" [items]="ruleSetNames" bindValue="ruleSetNameId"
+                          bindLabel="ruleSetName" (change)="onChangeRuleSetNames($event)"
+                          (search)="onSearchRuleSetName($event.term)" [loading]="isgetRuleSetBySecGrpIdsLoading"
+                          [clearable]="true" [compareWith]="fnCompareWithRuleSetNames">
+                        </ng-select>
+                      </div> -->
+
+                      @if (pageName === PageNames.Generic_RuleList) {
+                        <div class="d-flex mt-3 align-items-center">
+                          <input class="form-check-input mt-0 me-2" type="checkbox" aria-label=""
+                            formControlName="isGlobal">
+                            <label class="form-check-label" for="genericRadio">Set to Global</label>
+                          </div>
+                        }
+
+                        <div class="row mt-3">
+                          <div class="col-sm-12">
+                            <label class="form-label ps-2">Total no. of Rules: <span
+                            class="text-blue">{{getTotalCountOfRules()}}</span></label>
+                          </div>
+                        </div>
+
+                        @if (excelFileRule.length > 0) {
+                          <div class="rulesetarea rulesetarea-grey mt-3">
+                            <!-- <label class="form-label p-2 mb-0">Total no of Rules: <span
+                          class="text-primary">{{getTotalCountOfRules()}}</span></label> -->
+                          <!-- cdkDropList (cdkDropListDropped)="drop($event)" -->
+                          <ul class="ruleset">
+                            @for (rule of activeRules; track rule; let i = $index) {
+                              <!-- cdkDrag -->
+                              @if (rule.isActive) {
+                                <li>
+                                  <div class="individual-ruleset">
+                                    <div class="ruleset-name">
+                                      <!-- <span class="material-symbols-outlined draggable-row">
+                                      drag_handle
+                                    </span> -->
+                                    <span class="me-2">{{i+1}})</span>
+                                    <div class="text-description-container"
+                                      [class.text-danger]="rule.isIrrelevant">
+                                      <!-- <span *ngIf="expandedTd !== i"
+                                      [title]="rule.ruleDescription">{{(rule.ruleDescription | slice:0:20)
+                                      +
+                                    '...'}}</span> -->
+                                    <span [title]="rule.ruleDescription" class="f-13 word-break"
+                                      [ngStyle]="!rule.isActive ? {'text-decoration' : 'line-through'} : {}">
+                                      @if ((rule.ruleSetType === 2 || rule.isGlobal) && pageName === PageNames.Offline_Process) {
+                                        <span class="material-symbols-outlined" style="font-size: 16px;"
+                                          >
+                                          public
+                                        </span>
+                                      }
+                                      @if (rule.ruleTypeId === 6) {
+                                        <span class="material-symbols-outlined" style="font-size: 16px;"
+                                          >
+                                          database
+                                        </span>
+                                      }
+                                      {{rule.ruleDescription}}
+                                    </span>
+                                    <!-- <span class="f-13 no-wrap" [title]="rule.ruleDescription"
+                                  [innerHTML]="rule.ruleDescription"></span> -->
+                                </div>
+                              </div>
+                              <div class="ruleset-action">
+                                <!-- [ngStyle]="processConfigurationForm.get('ruleSetNames')?.value ? {} : {'cursor': 'pointer'}" -->
+                                <span class="material-icons-round text-primary cursor-pointer"
+                                  [ngStyle]="(rule.ruleSetType === 2 || rule.isGlobal) ? {} : {'cursor' : 'pointer'}"
+                                  (click)="(pageName === PageNames.Offline_Process) && (rule.ruleSetType === 2 || rule.isGlobal) ? null : editRule(rule.id)"
+                                data-toggle="tooltip" title="Edit">edit</span>
+                                @if (rule.isActive) {
+                                  <span class="material-icons-round text-danger cursor-pointer"
+                                    (click)="removeRule(rule.id)" data-toggle="tooltip" title="Remove"
+                                  >delete</span>
+                                }
+                                @if (!rule.isActive) {
+                                  <span class="material-symbols-outlined" data-toggle="tooltip"
+                                    title="Restore" (click)="onRestore(rule.id)">
+                                    restore_from_trash
+                                  </span>
+                                }
+                              </div>
+                            </div>
+                          </li>
+                        }
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+
+              <div>
+                <div class="col-sm-12 mt-3 mb-3 text-end float-end">
+                  <button class="btn btn-primary me-2" type="submit"
+                    [disabled]="isCheckingName || getTotalCountOfRules() === 0 || ruleCreationFormGroup.invalid">{{isEditing
+                    ?
+                  'Update' : 'Save'}}</button>
+                  <button class="btn btn-primary" type="button" (click)="onCancel()">Cancel</button>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>

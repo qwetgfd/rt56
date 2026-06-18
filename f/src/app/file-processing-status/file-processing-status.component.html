@@ -1,0 +1,220 @@
+<div id="processFilePage">
+  <div class="page-title">File Processing Status</div>
+
+  <div class="page-card col-xl-10">
+    @for (client of fileUploadStatusView; track client) {
+      <div class="file-process-list">
+        <div class="process-list">
+          @if (client.children && client.children.length) {
+            <div class="process-title"
+              (click)="clientToggleNode(client)">
+              <div class="contol">{{ client.collapsed ? "-" : "+" }}</div>
+              <div>
+                <b>{{ client.text }}</b>
+              </div>
+            </div>
+          }
+          @if (client.collapsed && client.children) {
+            <ul>
+              @for (item of client.children; track item) {
+                <div class="file-process-list">
+                  <div class="process-list">
+                    @if (item.children && item.text != '') {
+                      <div class="process-title" (click)="toggleNode(item)">
+                        <div class="contol">{{ item.collapsed ? "-" : "+" }}</div>
+                        <div>{{ item.text }} </div>
+                      </div>
+                    }
+                    @if (item.collapsed && item.children) {
+                      <ul class="mb-0 ps-0 pb-4">
+                        @for (child of item.children; track child; let i = $index) {
+                          @if (child.text != '') {
+                            <div [id]="child.value.tabName"  class="file-card">
+                              <div class="file-summary d-flex align-items-center">
+                                <div class="d-flex block">
+                          <div [ngClass]="{
+                              fileIconSuccess: child.value.fileProcessstatusName == 'Processed' || child.value.fileProcessstatusName == 'PartiallyCompleted',
+                              fileIcon:
+                                child.value.fileProcessstatusName ==
+                                'Processing',
+                              fileIconDanger:
+                                child.value.fileProcessstatusName == 'Error' ,
+                              fileIconStarted:
+                                child.value.fileProcessstatusName ==
+                                'Stopped Processing - Error multiple times'
+                            }">
+                            <div class="loaderA" [ngClass]="{
+                              'd-none': child.value.fileProcessstatusName == 'Processed' || child.value.fileProcessstatusName == 'PartiallyCompleted', 
+                              'd-none-error':
+                                child.value.fileProcessstatusName == 'Error',
+                              'd-none-start':
+                                child.value.fileProcessstatusName ==
+                                'Stopped Processing - Error multiple times'
+                            }"></div>
+                           <img [src]="
+                            getFileExtension(child.value.uploadFileName)
+                          " class="file-img" />
+                                    </div>
+                                    <div class="wrap">
+                            <div class="file-name text-break mb-2" [ngClass]="{'text-success':
+                            child.value.fileProcessstatusName ==   'Processed'|| child.value.fileProcessstatusName == 'PartiallyCompleted',
+                          'text-danger':
+                            child.value.fileProcessstatusName == 'Error',
+                          'text-primary':  child.value.fileProcessstatusName == 'Processing'}">
+                                        {{ child.value.uploadFileName }}  {{child.value.tabName ? ' - ' + child.value.tabName : ''}}
+                                      </div>
+                                      <div>
+                                        @if (child.value.fileProcessstatusName != 'Processing' && child.value.uploadFileId != timeDuration?.uploadFileId) {
+                                          <div class="row"
+                                            >
+                                            <div class="col-sm-3 text-start f-12 mb-2">
+                                              <strong>Start Time:</strong><br />
+                                              {{ child.value.fileCreationDate | date : "yyyy-MM-dd HH:mm:ss" }}
+                                            </div>
+                                            @if (child.value?.completionTime && child.value?.completionTime != '0001-01-01T00:00:00') {
+                                              <div class="col-sm-3 text-start f-12 mb-2"
+                                                >
+                                                <strong>End Time:</strong><br />
+                                                {{ child.value?.completionTime | date : "yyyy-MM-dd HH:mm:ss" }}
+                                              </div>
+                                            }
+                                            <div class="col-sm-3 text-start f-12 mb-2">
+                                              <strong>Total Duration:</strong><br />{{child.value.durationInSeconds}} seconds
+                                            </div>
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12 mb-2 text-break">
+                                                <strong>DB Name:</strong><br />{{child.value.databaseName}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12 text-break">
+                                                <strong>Table Name:</strong><br />{{child.value.tableName}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12 text-break">
+                                                <strong>Tab Name:</strong><br />{{child.value.tabName}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12">
+                                                <strong>Total Records:</strong><br />{{child.value.totalRecords}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12">
+                                                <strong>Processed Records:</strong><br />{{child.value.processedRecords}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12">
+                                                <strong>Duplicate Records:</strong><br />{{child.value.duplicateRecords}}
+                                              </div>
+                                            }
+                                            <div class="col-sm-12 text-start f-12">
+                                              <strong>Description:</strong><br />{{child.value.description}}
+                                            </div>
+                                          </div>
+                                        }
+                                        <!-- <div *ngIf="child.value.fileProcessstatusName == 'Processing' "> -->
+                                        @if (child.value.uploadFileId == timeDuration?.uploadFileId &&  child.value.tabName ==timeDuration?.tabName) {
+                                          <div class="row">
+                                            <div class="col-sm-3 text-start f-12 mb-2">
+                                              <strong>Start Time:</strong><br />
+                                              {{ child.value.fileCreationDate | date : "yyyy-MM-dd HH:mm:ss" }}
+                                            </div>
+                                            @if (timeDuration?.endTime) {
+                                              <div class="col-sm-3 text-start f-12 mb-2">
+                                                <strong>End Time:</strong><br />
+                                                {{ timeDuration?.endTime | date : "yyyy-MM-dd HH:mm:ss" }}
+                                              </div>
+                                            }
+                                            <div class="col-sm-3 text-start f-12 mb-2">
+                                              <strong>Total Duration:</strong><br />{{timeDuration?.totalDuration}} seconds
+                                            </div>
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12 mb-2 text-break">
+                                                <strong>DB Name:</strong><br />{{timeDuration?.databaseName}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12 text-break">
+                                                <strong>Tab Name:</strong><br />{{child.value.tabName}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12 text-break">
+                                                <strong>Table Name:</strong><br />{{timeDuration?.tableName}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12">
+                                                <strong>Total Records:</strong><br />{{timeDuration?.totalRecords}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12">
+                                                <strong>Processed Records:</strong><br />{{timeDuration?.processedRecords}}
+                                              </div>
+                                            }
+                                            @if (child.value.fileProcessingServerTypeId != DataSourceTypes.LandingLayer) {
+                                              <div class="col-sm-3 text-start f-12">
+                                                <strong>Duplicate Records:</strong><br />{{timeDuration?.duplicateRecords}}
+                                              </div>
+                                            }
+                                            <div class="col-sm-12 text-start f-12">
+                                              <strong>Description:</strong><br />{{timeDuration?.description}}
+                                            </div>
+                                          </div>
+                                        }
+                                      <!-- </div> -->
+                                    </div>
+                                  </div>
+                                </div>
+                        <button class="btn btn-primary" (click)="
+                            getDetailedStatus(
+                              item.value,
+                              child.value.uploadFileId,
+                              child.value.tabName,
+                              child.value.fileProcessingServerTypeId
+                            )
+                          " ngbTooltip="Get Detailed Status">
+                                  <span class="material-icons d-block">
+                                    menu
+                                  </span>
+                                </button>
+                              </div>
+                      <!-- <app-process-status-template [ngClass]="{'d-none': isDetailedStatus}" *ngIf="
+                          uploadFileId != '' &&
+                          uploadFileId == child.value.uploadFileId"
+                              [configurationID]="flpConfigurationID"
+                              [fileId]="uploadFileId"
+                              [tabName]="tabName"
+                              (completionTime)="updateStatus($event)">
+                            </app-process-status-template> -->
+                            @if (uploadFileId !== '' && uploadFileId === child.value.uploadFileId && child.value.tabName===this.tabName) {
+                              <app-process-status-template
+                                [id]="'process-status-' + child.value.tabName"
+                                [ngClass]="{'d-none': isDetailedStatus}"
+                                [configurationID]="flpConfigurationID"
+                                [fileId]="uploadFileId"
+                                [tabName]="tabName"
+                                [fileProcessingServerTypeId]="child.value.fileProcessingServerTypeId"
+                                (completionTime)="updateStatus($event)">
+                              </app-process-status-template>
+                            }
+                          </div>
+                        }
+                      }
+                    </ul>
+                  }
+                </div>
+              </div>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  }
+</div>
+</div>

@@ -1,0 +1,108 @@
+.status-list-container {
+  padding: 0.5rem 0;
+}
+
+.status-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.status-list {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid #d1d5db;
+  margin-bottom: 0.25rem;
+  transition: background 0.15s;
+}
+
+.status-list:hover {
+  background: #f9fafb;
+}
+
+.status-list.completed {
+  border-left-color: #10b981;
+}
+
+.status-list.error {
+  border-left-color: #ef4444;
+}
+
+.status-list.processing {
+  border-left-color: #3b82f6;
+}
+
+.status-list.stopped {
+  border-left-color: #f59e0b;
+}
+
+.status-list.skipped {
+  border-left-color: #9ca3af;
+}
+
+.status-indi-holder {
+  flex-shrink: 0;
+  padding-top: 0.25rem;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d1d5db;
+}
+
+.completed .status-indicator {
+  background: #10b981;
+}
+
+.error .status-indicator {
+  background: #ef4444;
+}
+
+.processing .status-indicator {
+  background: #3b82f6;
+}
+
+.stopped .status-indicator {
+  background: #f59e0b;
+}
+
+.skipped .status-indicator {
+  background: #9ca3af;
+}
+
+.status {
+  flex: 1;
+  min-width: 0;
+}
+
+.status-date {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 0.2rem;
+}
+
+.status-name a {
+  color: #3b82f6;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.status-name a:hover {
+  color: #2563eb;
+}
+
+.material-symbols-outlined.sm-font {
+  font-size: 1rem;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}

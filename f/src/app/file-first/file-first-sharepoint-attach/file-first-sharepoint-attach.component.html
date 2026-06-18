@@ -1,0 +1,48 @@
+<div class="ff-attach-root">
+  @if (error) {
+    <div class="ff-error" role="alert">
+      <sp-icon name="alert" size="sm" />
+      {{ error }}
+    </div>
+  }
+
+  <div class="ff-workspace">
+    <app-sharepoint-workspace
+      [filePickMode]="true"
+      [pickFileBusy]="fileLoading"
+      (pickFile)="useSelectedFile()"
+      (viewerOpenChange)="onViewerOpenChange($event)"
+      (navigateHome)="goBack()"
+      (navigateApplications)="goBack()">
+    </app-sharepoint-workspace>
+  </div>
+
+  @if (hasFileSelected && !viewerOpen) {
+    <div class="ff-selection">
+      <div class="ff-selection__inner">
+        <div class="ff-selection__info">
+          <sp-icon name="file" size="sm" />
+          <div class="ff-selection__details">
+            <span class="ff-selection__name">{{ selectedItem!.name }}</span>
+            <span class="ff-selection__meta">
+              {{ formatSize(selectedItem!.size) }}
+              @if (selectedItem!.lastModifiedDateTime) {
+                <span>&middot; {{ selectedItem!.lastModifiedDateTime | date:'MMM d, y' }}</span>
+              }
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="ff-selection__btn"
+          (click)="useSelectedFile()"
+          [disabled]="fileLoading">
+          @if (fileLoading) {
+            <span class="ff-btn-spinner" aria-hidden="true"></span>
+          }
+          {{ fileLoading ? m.downloading : m.selectFile }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

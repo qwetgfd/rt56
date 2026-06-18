@@ -1,0 +1,153 @@
+<div id="topBar">
+  <div class="top-left">
+    <button class="menu" (click)="menu()"><i class="material-icons-round">menu</i></button>
+    <a routerLink="/dashboard" routerLinkActive="active"><img class="w-30" src="logo.png" /></a>
+    <a routerLink="/dashboard" routerLinkActive="active"><img class="logo" src="DI-logo.svg" /></a>
+  </div>
+  <div class="top-right">
+    <div id="notifications">
+      <button class="menu"><i class="material-icons-round">notifications</i></button>
+    </div>
+    <div id="user" class="dropdown">
+      <div class="user-pic dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+        aria-expanded="false">
+        @if (profilePic) {
+          <img [src]="profilePic" alt="" />
+        }
+      </div>
+      <div class="dropdown-menu">
+        <div class="dropdown-user-pic">
+          @if (profilePic) {
+            <img [src]="profilePic" alt="" />
+          }
+        </div>
+        <label class="fullname">{{userName}}</label><br>
+        @if (jobTitle != 'null') {
+          <label class="company">{{jobTitle}}</label>
+        }
+        <label class="email">{{userEmail}}</label>
+        <br/>
+        <label class="company">{{userDefaultGroup}}</label>
+        <button class="btn btn-default" type="button" placement="top" ngbTooltip="change security group"
+          (click)="changeGroup()"><span class="material-icons edit-icon">
+          edit
+        </span></button>
+
+        <div>
+          <button class="signout" (click)="logout()">
+            <i class="material-symbols-outlined">logout</i> &nbsp;
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="container">
+  <div id="sideBar" [ngClass]="{'expanded': menuActive == true}">
+    <ul id="sideMenu">
+      <!-- class="highlight" -->
+      <!-- #region Sharepoint Workspace - AY -->
+      <li><a routerLink="/ingestion-console" routerLinkActive="active">
+        <i class="material-icons-round" title="Ingestion Console">sync_alt</i><span>Ingestion Console</span>
+      </a></li>
+      <!-- #endregion -->
+      <li><a routerLink="/add"  [class.active]="isProcessCreation" ><i class="material-icons-round"
+        title="Add New">add</i><span>Add New</span></a></li>
+        <li><a routerLink="/dashboard" routerLinkActive="active"><i class="material-icons-round"
+          title="Dashboard">dashboard</i><span>Dashboard</span></a></li>
+          <li><a routerLink="/process-config-list" routerLinkActive="active"><i class="material-icons-round"
+            title="Process Configuration">settings</i><span>Process Configuration</span></a></li>
+
+            <li><a (click)="openStatusDetails('')" routerLinkActive="active" style="cursor: pointer;"><i
+            class="material-symbols-rounded" title="File Process Status">inventory</i><span>File Process
+          Status</span></a>
+        </li>
+        <li>
+          <a routerLink="/processed-file-list" routerLinkActive="active">
+            <i class="material-icons-round" title="Processed File List">history</i><span>Processed File
+          List</span>
+        </a>
+      </li>
+      @if (hasAccess('ruleset-list')) {
+        <li>
+          <a routerLink="/ruleset-list" routerLinkActive="active">
+            <i class="material-icons-round" title="Rule Set List">account_tree</i><span>Rule Set List</span>
+          </a>
+        </li>
+      }
+
+      @if (hasAccess('profiling')) {
+        <li class="dropdown">
+          <a class="dropdown-toggle pdm-trigger " (click)="togglePdm($event)" class="pdm-trigger drop" [attr.aria-explanded]="isPdmOpen" type="button" data-bs-toggle="dropdown">
+            <i class="material-icons-round" title="PDM">article</i>
+            <span>PDM</span>
+            <span class="material-symbols-outlined" [class.rotate]="isPdmOpen">chevron_forward</span>
+          </a>
+          <ul class="dropdown-menu w-100" >
+            <!-- <li><a class="dropdown-item" href="#">Link 1</a></li> -->
+            @if (hasAccess('profiling')) {
+              <li class="dd">
+                <a routerLink="/profiling" class="dropdown-item " routerLinkActive="active">
+                  <i class="material-icons-outlined">
+                    library_books
+                    </i><span>Profiling</span>
+                  </a>
+                </li>
+              }
+              @if (hasAccess('eib')) {
+                <li class="dd">
+                  <a routerLink="/eib" class="dropdown-item " [class.active]="isCreateEibActive">
+                    <i class="material-icons-round" title="EIB">
+                      pivot_table_chart
+                      </i><span>EIB</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </li>
+          }
+
+          <!-- <li *ngIf="hasAccess('eib')">
+          <a href (click)="togglePdm($event)" class="pdm-trigger" [attr.aria-explanded]="isPdmOpen">
+            <i class="material-icons-round" title="PDM">article</i>
+            <span>PDM</span>
+            <i class="material-symbols-outlined" [class.rotate]="isPdmOpen">chevron_forward</i>
+          </a>
+          <ul class="submenu" *ngIf="isPdmOpen">
+            <li *ngIf="hasAccess('profiling')">
+              <a routerLink="/profiling" routerLinkActive="active">
+                <i class="material-icons-outlined">
+                  library_books
+                  </i><span>Profiling</span>
+                </a>
+              </li>
+              <li *ngIf="hasAccess('eib')">
+                <a routerLink="/eib" [class.active]="isCreateEibActive">
+                  <i class="material-icons-round" title="EIB">
+                    pivot_table_chart
+                    </i><span>EIB</span>
+                  </a>
+                </li>
+              </ul>
+            </li> -->
+
+          </ul>
+          <div id="footer">
+            <div class="default">
+              <img src="logo-white.png" class="w-25px" />
+            </div>
+            <div class="full">
+              <div class="text-xs">Data Ingestion . v 2.0.0</div>
+              <div class="text-xs">Copyright &copy; 2024 | TP</div>
+            </div>
+          </div>
+        </div>
+        <section id="pageContent">
+          <router-outlet />
+        </section>
+      </div>
+      @if (isChangeGroup) {
+        <app-ad-group [securityGroup]="securityGroups" (groupId)="updateGroup($event)"
+        (closeModal)="closeModal()"></app-ad-group>
+      }

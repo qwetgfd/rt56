@@ -1,0 +1,25 @@
+﻿-- SharePoint-only table: di_flpSharePointSource
+-- Safe to backup, drop, recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'dbo.di_flpSharePointSource_backup18June2026', N'U') IS NOT NULL
+    DROP TABLE dbo.di_flpSharePointSource_backup18June2026;
+IF OBJECT_ID(N'dbo.di_flpSharePointSource', N'U') IS NOT NULL
+BEGIN
+    EXEC sp_rename N'dbo.di_flpSharePointSource', N'di_flpSharePointSource_backup18June2026', N'OBJECT';
+END
+GO
+
+CREATE TABLE dbo.di_flpSharePointSource (
+    flpConfigurationId          NVARCHAR(100)    NOT NULL,
+    sharePointApplicationId     UNIQUEIDENTIFIER NULL,
+    sharePointApplicationSiteId UNIQUEIDENTIFIER NULL,
+    sharePointLibraryName       NVARCHAR(256)    NULL,
+    sharePointFolderPath        NVARCHAR(512)    NULL,
+    active                      BIT              NOT NULL DEFAULT (1),
+    createdOn                   DATETIME2(3)     NOT NULL DEFAULT (SYSUTCDATETIME()),
+    modifiedOn                  DATETIME2(3)     NULL,
+    CONSTRAINT PK_di_flpSharePointSource PRIMARY KEY CLUSTERED (flpConfigurationId)
+);

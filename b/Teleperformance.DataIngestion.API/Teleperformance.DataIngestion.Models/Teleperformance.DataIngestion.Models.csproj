@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\v2.0\**" />
+    <Compile Remove="Models\v3.0\**" />
+    <EmbeddedResource Remove="Models\v2.0\**" />
+    <EmbeddedResource Remove="Models\v3.0\**" />
+    <None Remove="Models\v2.0\**" />
+    <None Remove="Models\v3.0\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="1.1.2" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.21.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+    <PackageReference Include="NPOI" Version="2.7.1" />
+    <PackageReference Include="SMBLibrary" Version="1.5.3.5" />
+    <PackageReference Include="SSH.NET" Version="2025.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Enums\v2.0\" />
+  </ItemGroup>
+
+</Project>

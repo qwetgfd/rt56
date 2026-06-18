@@ -1,0 +1,36 @@
+﻿-- Data Ingestion table: di_flpConfiguration
+-- Backup existing table data before ALTER. All new columns NULLABLE.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[di_flpConfiguration]', N'U') IS NOT NULL
+BEGIN
+    IF OBJECT_ID(N'[dbo].[di_flpConfiguration_backup18June2026]', N'U') IS NOT NULL
+        DROP TABLE [dbo].[di_flpConfiguration_backup18June2026];
+    SELECT * INTO [dbo].[di_flpConfiguration_backup18June2026] FROM [dbo].[di_flpConfiguration];
+END
+GO
+
+BEGIN TRANSACTION;
+BEGIN TRY
+    IF COL_LENGTH('dbo.di_flpConfiguration', 'sharePointApplicationId') IS NULL
+        ALTER TABLE [dbo].[di_flpConfiguration] ADD [sharePointApplicationId] UNIQUEIDENTIFIER NULL;
+
+    IF COL_LENGTH('dbo.di_flpConfiguration', 'sharePointApplicationSiteId') IS NULL
+        ALTER TABLE [dbo].[di_flpConfiguration] ADD [sharePointApplicationSiteId] UNIQUEIDENTIFIER NULL;
+
+    IF COL_LENGTH('dbo.di_flpConfiguration', 'sharePointLibraryName') IS NULL
+        ALTER TABLE [dbo].[di_flpConfiguration] ADD [sharePointLibraryName] NVARCHAR(256) NULL;
+
+    IF COL_LENGTH('dbo.di_flpConfiguration', 'sharePointFolderPath') IS NULL
+        ALTER TABLE [dbo].[di_flpConfiguration] ADD [sharePointFolderPath] NVARCHAR(512) NULL;
+
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO

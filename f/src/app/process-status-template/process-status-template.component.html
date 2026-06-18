@@ -1,0 +1,77 @@
+<ng-container>
+  @if (apiErrorMessage != '') {
+    <div class="status-list-container">
+      <div class="status-name" style="color: brown">
+        {{ apiErrorMessage }}
+      </div>
+    </div>
+  }
+
+  @if (fileUploadDetailedStatus) {
+    <div class="status-list-container">
+      @for (status of fileUploadDetailedStatus.fileStatus; track status; let i = $index) {
+<div class="status-list" [ngClass]="{
+                        completed: status.processStatusId == 3,
+                        error: status.processStatusId == 4,
+                        processing: status.processStatusId == 2,
+                        stopped: status.processStatusId == -1,
+                        skipped: status.processStatusId == 5,
+                      }">
+          <div class="status-indi-holder">
+            <div class="status-indicator"></div>
+          </div>
+          <div class="status">
+            <div class="status-name">{{ status.statusName }}
+              @if (status.processStatusId == 4) {
+                <span>
+                  ({{status.errorMessage}})
+                </span>
+              }
+            </div>
+            @if (fileProcessingServerTypeId === DataSourceTypes.LandingLayer) {
+              <div>
+                <span>{{status.statusMessage}}</span>
+              </div>
+            }
+            @if (status.status != null) {
+              <div class="status-date">
+                @if ( status.statusCompletionTime !='0001-01-01T00:00:00') {
+                  <span>
+                    <!-- Completion Time:
+                    {{ status.statusCompletionTime | date : "yyyy-MM-dd HH:mm:ss"}} -->
+                  Duration: {{ status.durationInSeconds }}sec</span>
+                }
+              </div>
+            }
+            @if (UIValidationStatusError && status.statusName.toLowerCase() === 'validations') {
+              <div>
+                <!-- <a href="this.UIValidationFileHyperLink">Download UI Validation Error File</a> -->
+                <!-- <a [href]="UIValidationFileHyperLink">Download Validation Error File</a> -->
+                @if (UIValidationFileHyperLink === null && this.UIValidationFileStatusCode !=='500' ) {
+                  <span><img src="loadingfile.gif" class="icon" /> File is generating...</span>
+                }
+                @if (UIValidationFileHyperLink === null && this.UIValidationFileStatusCode ==='500' ) {
+                  <span class="status-name">Something went wrong. file is not generated</span>
+                }
+                @if (UIValidationFileHyperLink !== null) {
+                  <a href="javascript:void(0)" (click)="download()">Download Validation Error File</a>
+                }
+              </div>
+            }
+            @if (BEValidationStatusError && status.statusName.toLowerCase() === 'backend checks') {
+              <div>
+                <!-- <a href="this.UIValidationFileHyperLink">Download UI Validation Error File</a> -->
+                <!-- <a [href]="UIValidationFileHyperLink">Download Validation Error File</a> -->
+                <a href="javascript:void(0)" (click)="download()">Download Validation Error File</a>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      <!-- <div *ngIf="UIValidationStatusError">
+      <a [href]="UIValidationFileHyperLink">Download UI Validation Error File</a>
+      <!-- <a [href]="UIValidationFileHyperLink" download="report.xlsx">Download UI Validation Error File</a>
+    </div> -->
+  </div>
+}
+</ng-container>

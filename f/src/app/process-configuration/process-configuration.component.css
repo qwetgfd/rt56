@@ -1,0 +1,326 @@
+.config-form {
+  font-size: 13px;
+  padding: 0 20px 0;
+  display: block;
+  width: 100%;
+}
+
+#modifySettings .config-form {
+  padding-bottom: 0;
+}
+
+.tab-setting {
+  margin-bottom: 0;
+  position: static;
+  z-index: auto;
+  background: transparent;
+}
+
+#modifySettings .tab-setting #myTab {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fff;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--stroke-01, #dedae4);
+}
+
+.nav-tabs {
+  border-bottom: 1px solid var(--stroke-01, #dedae4);
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+}
+
+.nav-tabs .nav-item {
+  list-style: none;
+}
+
+.nav-tabs .nav-item .nav-link {
+  font-size: 13px;
+  padding: 12px 14px;
+  color: var(--text-02, #73738b);
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  transition: color 0.15s, border-color 0.15s;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.nav-tabs .nav-item .nav-link:hover {
+  color: var(--text-01, #2e2e2e);
+  background: transparent;
+}
+
+.nav-tabs .nav-item .nav-link.active {
+  color: var(--text-01, #2e2e2e);
+  border-bottom-color: #d14343;
+  background: transparent;
+  font-weight: 600;
+}
+
+.tab-content {
+  padding-top: 16px;
+  width: 100%;
+}
+
+.tab-pane {
+  padding: 0;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-01, #2e2e2e);
+  margin-bottom: 6px;
+}
+
+.form-check-label {
+  font-size: 13px;
+  color: var(--text-01, #2e2e2e);
+}
+
+.form-check-input {
+  cursor: pointer;
+}
+
+.form-switch .form-check-input {
+  width: 2.5em;
+}
+
+.input-group-text {
+  background: var(--background-02, #f4f4f4);
+  border: 1px solid var(--stroke-01, #dedae4);
+  font-size: 13px;
+}
+
+.input-group .dropdown-menu {
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--stroke-01, #dedae4);
+}
+
+.input-group .dropdown-item {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.input-group .dropdown-item:hover {
+  background: var(--background-02, #f4f4f4);
+}
+
+.border-bottom {
+  border-bottom: 1px solid var(--stroke-01, #dedae4);
+  padding-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-01, #2e2e2e);
+}
+
+.note {
+  font-size: 12px;
+  color: var(--text-03, #989898);
+  font-style: italic;
+}
+
+.text-danger {
+  font-size: 12px;
+}
+
+.ng-select {
+  font-size: 13px;
+  width: 100%;
+}
+
+.ng-select .ng-select-container {
+  min-height: 38px;
+  border-color: var(--stroke-01, #dedae4);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.ng-select .ng-arrow-wrapper {
+  display: flex;
+  align-items: center;
+  width: 24px;
+  padding-right: 6px;
+}
+
+.ng-select .ng-value-container {
+  padding-left: 10px;
+}
+
+.ng-select .ng-placeholder {
+  color: var(--text-03, #989898);
+}
+
+.form-control,
+.form-select {
+  font-size: 13px;
+  border-color: var(--stroke-01, #dedae4);
+  border-radius: 6px;
+  min-height: 38px;
+}
+
+.input-group.mb-3 {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.config-form .input-group .form-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-form .mb-3:has(.note) .note {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 11px !important;
+  font-style: normal;
+  line-height: 1.4;
+}
+
+.config-form .mb-3:has(.note) .form-label {
+  margin-bottom: 4px;
+}
+
+.config-form .mb-3:has(.note) .note + .ng-select {
+  margin-top: 0;
+}
+
+.config-form #addtional-setting-tab-pane .input-group.mb-3 {
+  position: relative;
+}
+
+.config-form #addtional-setting-tab-pane .input-group .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+}
+
+.config-form #addtional-setting-tab-pane .row > .d-flex.align-items-center {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.config-form select.modified-select,
+.config-form select.form-select,
+.config-form select.select-cust {
+  appearance: auto;
+  background-color: #fff;
+  border: 1px solid var(--stroke-01, #dedae4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  min-height: 34px;
+  color: var(--text-01, #2e2e2e);
+}
+
+.config-form .d-none {
+  display: none !important;
+}
+
+.button-section {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-top: 24px;
+  padding: 16px 0 20px;
+  background: #fff;
+  border-top: 1px solid var(--stroke-01, #dedae4);
+  text-align: right;
+}
+
+.btn.btn-outline-secondary.dropdown-toggle {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-color: var(--stroke-01, #dedae4);
+  color: var(--text-01, #2e2e2e);
+  border-radius: 6px;
+}
+
+.btn.btn-outline-secondary.dropdown-toggle:hover {
+  background: var(--background-02, #f4f4f4);
+  border-color: var(--stroke-01, #dedae4);
+}
+
+hr.dropdown-divider {
+  margin: 6px 0;
+}
+
+.d-flex.align-items-center {
+  gap: 8px;
+}
+
+.row {
+  margin-bottom: 8px;
+}
+
+.mb-3 {
+  margin-bottom: 16px !important;
+}
+
+.mt-3 {
+  margin-top: 16px !important;
+}
+
+.text-end {
+  text-align: right;
+}
+
+.config-form .btn-primary {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+.config-form .btn-secondary {
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 6px;
+}
+
+.position-relative {
+  position: relative;
+}
+
+.spinner {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e5e7eb;
+  border-top-color: var(--link-color, #253788);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+  font-size: 13px;
+}
+
+.small-text {
+  font-size: 12px;
+  color: var(--text-02, #73738b);
+}

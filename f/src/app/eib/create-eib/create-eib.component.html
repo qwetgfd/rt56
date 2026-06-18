@@ -1,0 +1,306 @@
+<div id="uploadPanel">
+  <div id="uploadContent">
+    <form [formGroup]="createEIBForm">
+      <div id="fileUploadPage">
+        <div id="uploadPanel">
+          <div class="attach-form col-sm-12 mb-2">
+            @if (!isFileUploaded) {
+              <div class="row">
+                <div class="form-control" class="d-flex file-drop-area flex-direction-column"
+                  (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)" [class.dragover]="isDragOver">
+                  <!-- Place this above your file input area -->
+                  <span class="material-symbols-outlined icon-font">cloud_upload</span>
+                  <label for="file-upload file-upload-label">
+                    Drop a file to upload or
+                  </label>
+                  <span class="text-primary">
+                    <!-- Hide the default file input -->
+                    <input type="file" id="formFile" #formFile (change)="onFileChange($event)"
+                      accept=".csv, .xlsx, .xls, .txt,.xlsb" style="display: none;">
+                      <!-- Custom label styled as a button -->
+                      <label for="formFile" class="cursor-pointer">click here to upload</label>
+                    </span>
+                    <p class="smaller-text">
+                      Only <strong>.XLSX</strong> format to be uploaded.<br />
+                      .XLSX file size should not be <strong>0KB</strong> or exceeds
+                      <strong>10MB</strong>.<br />
+                      <strong>No PCI Data</strong> to be uploaded.
+                    </p>
+                  </div>
+                </div>
+              }
+              @if (createEIBForm.get('formFile').hasError('fileIsTooLarge')) {
+                <div class="text-danger"
+                  style="text-align: center;">
+                  File size should not be <strong>0KB</strong> or exceeds
+                  <strong>10MB</strong>, Please validate and
+                  re-upload.
+                </div>
+              }
+              @if (isFileUploaded) {
+                <div class="row">
+                  <div class="mb-3 col-sm-12">
+                    <div class="d-flex ">
+                      <input class="inputbox-as-label w-82 mb-2 me-2" hidden formControlName="formFile">
+                      <p class="mb-0 me-2">{{ createEIBForm.get('formFile')?.value }}</p>
+                      <span for="formFile" class="text-end d-flex btn btn-primary text-sm align-self-center"
+                        (click)="onChangeFile($event)">
+                        <span class="material-symbols-outlined me-1 f-20">
+                          article_shortcut
+                        </span>
+                        {{paramsId === '' ? 'Change file' : 'Click here to upload new file.'}}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="mb-3 col-sm-12">
+                    <div class="text-wrapper">
+                      <label for="EIBName" class="form-label">EIB Name <b
+                      class="text-danger">*</b></label>
+                      <div class="position-relative">
+                        <input type="text" class="form-control" id="eibName"
+                          placeholder="Enter EIB Name" formControlName="eibName"
+                          (change)="CheckActiveEIBConfiguration()"
+                          [readOnly]="isCheckingActiveEIBCofiguration" maxlength="401">
+                          @if (isCheckingActiveEIBCofiguration) {
+                            <div class="spinner"></div>
+                          }
+                          @if (hasError('eibName', 'required')) {
+                            <div class="text-danger">
+                              EIB Name is required.
+                            </div>
+                          }
+                        </div>
+                        @if (createEIBForm.get('eibName')?.errors && createEIBForm.get('eibName')?.errors?.['eibNameExist']) {
+                          <div
+                            class="text-danger">
+                            EIB Name already exists.
+                          </div>
+                        }
+                        @if (hasError('eibName', 'maxlength') || hasError('eibName', 'minlength')) {
+                          <div class="text-danger"
+                            >
+                            EIB Name must contain atleast 5 to 400 characters only.
+                          </div>
+                        }
+                      </div>
+                    </div>
+                    <div class="mb-3 col-sm-4">
+                      <label for="country" class="form-label">
+                        Country <b class="text-danger">*</b>
+                      </label>
+                      <ng-select multiple="false" [items]="country" placeholder="Select A Country"
+                        bindLabel="countryName" bindValue="id" formControlName="country"
+                      (change)="onCountryChange($event)"></ng-select>
+                    </div>
+                    <div class="mb-3 col-sm-4">
+                      <label for="noOfBusinessProcess" class="form-label">
+                        Total Number of Business Process <b class="text-danger">*</b>
+                      </label>
+                      <input type="text" class="form-control" id="noOfBusinessProcess" readonly
+                        formControlName="noOfBusinessProcess">
+                      </div>
+                      <!-- [ngClass]="{'d-none' : getMappedRequiredBusinessProcess() === 0}" -->
+                      <div class="mb-3 col-sm-4">
+                        <label for="noOfRequiredBPMap" class="form-label">
+                          Total Number of Required Business Process Mapped
+                        </label>
+                        <input type="text" class="form-control" id="noOfRequiredBPMap" readonly>
+                      </div>
+                      <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <!-- <input type="text" class="form-control" id="eibName" placeholder="Enter Description"
+                        formControlName="description"> -->
+                        <textarea id="eibName" class="form-control" placeholder="Enter Description"
+                        formControlName="description" cols="2"></textarea>
+                      </div>
+                      <div class="container mb-3 text-center">
+                        <div class="grey">
+                          <div class="row">
+                            <div class="col-sm-1"></div>
+                            <div class="col-sm-10">
+                              <label class="mt-3 mb-3 form-label">
+                                <strong> Map your Business Process to a DB View</strong>
+                              </label>
+                              <br />
+                              <div class="row">
+                                <div class="col-sm-5">
+                                  <ng-select [items]="businessProcessDetails"
+                                    placeholder="Select Business Process" multiple="false"
+                                    bindLabel="processName" formControlName="businessProcess"
+                                    [groupBy]="'category'"
+                                    (change)="onBusinessProcessChange($event)">
+                                    <ng-template ng-option-tmp let-item="item">
+                                      <span
+                                        [ngStyle]="{'color': item.disabled && !item.isRequired ? 'gray' : (item.isRequired  && !item.isMapped ? 'red' : item.isMapped ? 'green' :'')}"
+                                        [attr.title]="item.processName + '-' + item.fieldCount">
+                                        {{ item.processName }} - {{ item.fieldCount }}
+                                      </span>
+                                    </ng-template>
+                                    <ng-template ng-label-tmp let-item="item">
+                                      <span [ngStyle]="{ 'color': item.isRequired ? 'red' : '' }"
+                                        [attr.title]="item.processName + ' - ' + item.fieldCount">
+                                        {{ item.processName }}
+                                      </span>
+                                    </ng-template>
+                                    <ng-template ng-optgroup-tmp let-item="item">
+                                      <div style="text-align:left; font-weight:bold; padding-left:8px;"
+                                        class="categoryColor">
+                                        {{ item.category }}
+                                      </div>
+                                    </ng-template>
+                                  </ng-select>
+                                  <div class="note mb-3">
+                                    Red <span style="color:red">Business Process Name</span> are
+                                    required to be mapped.
+                                  </div>
+                                </div>
+                                <div class="col-sm-5">
+                                  <ng-select [items]="dbViews" placeholder="Select a DB View"
+                                    multiple="true" bindLabel="viewName" bindValue="viewName"
+                                    formControlName="viewName">
+                                    <ng-template ng-option-tmp let-item="item">
+                                      <span
+                                        [attr.title]="item.viewName + '-' + item.columnCount">{{item.viewName}}
+                                      - {{item.columnCount}}</span>
+                                    </ng-template>
+                                  </ng-select>
+                                </div>
+                                <div class="col-sm-2">
+                                  <button class="btn btn-primary me-2" type="button" id="btnAdd"
+                                    (click)="onAdd()"
+                                                        [disabled]="!createEIBForm.get('businessProcess')?.value?.toString().trim() ||
+                                                         !createEIBForm.get('viewName')?.value?.toString().trim()">
+                                    {{isEditingMappedBPView ? 'Edit':'Add'}}
+                                  </button>
+                                  @if (isEditingMappedBPView) {
+                                    <button class="btn btn-primary" type="button" id="btnAdd"
+                                      (click)="onClearMapping()">
+                                      Cancel
+                                    </button>
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label for="list_of_business_process_mapped_to_db_views" class="form-label">
+                        List of Business Process Mapped to DB Views</label>
+                        <p-table styleClass="p-datatable-striped" [value]="filteredRecords"
+                          [tableStyle]="{'min-width':'50rem'}" [paginator]="true" [rows]="10"
+                          [totalRecords]="filteredRecords.length" responsiveLayout="stack"
+                          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                          [rowsPerPageOptions]="[2, 5, 10]" showCurrentPageReport="true"
+                          [first]="first"
+                          (onPage)="onPage($event)">
+                          <ng-template pTemplate="header">
+                            <tr>
+                              <th></th>
+                              <th>Process Name</th>
+                              <th>View Name</th>
+                              <th>Actions</th>
+                            </tr>
+                          </ng-template>
+                          <ng-template pTemplate="body" let-mappedData let-rowIndex="rowIndex"
+                            let-expanded="expanded">
+                            @if (confirmIndex !== rowIndex) {
+                              <tr
+                                [class.row-editing]="editingRowIndex === rowIndex">
+                                <td>{{rowIndex+1}}</td>
+                                <td>
+                                  {{mappedData.processName}}
+                                </td>
+                                <td>
+                                  {{ getViewNames(mappedData.dbView) }}
+                                </td>
+                                <td>
+                                  <span class="d-flex align-items-center">
+                                    <!-- onEditEIB(mappedData) -->
+                                    <span
+                                      (click)="isEditingMappedBPView ? null : askConfirm('edit',rowIndex)"
+                                                        title="Edit" class=" ms-2 me-2" [ngStyle]="{
+                                                            'cursor': isEditingMappedBPView ? 'default' : 'pointer',
+                                                            'color' : isEditingMappedBPView ? '#0d6efd' : '#0d6efd',
+                                                            'opacity': isEditingMappedBPView ? '0.5' : '1'
+                                                        }">
+                                      <span class="material-symbols-outlined">
+                                        edit
+                                      </span>
+                                    </span>
+                                    <!-- onRemoveEIB(mappedData) -->
+                                    <span (click)="askConfirm('delete',rowIndex)" class="cursor-pointer"
+                                      title="Delete">
+                                      <span class="material-symbols-outlined text-danger">
+                                        delete
+                                      </span>
+                                    </span>
+                                  </span>
+                                </td>
+                              </tr>
+                            }
+                            @if (confirmIndex === rowIndex) {
+                              <tr [@slideIn]="confirmAction">
+                                <td colspan="3" class="bg-light p-3">
+                                  <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                      <strong class="me-2">
+                                        {{confirmAction === 'edit' ? 'Edit Business Mapping'
+                                        :'Delete Business Mapping'}} :
+                                      </strong>
+                                      <small>{{ mappedData.processName + " - " +
+                                      getViewNames(mappedData.dbView)}}</small>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td class="bg-light p-3">
+                                  <div>
+                                    @if (confirmAction === 'edit') {
+                                      <span
+                                        class="material-symbols-outlined text-primary cursor-pointer"
+                                        (click)="onEditEIB(mappedData, rowIndex)">
+                                        Edit
+                                      </span>
+                                    }
+                                    @if (confirmAction === 'delete') {
+                                      <span class="material-symbols-outlined text-danger cursor-pointer"
+                                        (click)=" onRemoveEIB(mappedData)">
+                                        Delete
+                                      </span>
+                                    }
+                                    <span class="ms-2 material-symbols-outlined text-dark cursor-pointer"
+                                      (click)="cancelRemove()">
+                                      close
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            }
+                          </ng-template>
+                        </p-table>
+                      </div>
+                      <div class="mb-3 text-end">
+                        <button class="btn btn-primary me-2" type="button" id="btnSave" (click)="onSubmit()"
+                        [disabled]="enableAddButton()">{{paramsId === ''? 'Save' : 'Update'}}</button>
+                        <button class="btn btn-primary me-2" type="button" id="btnReset"
+                        (click)="onReset()">Reset</button>
+                        <button class="btn btn-primary" type="button" id="btnCancel"
+                        (click)="onBack()">Back</button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        @if (!isFileUploaded) {
+          <p class="text-center text-muted mt-5 mb-3">
+            "Please upload template file from workday"
+            <br>
+              <a class="link" (click)="goBack()">Click here to go back</a>
+            </p>
+          }
+        </div>

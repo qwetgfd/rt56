@@ -1,0 +1,142 @@
+<div class="container">
+
+  <h2 class="page-title">Create custom filename validation regex</h2>
+
+
+  <!-- Short Help Section -->
+  <div class="help-box">
+    <strong>How this works:</strong>
+    <ul>
+      <li>Create filename rules and the system generates a regex.</li>
+      <li>Rules include allowed characters, length, and required patterns.</li>
+      <li>Use Advanced Mode to write your own regex manually.</li>
+    </ul>
+  </div>
+
+  <!-- Advanced Help Toggle -->
+  <div class="advanced-help">
+    <a (click)="showAdvancedHelp = !showAdvancedHelp" class="bg-lightgrey text-primary"
+      style="cursor:pointer; text-decoration: none;">
+      {{ showAdvancedHelp ? 'Hide advanced help' : 'Show advanced help' }}
+
+      @if (!showAdvancedHelp) {
+        <span class="material-symbols-outlined float-end">
+          visibility
+        </span>
+      }
+
+      @if (showAdvancedHelp) {
+        <span class="material-symbols-outlined float-end">
+          visibility_off
+        </span>
+      }
+    </a>
+
+    @if (showAdvancedHelp) {
+      <div class="advanced-help-box">
+        <strong>Regex Reference:</strong>
+        <ul>
+          <li><code>^</code> start of string</li>
+          <li><code>$</code> end of string</li>
+          <li><code>[A-Za-z]</code> letters</li>
+          <li><code>[0-9]</code> numbers</li>
+          <li><code>\\d</code> digit</li>
+          <li><code>\\s</code> whitespace</li>
+          <li><code>(?!.*pattern)</code> negative lookahead</li>
+          <li><code>(?=.*pattern)</code> required pattern</li>
+          <li><code>{{'{min,max}'}}</code> length constraint</li>
+        </ul>
+      </div>
+    }
+  </div>
+
+  <!-- <div class="mode">
+  <label>
+    <input type="radio" name="mode" value="basic" [(ngModel)]="mode"> Basic rules
+  </label>
+  <label>
+    <input type="radio" name="mode" value="advanced" [(ngModel)]="mode"> Advanced (enter regex)
+  </label>
+</div> -->
+
+@if (mode === 'basic') {
+  <form [formGroup]="form">
+    <h3 class="page-title  mt-2">Allowed characters</h3>
+    <label class="me-3"><input type="checkbox" formControlName="letters"> Letters (A-Z, a-z)</label>
+    <label class="me-3"><input type="checkbox" formControlName="numbers"> Numbers</label>
+    <label class="me-3"><input type="checkbox" formControlName="underscore"> Underscore</label>
+    <label class="me-3"><input type="checkbox" formControlName="dash"> Dash</label>
+    <label class="me-3"><input type="checkbox" formControlName="space" [disabled]="form.value.noSpaces">
+    Space</label>
+    <label class="me-3"><input type="checkbox" formControlName="noSpaces"> No spaces</label>
+    <div class="mt-2">
+      Custom characters:
+      <span class="material-symbols-outlined info-icon" style="font-size: 15px;cursor: pointer;"
+        title="Enter extra characters to allow in the filename (for example: @ or #). Characters are treated literally."
+        placement="right" tabindex="0">
+        info
+      </span>
+      <input type="text" formControlName="customChars">
+    </div>
+    <h3 class="page-title mt-2">Length
+      <span class="material-symbols-outlined" style="font-size: 16px; cursor: pointer;"
+        title="The total filename length includes start and end text. The remaining length is applied to the middle section."
+        placement="right">
+        info
+      </span>
+    </h3>
+    <div class="d-flex align-items-center gap-2">
+      <input type="number" formControlName="minLength" placeholder="Min length">
+      <input type="number" formControlName="maxLength" placeholder="Max length">
+    </div>
+    <h3 class="page-title mt-2">Special patterns</h3>
+    <div class="d-flex align-items-center gap-2">
+      <div>Starts with <input type="text" formControlName="startsWith"></div>
+      <div>Ends with <input type="text" formControlName="endsWith"></div>
+    </div>
+    <div>Must contain <input type="text" formControlName="mustContain"></div>
+    <div>Must NOT contain <input type="text" formControlName="mustNotContain"></div>
+  </form>
+}
+
+<!-- <div *ngIf="mode === 'advanced'">
+<textarea formControlName="advancedRegex" placeholder="Enter your full regex here"></textarea>
+</div> -->
+
+
+@if (!hasBaseRule || regexError) {
+  <div class="validation-hint mb-2">
+    {{regexError}}
+  </div>
+}
+
+
+<button class="btn btn-primary" (click)="generateRegex()">Generate regex</button>
+
+@if (generatedRegex) {
+  <div class="preview-box">
+    <div><strong>Generated regex:</strong> {{ generatedRegex }}</div>
+    <div><strong>Description:</strong> {{ generatedDescription }}</div>
+  </div>
+}
+
+<h3 class="page-title">Try a filename (without extension)</h3>
+<input type="text" [(ngModel)]="testFilename" (input)="test()">
+
+@if (testResult) {
+  <div [class.valid]="testResult === 'valid'" [class.invalid]="testResult === 'invalid'">
+    {{ testResult | titlecase }}
+  </div>
+}
+<!--
+<div class="actions">
+  <button>Save pattern</button>
+  <button>Reset to default</button>
+</div> -->
+
+<div class="actions">
+  <button class="btn btn-primary" (click)="save()">Save</button>
+  <button class="btn btn-secondary" (click)="close()">Cancel</button>
+</div>
+
+</div>

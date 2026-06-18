@@ -1,0 +1,458 @@
+/* File First — SharePoint attach embed (tokens: sharepoint-tokens.css) */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-xl);
+  background: var(--sp-bg);
+  color: var(--sp-text);
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  box-shadow: var(--sp-shadow);
+}
+
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: border-box;
+}
+
+.ff-attach-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Compact back bar ── */
+.ff-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--sp-surface);
+  border-bottom: 1px solid var(--sp-border);
+  flex-shrink: 0;
+  min-height: 52px;
+}
+
+.ff-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--sp-border-2);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-surface);
+  color: var(--sp-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--sp-transition-fast);
+  font-family: inherit;
+  line-height: 1;
+}
+
+.ff-toolbar-btn:hover {
+  background: var(--sp-surface-2);
+  border-color: var(--sp-border-2);
+  transform: translateY(-1px);
+  box-shadow: var(--sp-shadow-sm);
+}
+
+.ff-toolbar-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.ff-toolbar-btn:focus-visible {
+  outline: none;
+  border-color: var(--sp-primary);
+  box-shadow: 0 0 0 3px rgba(46, 68, 177, 0.12);
+}
+
+.ff-toolbar-btn sp-icon {
+  transition: transform var(--sp-transition-fast);
+}
+
+.ff-toolbar-btn:hover sp-icon {
+  transform: translateX(-2px);
+}
+
+.ff-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sp-text);
+  letter-spacing: -0.01em;
+}
+
+.ff-sp-logo {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Error ── */
+.ff-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--sp-danger-light);
+  color: var(--sp-danger);
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 1px solid #fecaca;
+  flex-shrink: 0;
+  animation: ff-error-in 0.25s ease;
+}
+
+@keyframes ff-error-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Workspace shell ── */
+.ff-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ff-workspace > app-sharepoint-workspace {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* File First embed: let explorer breathe on wide screens without shifting sidebar alignment */
+:host ::ng-deep .sp-workspace-host--file-pick .sp-explorer-empty p {
+  max-width: 480px;
+}
+
+:host ::ng-deep .sp-workspace-host--file-pick .sp-explorer-empty__icon {
+  box-shadow:
+    0 4px 16px rgba(48, 76, 178, 0.12),
+    0 0 0 8px rgba(232, 237, 255, 0.45);
+}
+
+:host ::ng-deep .sp-workspace-host--file-pick .sp-explorer:has(.sp-explorer-empty) .sp-ambient-glyph--table,
+:host ::ng-deep .sp-workspace-host--file-pick .sp-explorer:has(.sp-explorer-empty) .sp-ambient-glyph--ingest {
+  opacity: 1;
+}
+
+/* Prevent DI/Bootstrap globals from distorting SharePoint controls */
+:host ::ng-deep .sp-workspace-page button {
+  font-family: inherit;
+}
+
+:host ::ng-deep .sp-toolbar-btn,
+:host ::ng-deep .sp-btn,
+:host ::ng-deep .sp-toolbar-nav {
+  box-shadow: none;
+}
+
+/* ── Selection bar ── */
+.ff-selection {
+  flex-shrink: 0;
+  z-index: 10;
+  background: var(--sp-surface);
+  border-top: 1px solid var(--sp-border);
+  box-shadow: 0 -4px 16px rgba(16, 24, 40, 0.06);
+  padding: 12px 16px;
+  animation: ff-selection-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ff-selection-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ff-selection__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ff-selection__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ff-selection__info sp-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--sp-primary);
+  flex-shrink: 0;
+}
+
+.ff-selection__details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ff-selection__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-selection__meta {
+  font-size: 12px;
+  color: var(--sp-text-3);
+}
+
+.ff-selection__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: var(--sp-radius-md);
+  background: linear-gradient(135deg, var(--sp-primary) 0%, #3b55c9 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--sp-transition-fast);
+  flex-shrink: 0;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: 0 2px 6px rgba(46, 68, 177, 0.25);
+}
+
+.ff-selection__btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--sp-primary-hover) 0%, #3349b0 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(46, 68, 177, 0.32);
+}
+
+.ff-selection__btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.ff-selection__btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46, 68, 177, 0.25);
+}
+
+.ff-selection__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ff-btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ff-spin 0.6s linear infinite;
+}
+
+@keyframes ff-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── File First embed: preview viewer layout ── */
+:host ::ng-deep .sp-viewer-backdrop {
+  z-index: 500;
+  padding: 12px 16px;
+}
+
+:host ::ng-deep .sp-viewer {
+  max-width: min(920px, 100%);
+  max-height: min(calc(100vh - 220px), 86vh);
+  min-height: min(380px, 72vh);
+  border-radius: var(--sp-radius-xl);
+}
+
+:host ::ng-deep .sp-viewer__stage > .sp-viewer__media {
+  max-height: calc(100% - 8px);
+}
+
+/* File First embed: hard-reset viewer buttons against DI/Bootstrap globals */
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn,
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+  min-height: 36px !important;
+  height: auto !important;
+  padding: 8px 16px !important;
+  margin: 0 !important;
+  border-radius: var(--sp-radius-md) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  width: auto !important;
+  min-width: unset !important;
+  max-width: none !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif !important;
+  box-shadow: none !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-btn {
+  min-height: 38px !important;
+  padding: 8px 20px !important;
+  background: var(--sp-primary, #2e44b1) !important;
+  color: #fff !important;
+  border: 1px solid var(--sp-primary, #2e44b1) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-btn:hover:not(:disabled) {
+  background: var(--sp-primary-hover, #2538a0) !important;
+  border-color: var(--sp-primary-hover, #2538a0) !important;
+  transform: translateY(-1px) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(46, 68, 177, 0.25) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--secondary {
+  background: #fff !important;
+  color: #3d4663 !important;
+  border: 1px solid #c8ced8 !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--secondary:hover:not(:disabled) {
+  background: #eceef2 !important;
+  transform: translateY(-1px) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--secondary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--secondary:focus-visible {
+  outline: none !important;
+  border-color: var(--sp-primary, #2e44b1) !important;
+  box-shadow: 0 0 0 3px rgba(46, 68, 177, 0.12) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--icon {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  color: #6b7280 !important;
+  border: 1px solid #e4e7ec !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--icon:hover:not(:disabled) {
+  background: #f5f6f8 !important;
+  color: #1a1f36 !important;
+  transform: translateY(-1px) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--icon:active:not(:disabled) {
+  transform: translateY(0) scale(0.96) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn--icon:focus-visible {
+  outline: none !important;
+  border-color: var(--sp-primary, #2e44b1) !important;
+  box-shadow: 0 0 0 3px rgba(46, 68, 177, 0.12) !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn .sp-icon,
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn svg,
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-info .sp-icon,
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-info svg {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+  color: inherit !important;
+  overflow: visible !important;
+}
+
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn:disabled,
+:host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+:host.ff-viewer-open {
+  z-index: 50;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .ff-toolbar-btn,
+  .ff-selection__btn,
+  :host ::ng-deep .sp-viewer-backdrop .sp-viewer__action-btn,
+  :host ::ng-deep .sp-viewer-backdrop .sp-viewer__pick-btn {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  :host {
+    border-radius: var(--sp-radius-lg);
+  }
+
+  .ff-selection {
+    padding: 10px 12px;
+  }
+}

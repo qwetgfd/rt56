@@ -1,0 +1,40 @@
+<!-- <div class="modal-header" [ngClass]="{'bg-success' : isSuccess, 'bg-danger': !isSuccess}">
+    <h4 class="modal-title pull-left"> {{title}}</h4>
+    <button type="button" class="btn-close close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+        <span aria-hidden="true" class="visually-hidden">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    {{message}}
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">
+        Ok
+    </button>
+</div> -->
+
+
+<div class="notification" [ngClass]="{'success-notif' : isSuccess, 'error-notif': !isSuccess}">
+    <div class="notif-header ">
+        <div class="notif-icon">
+            <div class="icon-success">
+                <i class="material-symbols-rounded">check_circle</i>
+            </div>
+            <div class="icon-erro">
+                <i class="material-symbols-rounded">error</i>
+            </div>
+        </div>
+        <button type="button" class="btn-close close " aria-label="Close" (click)="bsModalRef.hide()">
+            <span aria-hidden="true" class="visually-hidden">&times;</span>
+        </button>
+    </div>
+    <div class="notif-body">
+        <div class="notif-title">{{title}}</div>
+        <div class="notif-message">{{message}} </div>
+    </div>
+    <div class="notif-footer">
+        <button type="button" class="btn btn-primary" (click)="bsModalRef.hide()">
+            Confirm
+        </button>
+    </div>
+</div>

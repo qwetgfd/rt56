@@ -1,0 +1,66 @@
+﻿-- SharePoint-only stored procedure: commit_InsertFlpSharePointSource
+-- Safe to recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[commit_InsertFlpSharePointSource_backup18June2026]', N'P') IS NOT NULL
+    DROP PROCEDURE [dbo].[commit_InsertFlpSharePointSource_backup18June2026];
+IF OBJECT_ID(N'[dbo].[commit_InsertFlpSharePointSource]', N'P') IS NOT NULL
+    EXEC sp_rename N'dbo.commit_InsertFlpSharePointSource', N'commit_InsertFlpSharePointSource_backup18June2026', N'OBJECT';
+GO
+
+CREATE OR ALTER PROCEDURE dbo.commit_InsertFlpSharePointSource
+    @flpConfigurationId          NVARCHAR(100),
+    @sharePointApplicationId     UNIQUEIDENTIFIER = NULL,
+    @sharePointApplicationSiteId UNIQUEIDENTIFIER = NULL,
+    @sharePointLibraryName       NVARCHAR(256) = NULL,
+    @sharePointFolderPath        NVARCHAR(512) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM dbo.di_flpSharePointSource WHERE flpConfigurationId = @flpConfigurationId)
+    BEGIN
+        UPDATE dbo.di_flpSharePointSource
+        SET sharePointApplicationId     = @sharePointApplicationId,
+            sharePointApplicationSiteId = @sharePointApplicationSiteId,
+            sharePointLibraryName       = @sharePointLibraryName,
+            sharePointFolderPath        = @sharePointFolderPath,
+            active                        = 1,
+            modifiedOn                    = SYSUTCDATETIME()
+        WHERE flpConfigurationId = @flpConfigurationId;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.di_flpSharePointSource (
+            flpConfigurationId,
+            sharePointApplicationId,
+            sharePointApplicationSiteId,
+            sharePointLibraryName,
+            sharePointFolderPath
+        )
+        VALUES (
+            @flpConfigurationId,
+            @sharePointApplicationId,
+            @sharePointApplicationSiteId,
+            @sharePointLibraryName,
+            @sharePointFolderPath
+        );
+    END
+
+    SELECT
+        s.flpConfigurationId,
+        s.sharePointApplicationId,
+        s.sharePointApplicationSiteId,
+        s.sharePointLibraryName,
+        s.sharePointFolderPath,
+        a.displayname AS sharePointApplicationName,
+        site.sitename AS sharePointSiteName
+    FROM dbo.di_flpSharePointSource s
+    LEFT JOIN dbo.di_application a ON a.applicationid = s.sharePointApplicationId
+    LEFT JOIN dbo.di_applicationsite site ON site.applicationsiteid = s.sharePointApplicationSiteId
+    WHERE s.flpConfigurationId = @flpConfigurationId
+      AND s.active = 1;
+END;
+GO

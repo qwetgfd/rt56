@@ -1,0 +1,620 @@
+/* ── Configuration First wizard layout ── */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+#fileUploadPage {
+  position: relative;
+  width: 100%;
+}
+
+/* Outer shell — title sits above the card */
+#fileUploadPage > #uploadPanel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-height: auto;
+}
+
+.page-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-01, #2e2e2e);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+/* Inner white card */
+.config-form {
+  font-size: 13px;
+  display: block;
+  width: 100%;
+}
+
+.config-form #uploadPanel {
+  background: var(--background-01, #fff);
+  border: 1px solid var(--stroke-01, #dedae4);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 0;
+  min-height: calc(100vh - 180px);
+  overflow: visible;
+}
+
+.col-xl-12.center {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Sidebar + content split */
+.tab-setting {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 0;
+  background: transparent;
+}
+
+/* Vertical left navigation */
+#myTab.nav-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 260px;
+  width: 260px;
+  min-width: 260px;
+  border: none;
+  border-right: 1px solid var(--stroke-01, #dedae4);
+  border-bottom: none;
+  gap: 2px;
+  padding: 16px 12px;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--background-02, #f4f4f4);
+  list-style: none;
+}
+
+#myTab .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-02, #73738b);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  white-space: normal;
+  line-height: 1.35;
+  transition: color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+
+#myTab .nav-link:hover:not(:disabled) {
+  color: var(--text-01, #2e2e2e);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+#myTab .nav-link.active {
+  color: var(--text-01, #2e2e2e);
+  font-weight: 700;
+  background: transparent;
+  border: none;
+}
+
+#myTab .nav-link:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#myTab .nav-link.d-none {
+  display: none !important;
+}
+
+#myTab .nav-link > span {
+  flex: 1;
+}
+
+#myTab .nav-link .tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 20px;
+  color: var(--text-03, #989898);
+  background: transparent;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+#myTab .nav-link.active .tab-icon {
+  background: var(--link-color, #253788);
+  color: #fff;
+}
+
+#myTab .nav-link .material-icons-outlined:last-child,
+#myTab .nav-link .material-icons-outlined.float-end {
+  margin-left: auto;
+  font-size: 18px;
+  color: var(--text-03, #989898);
+  flex-shrink: 0;
+}
+
+#myTab .nav-link.active .material-icons-outlined:last-child,
+#myTab .nav-link.active .material-icons-outlined.float-end {
+  color: var(--text-02, #73738b);
+}
+
+/* Main form area */
+.tab-content {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 32px 20px;
+  background: var(--background-01, #fff);
+  overflow: visible;
+}
+
+.tab-pane {
+  padding: 0;
+}
+
+.tab-pane:not(.active) {
+  display: none !important;
+}
+
+.tab-pane.active {
+  display: block !important;
+}
+
+/* SharePoint settings tab — browser-first, full height */
+.tab-content:has(#sharepoint-settings-tab-pane.active) {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 168px);
+  max-height: calc(100vh - 168px);
+  min-height: 0;
+  padding: 4px 12px 0;
+  overflow: hidden;
+}
+
+#sharepoint-settings-tab-pane.active {
+  display: flex !important;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#sharepoint-settings-tab-pane.active .npc-sp-panel,
+#sharepoint-settings-tab-pane.active .npc-sp-card--workspace {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Wizard footer — cohesive bar when SharePoint tab is active */
+.tab-content:has(#sharepoint-settings-tab-pane.active) .button-section {
+  margin-left: 260px;
+  margin-top: 0;
+  padding: 12px 24px 16px;
+  background: var(--background-01, #fff);
+  border-top: 1px solid var(--stroke-01, #dedae4);
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+@media (max-width: 1100px) {
+  .tab-content:has(#sharepoint-settings-tab-pane.active) .button-section {
+    margin-left: 0;
+  }
+}
+
+/* Bottom action bar — aligned with content column */
+.button-section {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-left: 260px;
+  padding: 16px 32px 24px;
+  background: var(--background-01, #fff);
+  border-top: 1px solid var(--stroke-01, #dedae4);
+  text-align: right;
+}
+
+.button-section .btn {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 6px;
+  min-width: 96px;
+}
+
+.button-section .btn-primary[type="button"] {
+  background: var(--link-color, #253788);
+  border-color: var(--link-color, #253788);
+  color: #fff;
+}
+
+.button-section .btn-primary[type="button"]:hover:not(:disabled) {
+  background: #1e2d6e;
+  border-color: #1e2d6e;
+}
+
+.button-section .btn-primary[type="button"]:disabled {
+  background: #c4c4c4;
+  border-color: #c4c4c4;
+  color: #fff;
+  opacity: 1;
+}
+
+.button-section .btn-primary[type="submit"] {
+  background: #989898;
+  border-color: #989898;
+  color: #fff;
+}
+
+.button-section .btn-primary[type="submit"]:not(:disabled):hover {
+  background: #7a7a7a;
+  border-color: #7a7a7a;
+}
+
+.button-section .btn-primary[type="submit"]:disabled {
+  background: #d1d1d1;
+  border-color: #d1d1d1;
+  color: #fff;
+  opacity: 1;
+}
+
+/* Form controls */
+.form-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-01, #2e2e2e);
+  margin-bottom: 6px;
+}
+
+.form-check-label {
+  font-size: 13px;
+  color: var(--text-01, #2e2e2e);
+}
+
+.form-check-input {
+  cursor: pointer;
+}
+
+.form-switch .form-check-input {
+  width: 2.5em;
+}
+
+.form-control {
+  font-size: 13px;
+  border-color: var(--stroke-01, #dedae4);
+  border-radius: 6px;
+  min-height: 38px;
+}
+
+.form-select,
+select.form-select,
+select.modified-select,
+select.select-cust {
+  font-size: 13px;
+  appearance: auto;
+  -webkit-appearance: menulist;
+  background-color: #fff;
+  background-image: var(--bs-form-select-bg-img);
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  border: 1px solid var(--stroke-01, #dedae4);
+  border-radius: 6px;
+  min-height: 38px;
+  padding: 6px 2.25rem 6px 10px;
+  color: var(--text-01, #2e2e2e);
+  cursor: pointer;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.text-danger {
+  font-size: 12px;
+}
+
+.note {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--text-03, #989898);
+  line-height: 1.4;
+}
+
+.border-bottom {
+  border-bottom: 1px solid var(--stroke-01, #dedae4);
+  padding-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-01, #2e2e2e);
+}
+
+.mb-3 {
+  margin-bottom: 16px !important;
+}
+
+.row {
+  margin-bottom: 8px;
+}
+
+/* ng-select — pierce encapsulation so dropdown chrome renders correctly */
+:host ::ng-deep .ng-select {
+  display: block;
+  width: 100%;
+  font-size: 13px;
+}
+
+:host ::ng-deep .ng-select .ng-select-container {
+  min-height: 38px;
+  height: auto;
+  border: 1px solid var(--stroke-01, #dedae4) !important;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  align-items: center;
+}
+
+:host ::ng-deep .ng-select .ng-select-container:hover {
+  box-shadow: none;
+}
+
+:host ::ng-deep .ng-select .ng-value-container {
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 8px;
+}
+
+:host ::ng-deep .ng-select .ng-placeholder {
+  color: var(--text-03, #989898);
+}
+
+:host ::ng-deep .ng-select .ng-arrow-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding-right: 8px;
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .ng-select .ng-arrow-wrapper .ng-arrow {
+  display: inline-block;
+  border-color: #73738b rgba(0, 0, 0, 0) rgba(0, 0, 0, 0);
+  border-style: solid;
+  border-width: 5px 5px 2.5px;
+}
+
+:host ::ng-deep .ng-select.ng-select-opened .ng-arrow-wrapper .ng-arrow {
+  top: -2px;
+  border-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) #73738b;
+  border-width: 0 5px 5px;
+}
+
+/* Closed single-select: show placeholder + arrow, not a text cursor field */
+:host ::ng-deep .ng-select.ng-select-single:not(.ng-select-opened) .ng-value-container .ng-input {
+  position: absolute;
+  width: 1px;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+:host ::ng-deep .ng-select.ng-select-single.ng-select-opened .ng-value-container .ng-input {
+  position: relative;
+  width: auto;
+  opacity: 1;
+  padding-left: 4px;
+  pointer-events: auto;
+}
+
+:host ::ng-deep .ng-select.ng-select-single.ng-select-opened .ng-value-container .ng-input > input {
+  cursor: text;
+}
+
+:host ::ng-deep .ng-select.ng-select-multiple .ng-select-container .ng-value-container {
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+:host ::ng-deep .ng-select.ng-select-multiple .ng-value {
+  background: #e8edff;
+  color: var(--link-color, #253788);
+  border-radius: 4px;
+  border: none;
+  margin: 0;
+}
+
+:host ::ng-deep .ng-select.ng-select-focused:not(.ng-select-opened) .ng-select-container {
+  border-color: var(--link-color, #253788) !important;
+  box-shadow: 0 0 0 2px rgba(37, 55, 136, 0.12);
+}
+
+:host ::ng-deep .ng-dropdown-panel {
+  border: 1px solid var(--stroke-01, #dedae4);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 1070;
+}
+
+/* Input groups & dropdowns */
+.input-group-text {
+  background: var(--background-02, #f4f4f4);
+  border: 1px solid var(--stroke-01, #dedae4);
+  font-size: 13px;
+}
+
+.input-group .dropdown-menu {
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--stroke-01, #dedae4);
+}
+
+.input-group .dropdown-item {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.input-group .dropdown-item:hover {
+  background: var(--background-02, #f4f4f4);
+}
+
+.btn.btn-outline-secondary.dropdown-toggle {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-color: var(--stroke-01, #dedae4);
+  color: var(--text-01, #2e2e2e);
+  border-radius: 6px;
+}
+
+.btn.btn-outline-secondary.dropdown-toggle:hover {
+  background: var(--background-02, #f4f4f4);
+  border-color: var(--stroke-01, #dedae4);
+}
+
+.config-form .d-none {
+  display: none !important;
+}
+
+.d-flex.align-items-center {
+  gap: 8px;
+}
+
+/* Scheduler Settings — date picker alignment and popup visibility */
+#schedular-settings-tab-pane {
+  overflow: visible;
+  position: relative;
+}
+
+#schedular-settings-tab-pane .scheduler-datepicker,
+#schedular-settings-tab-pane .scheduler-date-field .p-datepicker {
+  width: 100%;
+  display: block;
+}
+
+#schedular-settings-tab-pane .scheduler-date-field {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+#schedular-settings-tab-pane .scheduler-date-field:focus-within {
+  z-index: 2;
+}
+
+:host ::ng-deep #schedular-settings-tab-pane .scheduler-datepicker.p-datepicker {
+  width: 100%;
+}
+
+:host ::ng-deep #schedular-settings-tab-pane .scheduler-datepicker .p-datepicker-input-icon-container,
+:host ::ng-deep #schedular-settings-tab-pane .scheduler-datepicker .p-inputtext {
+  width: 100%;
+}
+
+/* File preview / validation slide-out panels */
+#modifySettings,
+#UIValidation {
+  position: fixed;
+  top: 65px;
+  right: 0;
+  width: 560px;
+  height: calc(100vh - 65px);
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+  border-left: 1px solid var(--stroke-01, #dedae4);
+  z-index: 1060;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#modifySettings.slide-left.open,
+#UIValidation.slide-left.open {
+  transform: translateX(0);
+}
+
+#modifySettings .panel-header,
+#UIValidation .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--stroke-01, #dedae4);
+  background: #fff;
+  flex-shrink: 0;
+}
+
+#modifySettings .panel-header .page-title,
+#UIValidation .panel-header .page-title {
+  margin-bottom: 0;
+  font-size: 15px;
+}
+
+#modifySettings .close-icon {
+  cursor: pointer;
+  color: var(--text-02, #73738b);
+  transition: color 0.15s;
+}
+
+#modifySettings .close-icon:hover {
+  color: var(--text-01, #2e2e2e);
+}
+
+#UIValidation .p-15 {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .tab-setting {
+    flex-direction: column;
+  }
+
+  #myTab.nav-tabs {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--stroke-01, #dedae4);
+    max-height: 220px;
+  }
+
+  .button-section {
+    margin-left: 0;
+    padding: 16px 20px 20px;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+}

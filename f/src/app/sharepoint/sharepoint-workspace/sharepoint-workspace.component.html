@@ -1,0 +1,1009 @@
+<div class="sp-workspace-page">
+  <div class="sp-workspace-shell">
+    <div class="sp-workspace-main">
+  <header class="sp-workspace-toolbar" role="toolbar" [attr.aria-label]="m.toolbar.aria">
+    <div class="sp-toolbar-left">
+      <button type="button" class="sp-toolbar-nav sp-toolbar-nav--text" *ngIf="!filePickMode" (click)="navigateHome.emit()" [title]="m.toolbar.backToHome">
+        <sp-icon name="home" size="sm" />
+        <span>{{ m.toolbar.home }}</span>
+      </button>
+      <button type="button" class="sp-toolbar-nav sp-toolbar-nav--text" *ngIf="!filePickMode" (click)="navigateApplications.emit()" [title]="m.toolbar.backToApplications">
+        <sp-icon name="apps" size="sm" />
+        <span>{{ m.toolbar.applications }}</span>
+      </button>
+      <div class="toolbar-divider" *ngIf="!filePickMode"></div>
+      <button type="button" class="sp-toolbar-btn" (click)="goBack()" [disabled]="!workspaceConnected || !canNavigateUp" [title]="m.toolbar.upFolder" [attr.aria-label]="m.toolbar.upFolder">
+        <sp-icon name="chevron-left" />
+      </button>
+      <button type="button" class="sp-toolbar-btn" (click)="navigateBack()" [disabled]="!canNavigateBack" [title]="m.toolbar.back" [attr.aria-label]="m.toolbar.navigateBack">
+        <sp-icon name="back" />
+      </button>
+      <button type="button" class="sp-toolbar-btn" (click)="navigateForward()" [disabled]="!canNavigateForward" [title]="m.toolbar.forward" [attr.aria-label]="m.toolbar.navigateForward">
+        <sp-icon name="chevron-right" />
+      </button>
+      <button type="button" class="sp-toolbar-btn" (click)="navigateRoot()" [disabled]="!workspaceConnected || !currentPath" [title]="m.toolbar.libraryRoot" [attr.aria-label]="m.toolbar.libraryRoot">
+        <sp-icon name="folder" />
+      </button>
+      <button type="button" class="sp-toolbar-btn" (click)="refreshCurrentFolder()" [disabled]="!workspaceConnected || browsing" [title]="m.toolbar.refresh" [attr.aria-label]="m.toolbar.refreshFolder">
+        <sp-icon name="refresh" [spin]="browsing" />
+      </button>
+    </div>
+
+    <!-- Breadcrumb bar -->
+    <div class="sp-toolbar-breadcrumb" *ngIf="workspaceConnected" [attr.aria-label]="m.toolbar.breadcrumb">
+      <ng-container *ngFor="let crumb of breadcrumbs; let i = index; let last = last">
+        <button
+          type="button"
+          class="sp-bc-link"
+          [class.sp-bc-link--active]="last"
+          [attr.aria-current]="last ? 'location' : undefined"
+          (click)="navigateBreadcrumb(i)"
+          [title]="crumb">
+          <span>{{ crumb }}</span>
+        </button>
+        <sp-icon *ngIf="!last" class="sp-bc-sep" name="chevron-right" size="sm" />
+      </ng-container>
+    </div>
+
+    <div class="sp-toolbar-right">
+      <button
+        type="button"
+        class="sp-toolbar-nav sp-toolbar-nav--text"
+        *ngIf="isModeUser && auth.isConfigured"
+        (click)="openUserAccountModal()"
+        [title]="auth.isSignedIn() ? (auth.account()?.username ?? m.toolbar.account) : m.toolbar.signInOrPermissions">
+        <sp-icon name="shield" size="sm" />
+        <span>{{ auth.isSignedIn() ? m.toolbar.account : m.toolbar.signIn }}</span>
+      </button>
+      <button type="button" class="sp-toolbar-nav sp-toolbar-nav--text sp-toolbar-nav--reset" *ngIf="!filePickMode" (click)="resetWorkspace()" [title]="m.toolbar.resetTitle">
+        <sp-icon name="refresh" size="sm" />
+        <span>{{ m.toolbar.reset }}</span>
+      </button>
+      <button
+        type="button"
+        class="sp-generate-curl"
+        *ngIf="workspaceConnected && canShowCurlGuide"
+        (click)="openCurlModal()"
+        [disabled]="curlModalLoading"
+        [title]="m.toolbar.generateCurlTitle">
+        <span class="sp-generate-curl__spinner" *ngIf="curlModalLoading" aria-hidden="true"></span>
+        <sp-icon *ngIf="!curlModalLoading" name="code" />
+        {{ curlModalLoading ? m.toolbar.generatingCurl : m.toolbar.generateCurl }}
+      </button>
+      <span class="sp-chip sp-chip--{{ configMode | lowercase }}" *ngIf="workspaceConnected && !filePickMode">{{ applicationTypeLabel }}</span>
+      <button type="button" class="sp-toolbar-btn" (click)="disconnectWorkspace()" *ngIf="workspaceConnected && !filePickMode" [title]="m.toolbar.disconnect" [attr.aria-label]="m.toolbar.disconnectAria">
+        <sp-icon name="unlink" />
+      </button>
+      <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm sp-mobile-config" *ngIf="!filePickMode" (click)="openConfigurePanel()">
+        <sp-icon name="settings" size="sm" /> {{ m.toolbar.configure }}
+      </button>
+      <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm sp-mobile-config" *ngIf="filePickMode && isCompact" (click)="openConfigurePanel()">
+        <sp-icon name="folder" size="sm" /> {{ m.toolbar.library }}
+      </button>
+    </div>
+  </header>
+
+    <main class="sp-explorer" role="main">
+      <div class="sp-explorer-ambient" aria-hidden="true">
+        <div class="sp-ambient-grid"></div>
+        <div class="sp-ambient-blur"></div>
+        <div class="sp-ambient-glyphs">
+          <span class="sp-ambient-glyph sp-ambient-glyph--folder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v9A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-11Z" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--doc">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 3H7.5A1.5 1.5 0 0 0 6 4.5v15A1.5 1.5 0 0 0 7.5 21h9A1.5 1.5 0 0 0 18 19.5V8l-4-5Z" />
+              <path d="M14 3v5h5" />
+              <path d="M9 13h6M9 17h4" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--cloud">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 18h11a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.7 1.5A3.5 3.5 0 0 0 7 18Z" />
+              <path d="M12 14v5M9.5 16.5 12 19l2.5-2.5" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--table">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="5" width="16" height="14" rx="1.5" />
+              <path d="M4 10h16M4 14h16M10 10v9M14 10v9" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--logo">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="14" r="9.5" fill="#036C70" opacity="0.55" />
+              <circle cx="31" cy="23" r="9.5" fill="#1A9BA1" opacity="0.5" />
+              <circle cx="22" cy="32" r="9.5" fill="#37C6D0" opacity="0.45" />
+              <circle cx="13" cy="23" r="9.5" fill="#038387" opacity="0.5" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--ingest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="6" rx="7" ry="3" />
+              <path d="M5 6v8c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+              <path d="M12 11v6M9 15l3 3 3-3" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--csv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 3H7.5A1.5 1.5 0 0 0 6 4.5v15A1.5 1.5 0 0 0 7.5 21h9A1.5 1.5 0 0 0 18 19.5V8l-4-5Z" />
+              <path d="M14 3v5h5" />
+              <path d="M8.5 13.5h7M8.5 17h5" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--site">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 20V9l8-5 8 5v11" />
+              <path d="M9 20v-6h6v6" />
+              <path d="M4 12h16" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--library">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 5v14M9 5v14M9 5h8l2 3v11H9" />
+              <path d="M13 8h4" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--sync">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12a8 8 0 0 1 13.5-5.7" />
+              <path d="M20 7v5h-5" />
+              <path d="M20 12a8 8 0 0 1-13.5 5.7" />
+              <path d="M4 17v-5h5" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--shield">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 5 6v6c0 4.5 3 8.7 7 9.8 4-.9 7-5.3 7-9.8V6l-7-3Z" />
+              <path d="m9.5 12 1.8 1.8L15 10" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--pipeline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="6" cy="12" r="2.5" />
+              <circle cx="18" cy="6" r="2.5" />
+              <circle cx="18" cy="18" r="2.5" />
+              <path d="M8.5 11 15 7M8.5 13 15 17" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 15a4 4 0 0 0 5.7.3l2-2a4 4 0 0 0-5.7-5.7l-1 1" />
+              <path d="M15 9a4 4 0 0 0-5.7-.3l-2 2a4 4 0 0 0 5.7 5.7l1-1" />
+            </svg>
+          </span>
+          <span class="sp-ambient-glyph sp-ambient-glyph--logo-sm">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="14" r="9.5" fill="#036C70" opacity="0.45" />
+              <circle cx="31" cy="23" r="9.5" fill="#1A9BA1" opacity="0.4" />
+              <circle cx="22" cy="32" r="9.5" fill="#37C6D0" opacity="0.35" />
+              <circle cx="13" cy="23" r="9.5" fill="#038387" opacity="0.4" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Not connected state -->
+      <div class="sp-explorer-empty" *ngIf="!workspaceConnected && !showInlineConnectLoader">
+        <div class="sp-explorer-empty__icon" aria-hidden="true">
+          <sp-icon name="unlink" size="lg" />
+        </div>
+        <h3>{{ m.explorer.connectTitle }}</h3>
+        <p>{{ filePickMode ? filePickDisconnectedHint() : branding.browseDisconnectedHint }}</p>
+        <div class="sp-explorer-empty__modes" *ngIf="!filePickMode">
+          <span>{{ m.explorer.modeInternal }}</span><span class="sp-explorer-empty__sep">/</span><span>{{ m.explorer.modeExternal }}</span><span class="sp-explorer-empty__sep">/</span><span>{{ m.explorer.modeUser }}</span>
+        </div>
+      </div>
+
+      <!-- Connect / reconnect / load libraries (full explorer — initial connect only in wizard embed) -->
+      <div
+        class="sp-explorer-inline-loader"
+        *ngIf="showInlineConnectLoader && !(processConfigMode && showExplorerMain)"
+        aria-live="polite">
+        <sp-orbit-loader
+          [title]="workspaceLoaderTitleLine"
+          [hint]="workspaceLoaderHint"
+          [ariaLabel]="workspaceLoaderAriaLabel"
+          [showSteps]="showConnectLoaderSteps"
+          [activeStep]="connectLoaderPhase"
+          [steps]="connectLoaderSteps" />
+      </div>
+
+      <!-- Connected: Explorer content (hidden while connect/load runs) -->
+      <div class="sp-explorer-workspace" *ngIf="showExplorerMain">
+        <!-- Wizard embed: full workspace overlay (library header + file list) -->
+        <div
+          class="sp-explorer-workspace__overlay"
+          *ngIf="showInlineConnectLoader && processConfigMode"
+          aria-live="polite">
+          <sp-orbit-loader
+            [title]="workspaceLoaderTitleLine"
+            [hint]="workspaceLoaderHint"
+            [ariaLabel]="workspaceLoaderAriaLabel"
+            [showSteps]="showConnectLoaderSteps"
+            [activeStep]="connectLoaderPhase"
+            [steps]="connectLoaderSteps" />
+        </div>
+
+        <!-- Library context -->
+        <div class="sp-explorer-context" [attr.aria-label]="m.explorer.currentLibraryAria">
+          <div class="sp-explorer-context__main">
+            <h2 class="sp-explorer-context__title">{{ workspaceConnection.libraryName || m.defaultLibrary }}</h2>
+            <p class="sp-explorer-context__subtitle" [class.sp-explorer-context__subtitle--loading]="browsing || connectingSite">
+              <span class="sp-explorer-context__status-dot" *ngIf="browsing || connectingSite" aria-hidden="true"></span>
+              {{ (isModeUser ? userSiteTitle : workspaceConnection.siteName) || branding.siteLabel }} ·
+              <ng-container *ngIf="browsing && !filteredItems().length">{{ m.explorer.loading }}</ng-container>
+              <ng-container *ngIf="!(browsing && !filteredItems().length)">{{ itemCountLabel(filteredItems().length) }}</ng-container>
+            </p>
+          </div>
+          <div class="sp-view-toggle sp-explorer-view-toggle" role="group" [attr.aria-label]="m.explorer.folderViewAria" *ngIf="filteredItems().length && !browsing">
+            <button
+              type="button"
+              class="sp-view-toggle__button"
+              [class.sp-view-toggle__button--active]="fileDisplayMode === 'list'"
+              [attr.aria-pressed]="fileDisplayMode === 'list'"
+              (click)="setFileDisplayMode('list')"
+              [title]="m.explorer.listView">
+              <sp-icon name="list" size="sm" /> List
+            </button>
+            <button
+              type="button"
+              class="sp-view-toggle__button"
+              [class.sp-view-toggle__button--active]="fileDisplayMode === 'grid'"
+              [attr.aria-pressed]="fileDisplayMode === 'grid'"
+              (click)="setFileDisplayMode('grid')"
+              [title]="m.explorer.gridView">
+              <sp-icon name="grid" size="sm" /> Grid
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="sp-explorer-content"
+          [class.sp-explorer-content--loading]="browsing && items.length"
+          [attr.aria-busy]="browsing || connectingSite">
+
+          <!-- Inline progress bar -->
+          <div class="sp-loading-bar" *ngIf="browsing" [attr.aria-label]="m.explorer.loadingContentAria" role="progressbar">
+            <span class="sp-loading-bar__track"></span>
+            <span class="sp-loading-bar__glow"></span>
+          </div>
+
+          <!-- Initial browse / connect prompt -->
+          <div class="sp-explorer-init" *ngIf="!browsing && !items.length && !breadcrumbs.length && !connectingSite">
+            <button type="button" class="sp-btn sp-btn--primary sp-btn--lg" (click)="loadChildren('')" [disabled]="!canBrowse">
+              <sp-icon name="folder-open" /> Open library
+            </button>
+            <p class="sp-explorer-init__hint" [innerHTML]="m.explorer.browseInLibraryHtml(workspaceConnection.libraryName || m.defaultLibrary)"></p>
+          </div>
+
+          <!-- Skeleton list (first load or empty folder navigation) -->
+          <div class="sp-filelist sp-filelist--skeleton" *ngIf="browsing && !items.length && (fileDisplayMode === 'list' || !breadcrumbs.length)" aria-hidden="true">
+            <div class="sp-filelist-header" role="presentation">
+              <span class="sp-filelist-col--icon"></span>
+              <span class="sp-filelist-col--name">{{ m.explorer.colName }}</span>
+              <span class="sp-filelist-col--size">{{ m.explorer.colSize }}</span>
+              <span class="sp-filelist-col--modified">{{ m.explorer.colModified }}</span>
+            </div>
+            <ul class="sp-filelist-body" role="presentation">
+              <li class="sp-skeleton-row" *ngFor="let i of skeletonRows" [style.--sp-skeleton-delay]="i * 70 + 'ms'">
+                <span class="sp-skeleton sp-skeleton--icon sp-skeleton--icon-shape"></span>
+                <span class="sp-skeleton sp-skeleton--name"></span>
+                <span class="sp-skeleton sp-skeleton--size"></span>
+                <span class="sp-skeleton sp-skeleton--date"></span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Skeleton grid -->
+          <ul class="sp-filegrid sp-filegrid--skeleton" role="presentation" *ngIf="browsing && !items.length && fileDisplayMode === 'grid' && breadcrumbs.length" aria-hidden="true">
+            <li class="sp-skeleton-grid-item" *ngFor="let i of skeletonGridCells" [style.--sp-skeleton-delay]="i * 55 + 'ms'">
+              <span class="sp-skeleton sp-skeleton--grid-icon sp-skeleton--icon-shape"></span>
+              <span class="sp-skeleton sp-skeleton--grid-name"></span>
+              <span class="sp-skeleton sp-skeleton--grid-meta"></span>
+            </li>
+          </ul>
+
+          <!-- File list -->
+          <div class="sp-filelist" *ngIf="filteredItems().length && fileDisplayMode === 'list'">
+            <div class="sp-filelist-header" role="row">
+              <span class="sp-filelist-col--icon" role="columnheader" [attr.aria-label]="m.explorer.colTypeAria"></span>
+              <span class="sp-filelist-col--name" role="columnheader">{{ m.explorer.colName }}</span>
+              <span class="sp-filelist-col--size" role="columnheader">{{ m.explorer.colSize }}</span>
+              <span class="sp-filelist-col--modified" role="columnheader">{{ m.explorer.colModified }}</span>
+            </div>
+            <ul class="sp-filelist-body" role="list">
+              <li class="sp-filelist-row" *ngFor="let item of filteredItems(); let i = index; trackBy: trackByItemId" [style.--sp-row-i]="i">
+                <button type="button" class="sp-filelist-btn" (click)="openItem(item)" (dblclick)="filePickMode && openItemPreview(item)" [disabled]="browsing" [attr.aria-label]="item.name">
+                  <span class="sp-filelist-col--icon" aria-hidden="true">
+                    <img class="sp-file-ext-icon" [src]="fileIconSrc(item)" width="32" height="32" alt="" />
+                  </span>
+                  <span class="sp-filelist-col--name">
+                    <span class="sp-filelist-name">{{ item.name }}</span>
+                    <span class="sp-filelist-meta" *ngIf="item.isFolder">{{ itemCountLabel(item.childCount ?? 0) }}</span>
+                    <span class="sp-filelist-meta" *ngIf="!item.isFolder">{{ fileExtensionLabel(item) }}</span>
+                  </span>
+                  <span class="sp-filelist-col--size">{{ fileDisplaySize(item) }}</span>
+                  <span class="sp-filelist-col--modified">
+                    <ng-container *ngIf="item.lastModifiedDateTime; else noDateList">{{ item.lastModifiedDateTime | date:'MMM d, y' }}</ng-container>
+                    <ng-template #noDateList>&mdash;</ng-template>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- File grid -->
+          <ul class="sp-filegrid" role="list" *ngIf="filteredItems().length && fileDisplayMode === 'grid'">
+            <li class="sp-filegrid__item" *ngFor="let item of filteredItems(); let i = index; trackBy: trackByItemId" [style.--sp-tile-i]="i">
+              <button type="button" class="sp-filegrid__btn" (click)="openItem(item)" (dblclick)="filePickMode && openItemPreview(item)" [disabled]="browsing" [attr.aria-label]="item.name">
+                <span class="sp-filegrid__icon" aria-hidden="true">
+                  <img class="sp-file-ext-icon sp-file-ext-icon--lg" [src]="fileIconSrc(item)" width="44" height="44" alt="" />
+                </span>
+                <span class="sp-filegrid__name" [title]="item.name">{{ item.name }}</span>
+                <span class="sp-filegrid__meta" *ngIf="item.isFolder">{{ item.childCount ?? 0 }} items</span>
+                <span class="sp-filegrid__meta" *ngIf="!item.isFolder">{{ fileDisplaySize(item) }}</span>
+                <span class="sp-filegrid__date" *ngIf="item.lastModifiedDateTime">{{ item.lastModifiedDateTime | date:'MMM d, y' }}</span>
+              </button>
+            </li>
+          </ul>
+
+          <!-- Loading overlay when refreshing with existing items -->
+          <div class="sp-explorer-content__overlay" *ngIf="browsing && filteredItems().length">
+            <sp-orbit-loader
+              [compact]="true"
+              [title]="m.explorer.refreshingFolder"
+              [hint]="m.toolbar.refresh"
+              [ariaLabel]="m.toolbar.refreshFolder" />
+          </div>
+
+          <!-- Empty folder state -->
+          <div class="sp-explorer-emptyfolder" *ngIf="!browsing && !filteredItems().length && breadcrumbs.length > 1">
+            <div class="sp-explorer-emptyfolder__icon" aria-hidden="true">
+              <img class="sp-file-ext-icon sp-file-ext-icon--lg" [src]="folderIconSrc" width="44" height="44" alt="" />
+            </div>
+            <h3>{{ filePickMode ? m.explorer.filePickEmptyTitle : m.explorer.emptyFolderTitle }}</h3>
+            <p>{{ filePickMode ? m.explorer.filePickEmptyHint : m.explorer.emptyFolderHint }}</p>
+          </div>
+        </div>
+      </div>
+    </main>
+    </div>
+
+    <aside
+      class="sp-workspace-sidebar"
+      [class.sp-workspace-sidebar--collapsed]="sidebarCollapsed"
+      [class.sp-workspace-sidebar--mobile-open]="mobileDrawerOpen"
+      [class.sp-workspace-sidebar--dropdown-open]="!!openDropdownId"
+      role="complementary"
+      [attr.aria-label]="m.explorer.configPanelAria">
+
+      <div class="sp-workspace-sidebar__backdrop" *ngIf="isCompact && mobileDrawerOpen" (click)="closeMobileDrawer()"></div>
+
+      <div class="sp-workspace-sidebar__content">
+        <!-- Full sidebar content -->
+        <div class="sp-workspace-sidebar__panels" *ngIf="!sidebarCollapsed || isCompact">
+          <section class="sp-panel">
+            <header class="sp-panel__head" [class.sp-panel__head--branded]="processConfigMode">
+              <span class="sp-panel__brand" *ngIf="processConfigMode" aria-hidden="true">
+                <sp-icon name="apps" size="sm" />
+              </span>
+              <div class="sp-panel__head-text">
+                <h3>{{ filePickMode ? m.sidebar.application : m.explorer.connection }}</h3>
+                <p>{{ filePickMode ? m.sidebar.filePickIntro : branding.connectionPanelIntro }}</p>
+              </div>
+            </header>
+
+            <div class="sp-sidebar-form-stack">
+            <div class="sp-segment" role="radiogroup" [attr.aria-label]="m.sidebar.connectionProfileAria" *ngIf="!filePickMode">
+              <label class="sp-segment__opt" [class.sp-segment__opt--active]="isModeInternal">
+                <input type="radio" name="configMode" value="tp_internal" [(ngModel)]="configMode" (ngModelChange)="onConfigModeChange()" />
+                <span class="sp-segment__title">{{ m.sidebar.internalTitle }}</span>
+                <span class="sp-segment__hint">{{ m.sidebar.internalHint }}</span>
+              </label>
+              <label class="sp-segment__opt" [class.sp-segment__opt--active]="isModeExternal">
+                <input type="radio" name="configMode" value="tp_external" [(ngModel)]="configMode" (ngModelChange)="onConfigModeChange()" />
+                <span class="sp-segment__title">{{ m.sidebar.externalTitle }}</span>
+                <span class="sp-segment__hint">{{ m.sidebar.externalHint }}</span>
+              </label>
+              <label class="sp-segment__opt" [class.sp-segment__opt--active]="isModeUser" (click)="onSignedInUserOptionClick($event)">
+                <input
+                  type="radio"
+                  name="configMode"
+                  value="user_delegated"
+                  [checked]="isModeUser"
+                  tabindex="-1"
+                  (click)="onSignedInUserOptionClick($event)" />
+                <span class="sp-segment__title">{{ m.sidebar.userTitle }}</span>
+                <span class="sp-segment__hint">{{ m.sidebar.userHint }}</span>
+              </label>
+            </div>
+
+            <ng-template #dropdownOptionTpl let-item="item">
+              <span class="sp-ngx-dropdown__option-text" [attr.title]="item.searchText || null">{{ item.label }}</span>
+            </ng-template>
+            <ng-template #internalAppButtonTpl>
+              <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="!internalApplications().length">
+                <span class="sp-ngx-dropdown__trigger-text">{{ selectedInternalAppDropdown?.label || m.sidebar.selectApplication }}</span>
+                <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+              </button>
+            </ng-template>
+            <ng-template #libraryButtonTpl>
+              <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="loadingLibraries || !libraryDropdownOptions.length">
+                <span class="sp-ngx-dropdown__trigger-text">{{ selectedLibraryDropdown?.label || workspaceConnection.libraryName || m.sidebar.selectLibrary }}</span>
+                <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+              </button>
+            </ng-template>
+
+            <ng-template #registeredSiteButtonTpl>
+              <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="!registeredSiteDropdownOptions.length">
+                <span class="sp-ngx-dropdown__trigger-text">{{ selectedRegisteredSiteDropdown?.label || m.sidebar.selectRegisteredSite }}</span>
+                <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+              </button>
+            </ng-template>
+            <ng-template #userSiteButtonTpl>
+              <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="!userSiteDropdownOptions.length">
+                <span class="sp-ngx-dropdown__trigger-text">{{ selectedUserSiteDropdown?.label || m.sidebar.selectRegisteredSite }}</span>
+                <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+              </button>
+            </ng-template>
+
+            <ng-container *ngIf="filePickMode">
+              <ng-template #filePickAppButtonTpl>
+                <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="!applications.length">
+                  <span class="sp-ngx-dropdown__trigger-text">{{ selectedFilePickAppDropdown?.label || m.sidebar.selectApplication }}</span>
+                  <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+                </button>
+              </ng-template>
+              <ng-template #filePickSiteButtonTpl>
+                <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="!filePickSites().length">
+                  <span class="sp-ngx-dropdown__trigger-text">{{ selectedFilePickSiteDropdown?.label || m.sidebar.selectSite }}</span>
+                  <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+                </button>
+              </ng-template>
+              <ng-template #filePickLibraryButtonTpl>
+                <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="loadingLibraries || !libraryDropdownOptions.length">
+                  <span class="sp-ngx-dropdown__trigger-text">{{ selectedLibraryDropdown?.label || workspaceConnection.libraryName || m.sidebar.selectLibrary }}</span>
+                  <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+                </button>
+              </ng-template>
+
+              <div class="sp-field sp-field--dropdown"
+                [class.sp-field--dropdown-open]="openDropdownId === 'sp-filepick-app'">
+                <label for="filepick-app">{{ m.sidebar.applicationLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <div class="sp-ngx-dropdown sp-ngx-dropdown--stacked"
+                  [class.sp-ngx-dropdown--open]="openDropdownId === 'sp-filepick-app'">
+                  <ngx-select-dropdown
+                    instanceId="sp-filepick-app"
+                    name="filePickApp"
+                    [(ngModel)]="selectedFilePickAppDropdown"
+                    [options]="filePickAppDropdownOptions"
+                    [config]="appDropdownConfig"
+                    [disabled]="!applications.length"
+                    [dropdownButtonTemplate]="filePickAppButtonTpl"
+                    [optionItemTemplate]="dropdownOptionTpl"
+                    (open)="onWorkspaceDropdownOpen('sp-filepick-app')"
+                    (close)="onWorkspaceDropdownClose()"
+                    (ngModelChange)="onFilePickAppDropdownModelChange($event)" />
+                </div>
+                <p class="sp-hint" *ngIf="!applications.length">
+                  {{ m.sidebar.noAppsRegistered }}
+                </p>
+              </div>
+
+              <div class="sp-field sp-field--dropdown" *ngIf="selectedFilePickAppId"
+                [class.sp-field--dropdown-open]="openDropdownId === 'sp-filepick-site'">
+                <label for="filepick-site">{{ m.sidebar.siteLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <div class="sp-ngx-dropdown sp-ngx-dropdown--stacked"
+                  [class.sp-ngx-dropdown--open]="openDropdownId === 'sp-filepick-site'">
+                  <ngx-select-dropdown
+                    instanceId="sp-filepick-site"
+                    name="filePickSite"
+                    [(ngModel)]="selectedFilePickSiteDropdown"
+                    [options]="filePickSiteDropdownOptions"
+                    [config]="appDropdownConfig"
+                    [disabled]="!filePickSites().length"
+                    [dropdownButtonTemplate]="filePickSiteButtonTpl"
+                    [optionItemTemplate]="dropdownOptionTpl"
+                    (open)="onWorkspaceDropdownOpen('sp-filepick-site')"
+                    (close)="onWorkspaceDropdownClose()"
+                    (ngModelChange)="onFilePickSiteDropdownModelChange($event)" />
+                </div>
+                <p class="sp-hint" *ngIf="selectedFilePickAppId && !filePickSites().length">
+                  {{ m.sidebar.noSitesForApp }}
+                </p>
+              </div>
+
+              <div class="sp-field sp-field--dropdown" *ngIf="workspaceConnected && (isModeInternal || isModeUser)"
+                [class.sp-field--dropdown-open]="openDropdownId === 'sp-library'">
+                <label for="ws-library-filepick">{{ m.sidebar.library }}</label>
+                <div class="sp-input-row">
+                  <div class="sp-ngx-dropdown sp-ngx-dropdown--stacked sp-input-row__grow"
+                    [class.sp-ngx-dropdown--open]="openDropdownId === 'sp-library'">
+                    <ngx-select-dropdown
+                      instanceId="sp-library"
+                      name="filePickLibraryName"
+                      [(ngModel)]="selectedLibraryDropdown"
+                      [options]="libraryDropdownOptions"
+                      [config]="libraryDropdownConfig"
+                      [disabled]="loadingLibraries || !libraryDropdownOptions.length"
+                      [dropdownButtonTemplate]="filePickLibraryButtonTpl"
+                      [optionItemTemplate]="dropdownOptionTpl"
+                      (open)="onWorkspaceDropdownOpen('sp-library')"
+                      (close)="onWorkspaceDropdownClose()"
+                      (ngModelChange)="onFilePickLibraryDropdownModelChange($event)" />
+                  </div>
+                  <button type="button" class="sp-btn sp-btn--ghost sp-btn--sm" (click)="refreshLibraries(true)" [disabled]="loadingLibraries" [attr.aria-busy]="loadingLibraries && librariesManualRefresh">
+                    <span class="sp-btn__spinner sp-btn__spinner--dark" *ngIf="loadingLibraries && librariesManualRefresh" aria-hidden="true"></span>
+                    {{ (loadingLibraries && librariesManualRefresh) ? m.sidebar.refreshing : m.toolbar.refresh }}
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="isModeInternal && !filePickMode">
+              <div
+                class="sp-field sp-field--dropdown"
+                [class.sp-field--dropdown-open]="openDropdownId === 'sp-internal-app'">
+                <label for="internal-app">{{ m.sidebar.registeredApplication }}</label>
+                <div
+                  class="sp-ngx-dropdown sp-ngx-dropdown--stacked"
+                  [class.sp-ngx-dropdown--open]="openDropdownId === 'sp-internal-app'">
+                  <ngx-select-dropdown
+                    instanceId="sp-internal-app"
+                    name="internalApp"
+                    [(ngModel)]="selectedInternalAppDropdown"
+                    [options]="internalAppDropdownOptions"
+                    [config]="appDropdownConfig"
+                    [disabled]="!internalApplications().length"
+                    [dropdownButtonTemplate]="internalAppButtonTpl"
+                    [optionItemTemplate]="dropdownOptionTpl"
+                    (open)="onWorkspaceDropdownOpen('sp-internal-app')"
+                    (close)="onWorkspaceDropdownClose()"
+                    (ngModelChange)="onInternalAppDropdownModelChange($event)" />
+                </div>
+                <p class="sp-hint" *ngIf="!selectedInternalAppId && !workspaceConnected" [innerHTML]="m.sidebar.internalEmptyHtml"></p>
+                <p class="sp-hint" *ngIf="!internalApplications().length">
+                  {{ m.sidebar.noInternalSites }}
+                </p>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="isModeUser && !filePickMode">
+              <div class="sp-user-session" *ngIf="auth.isSignedIn()">
+                <p class="sp-user-session__label">{{ m.sidebar.loggedInAs }}</p>
+                <p class="sp-user-session__email" [title]="auth.account()?.username ?? ''">{{ auth.account()?.username }}</p>
+                <button type="button" class="sp-link sp-user-session__manage" (click)="openUserAccountModal()">{{ m.sidebar.manageAccount }}</button>
+              </div>
+              <p class="sp-hint sp-hint--warn" *ngIf="!auth.isSignedIn()">
+                {{ m.sidebar.signInViaAccountBefore }}<button type="button" class="sp-link" (click)="openUserAccountModal()">{{ m.toolbar.account }}</button>{{ m.sidebar.signInViaAccountAfter }}
+              </p>
+              <div
+                class="sp-field sp-field--dropdown"
+                *ngIf="userDelegatedSites().length; else legacyUserSiteInput"
+                [class.sp-field--dropdown-open]="openDropdownId === 'sp-user-site'">
+                <label for="ws-user-site-reg">{{ branding.siteUrlOrNameLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <div
+                  class="sp-ngx-dropdown sp-ngx-dropdown--stacked"
+                  [class.sp-ngx-dropdown--open]="openDropdownId === 'sp-user-site'">
+                  <ngx-select-dropdown
+                    instanceId="sp-user-site"
+                    name="userRegisteredSite"
+                    [(ngModel)]="selectedUserSiteDropdown"
+                    [options]="userSiteDropdownOptions"
+                    [config]="appDropdownConfig"
+                    [disabled]="!userSiteDropdownOptions.length"
+                    [dropdownButtonTemplate]="userSiteButtonTpl"
+                    [optionItemTemplate]="dropdownOptionTpl"
+                    (open)="onWorkspaceDropdownOpen('sp-user-site')"
+                    (close)="onWorkspaceDropdownClose()"
+                    (ngModelChange)="onUserSiteDropdownModelChange($event)" />
+                </div>
+              </div>
+              <ng-template #legacyUserSiteInput>
+              <div class="sp-field">
+                <label for="ws-user-site">{{ branding.siteUrlOrNameLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <input
+                  id="ws-user-site"
+                  class="sp-input"
+                  type="text"
+                  [(ngModel)]="userSiteInput"
+                  name="userSite"
+                  [disabled]="connectingSite" />
+              </div>
+              </ng-template>
+              <div class="sp-panel__actions sp-panel__actions--connect">
+                <button
+                  type="button"
+                  class="sp-btn sp-btn--primary sp-btn--sm sp-btn--connect"
+                  (click)="connectUserSite()"
+                  [disabled]="!canConnectUser || isWorkspaceConnecting">
+                  <span class="sp-btn__spinner" *ngIf="isWorkspaceConnecting" aria-hidden="true"></span>
+                  {{ connectButtonLabel }}
+                </button>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="isModeExternal && !filePickMode">
+              <div class="sp-field">
+                <label for="ext-tenant">{{ m.sidebar.tenantIdEntra }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <input id="ext-tenant" class="sp-input" type="text" [(ngModel)]="workspaceConnection.tenantId" name="extTenant" />
+              </div>
+              <div class="sp-field">
+                <label for="ext-client">{{ m.sidebar.applicationIdEntra }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <input id="ext-client" class="sp-input" type="text" [(ngModel)]="workspaceConnection.clientId" name="extClient" />
+              </div>
+              <div class="sp-field">
+                <label for="ext-secret">{{ m.sidebar.clientSecretEntra }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <div class="sp-secret-field">
+                  <input id="ext-secret" class="sp-input sp-secret-field__input" [type]="wsSecretVisible ? 'text' : 'password'" [(ngModel)]="workspaceConnection.clientSecret" name="extSecret" autocomplete="off" />
+                  <button type="button" class="sp-secret-field__toggle" (click)="wsSecretVisible = !wsSecretVisible" [attr.aria-label]="wsSecretVisible ? m.sidebar.hideClientSecret : m.sidebar.showClientSecret" [title]="wsSecretVisible ? m.hide : m.show">
+                    <sp-icon [name]="wsSecretVisible ? 'eye-off' : 'eye'" />
+                  </button>
+                </div>
+              </div>
+              <div class="sp-field">
+                <label for="ext-host">{{ branding.hostLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <input id="ext-host" class="sp-input" type="text" [(ngModel)]="workspaceConnection.hostName" name="extHost" />
+              </div>
+              <div class="sp-field">
+                <label for="ws-site">{{ branding.siteLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <input id="ws-site" class="sp-input" type="text" [(ngModel)]="workspaceConnection.siteName" name="siteName" />
+              </div>
+            </ng-container>
+
+            <div class="sp-field sp-field--dropdown" *ngIf="!filePickMode && (isModeInternal || isModeUser) && workspaceConnected" [class.sp-field--dropdown-open]="openDropdownId === 'sp-library'">
+              <label for="ws-library">{{ m.sidebar.library }}</label>
+              <div class="sp-input-row">
+                <div
+                  class="sp-ngx-dropdown sp-ngx-dropdown--stacked sp-input-row__grow"
+                  [class.sp-ngx-dropdown--open]="openDropdownId === 'sp-library'">
+                  <ngx-select-dropdown
+                    instanceId="sp-library"
+                    name="libraryName"
+                    [(ngModel)]="selectedLibraryDropdown"
+                    [options]="libraryDropdownOptions"
+                    [config]="libraryDropdownConfig"
+                    [disabled]="loadingLibraries || !libraryDropdownOptions.length"
+                    [dropdownButtonTemplate]="libraryButtonTpl"
+                    [optionItemTemplate]="dropdownOptionTpl"
+                    (open)="onWorkspaceDropdownOpen('sp-library')"
+                    (close)="onWorkspaceDropdownClose()"
+                    (ngModelChange)="onLibraryDropdownModelChange($event)" />
+                </div>
+                <button type="button" class="sp-btn sp-btn--ghost sp-btn--sm" (click)="refreshLibraries(true)" [disabled]="loadingLibraries" [attr.aria-busy]="loadingLibraries && librariesManualRefresh">
+                  <span class="sp-btn__spinner sp-btn__spinner--dark" *ngIf="loadingLibraries && librariesManualRefresh" aria-hidden="true"></span>
+                  {{ (loadingLibraries && librariesManualRefresh) ? m.sidebar.refreshing : m.toolbar.refresh }}
+                </button>
+              </div>
+            </div>
+
+            <div class="sp-field" *ngIf="isModeExternal && (!filePickMode || workspaceConnected)">
+              <label for="ws-library-manual">{{ m.sidebar.documentLibrary }}</label>
+              <input id="ws-library-manual" class="sp-input" type="text" [(ngModel)]="workspaceConnection.libraryName" name="libraryNameManual" />
+            </div>
+
+            <div class="sp-panel__actions sp-panel__actions--connect" *ngIf="!isModeInternal && !isModeUser">
+              <button type="button" class="sp-btn sp-btn--primary sp-btn--sm sp-btn--connect" (click)="applyExternalConnection()">
+                {{ workspaceConnected ? m.sidebar.reconnect : m.sidebar.connect }}
+              </button>
+            </div>
+            </div>
+          </section>
+
+          <section class="sp-panel sp-panel--summary" *ngIf="workspaceConnected && !isModeUser && !filePickMode && !openDropdownId">
+            <header class="sp-panel__head">
+              <h3>{{ m.sidebar.credentialSummary }}</h3>
+              <details class="sp-panel-hint">
+                <summary><sp-icon name="help" size="sm" /> {{ m.sidebar.apiCallersSummary }}</summary>
+                <p [innerHTML]="m.sidebar.apiCallersDetailHtml"></p>
+              </details>
+            </header>
+            <dl class="sp-summary">
+              <div class="sp-summary__row"><dt class="sp-summary__label">{{ m.sidebar.tenantIdEntra }}</dt><dd class="sp-summary__value sp-mono">{{ workspaceConnection.tenantId || m.summaryEmpty }}</dd></div>
+              <div class="sp-summary__row"><dt class="sp-summary__label">{{ m.sidebar.applicationIdEntra }}</dt><dd class="sp-summary__value sp-mono">{{ workspaceConnection.clientId || m.summaryEmpty }}</dd></div>
+              <div class="sp-summary__row"><dt class="sp-summary__label">{{ m.sidebar.clientSecretEntra }}</dt><dd class="sp-summary__value sp-mono sp-secret-value">
+                <span>{{ wsSummarySecretVisible ? (workspaceConnection.clientSecret || m.summaryEmpty) : m.sidebar.secretMasked }}</span>
+                <button type="button" class="sp-secret-value__toggle" (click)="wsSummarySecretVisible = !wsSummarySecretVisible" [attr.aria-label]="wsSummarySecretVisible ? m.sidebar.hideEntraSecret : m.sidebar.showEntraSecret" [title]="wsSummarySecretVisible ? m.hide : m.show">
+                  <sp-icon [name]="wsSummarySecretVisible ? 'eye-off' : 'eye'" size="sm" />
+                </button>
+              </dd></div>
+              <ng-container *ngIf="workspaceConnection.applicationId">
+                <div class="sp-summary__row"><dt class="sp-summary__label">{{ m.sidebar.registeredAppId }}</dt><dd class="sp-summary__value sp-mono">{{ workspaceConnection.applicationId }}</dd></div>
+                <div class="sp-summary__row"><dt class="sp-summary__label">{{ m.sidebar.apiSecret }}</dt><dd class="sp-summary__value sp-mono sp-secret-value">
+                  <span>{{ wsConsumerSummarySecretVisible ? (workspaceConnection.consumerSecret || m.summaryEmpty) : m.sidebar.secretMasked }}</span>
+                  <button type="button" class="sp-secret-value__toggle" (click)="wsConsumerSummarySecretVisible = !wsConsumerSummarySecretVisible" [attr.aria-label]="wsConsumerSummarySecretVisible ? m.sidebar.hideConsumerSecret : m.sidebar.showConsumerSecret" [title]="wsConsumerSummarySecretVisible ? m.hide : m.show">
+                    <sp-icon [name]="wsConsumerSummarySecretVisible ? 'eye-off' : 'eye'" size="sm" />
+                  </button>
+                </dd></div>
+              </ng-container>
+              <div class="sp-summary__row"><dt class="sp-summary__label">{{ branding.hostLabel }}</dt><dd class="sp-summary__value">{{ workspaceConnection.hostName || m.summaryEmpty }}</dd></div>
+              <div class="sp-summary__row"><dt class="sp-summary__label">{{ branding.siteLabel }}</dt><dd class="sp-summary__value">{{ workspaceConnection.siteName || m.summaryEmpty }}</dd></div>
+              <div class="sp-summary__row"><dt class="sp-summary__label">{{ m.sidebar.documentLibrarySummary }}</dt><dd class="sp-summary__value">{{ workspaceConnection.libraryName || m.defaultLibrary }}</dd></div>
+            </dl>
+          </section>
+        </div>
+      </div>
+    </aside>
+
+    <button
+      type="button"
+      class="sp-sidebar-toggle"
+      *ngIf="!filePickMode"
+      (click)="toggleSidebar()"
+      [class.sp-sidebar-toggle--collapsed]="sidebarCollapsed"
+      [attr.aria-label]="sidebarCollapsed ? m.explorer.expandConfigAria : m.explorer.collapseConfigAria"
+      [attr.aria-expanded]="!sidebarCollapsed"
+      [title]="sidebarCollapsed ? m.explorer.expandPanel : m.explorer.collapsePanel">
+      <span class="sp-sidebar-toggle__icon" aria-hidden="true">
+        <sp-icon name="chevron-right" />
+      </span>
+    </button>
+  </div>
+
+  <sp-status-alerts
+    [error]="status.error"
+    [success]="status.success"
+    mode="toast"
+    [dismissibleError]="true"
+    (dismissError)="status.dismissError()"
+    (dismissSuccess)="status.dismissSuccess()" />
+</div>
+
+<div class="sp-viewer-backdrop" *ngIf="showViewer" (click)="closeViewer()">
+  <div class="sp-viewer" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" [attr.aria-label]="selectedItem?.name">
+    <header class="sp-viewer__head">
+      <div>
+        <h3>{{ selectedItem?.name }}</h3>
+        <p class="sp-viewer__path">{{ selectedItem?.path || selectedItem?.name }}</p>
+      </div>
+      <div class="sp-viewer__actions">
+        <button type="button" class="sp-viewer__action-btn sp-viewer__action-btn--secondary" (click)="downloadSelected()"><sp-icon name="download" size="sm" /> Download</button>
+        <button type="button" class="sp-viewer__action-btn sp-viewer__action-btn--icon" (click)="closeViewer()" [attr.aria-label]="m.viewer.closeAria">
+          <sp-icon name="x" />
+        </button>
+      </div>
+    </header>
+    <div class="sp-viewer__body">
+      <div class="sp-viewer__stage">
+        <div class="sp-viewer__overlay" *ngIf="viewerLoading" aria-live="polite" aria-busy="true">
+          <div class="sp-wait sp-wait--preview sp-wait--overlay" role="status" [attr.aria-label]="m.viewer.loadingPreviewAria">
+            <div class="sp-wait__sketch" aria-hidden="true">
+              <div class="sp-wait__sketch-toolbar"></div>
+              <div class="sp-wait__sketch-body">
+                <span class="sp-wait__sketch-line"></span>
+                <span class="sp-wait__sketch-line sp-wait__sketch-line--w90"></span>
+                <span class="sp-wait__sketch-line sp-wait__sketch-line--w75"></span>
+                <span class="sp-wait__sketch-line sp-wait__sketch-line--w60"></span>
+                <span class="sp-wait__sketch-block"></span>
+              </div>
+            </div>
+            <p class="sp-wait__title">
+              {{ m.viewer.loadingPreview }}
+              <span class="sp-wait__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            </p>
+          </div>
+        </div>
+
+        <!-- PDF, PPTX, DOCX, Excel, CSV — host must stay mounted while loading -->
+        <div
+          #officePreviewHost
+          class="sp-preview-host"
+          *ngIf="hasRichPreviewHost"
+          [class.sp-preview-host--busy]="viewerLoading"></div>
+
+        <div
+          class="sp-viewer__state sp-viewer__state--error"
+          *ngIf="viewerMediaError && !viewerUnsupportedMsg && !viewerLoading"
+          role="alert">
+          <span class="sp-viewer__state-icon" aria-hidden="true"><sp-icon name="alert" size="lg" /></span>
+          <h4 class="sp-viewer__state-title">{{ m.viewer.couldNotOpenPreview }}</h4>
+          <p class="sp-viewer__state-text">{{ viewerMediaError }}</p>
+          <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="downloadSelected()">
+            <sp-icon name="download" size="sm" /> {{ m.viewer.downloadFile }}
+          </button>
+        </div>
+
+        <div class="sp-viewer__state sp-viewer__state--unsupported" *ngIf="viewerUnsupportedMsg && !viewerLoading">
+          <span class="sp-viewer__state-icon" aria-hidden="true"><sp-icon name="file" size="lg" /></span>
+          <h4 class="sp-viewer__state-title">{{ m.viewer.previewNotAvailable }}</h4>
+          <p class="sp-viewer__state-text">{{ viewerUnsupportedMsg }}</p>
+          <button type="button" class="sp-btn sp-btn--primary sp-btn--sm" (click)="downloadSelected()">
+            <sp-icon name="download" size="sm" /> {{ m.viewer.downloadFile }}
+          </button>
+        </div>
+
+        <video
+          *ngIf="viewerKind === 'video' && viewerUrl && viewerShowsMedia"
+          #viewerVideo
+          [src]="viewerUrl"
+          [attr.crossorigin]="viewerStreamIsBlobUrl ? null : 'anonymous'"
+          controls
+          playsinline
+          preload="metadata"
+          class="sp-viewer__media"
+          (error)="onMediaError()"
+          (canplay)="onMediaCanPlay(viewerVideo)"></video>
+        <audio
+          *ngIf="viewerKind === 'audio' && viewerUrl && viewerShowsMedia"
+          [src]="viewerUrl"
+          [attr.crossorigin]="viewerStreamIsBlobUrl ? null : 'anonymous'"
+          controls
+          preload="metadata"
+          class="sp-viewer__media"
+          (error)="onMediaError()"
+          (canplay)="onMediaCanPlay()"></audio>
+        <img
+          *ngIf="viewerKind === 'image' && viewerUrl && viewerShowsMedia"
+          [src]="viewerUrl"
+          [attr.crossorigin]="viewerStreamIsBlobUrl ? null : 'anonymous'"
+          alt=""
+          class="sp-viewer__image" />
+        <pre *ngIf="viewerKind === 'text' && viewerText && viewerShowsMedia" class="sp-viewer__text">{{ viewerText }}</pre>
+      </div>
+    </div>
+    <footer class="sp-viewer__pick" *ngIf="filePickMode && !processConfigMode && selectedItem && !selectedItem.isFolder">
+      <div class="sp-viewer__pick-info">
+        <sp-icon name="file" size="sm" />
+        <div class="sp-viewer__pick-meta">
+          <span class="sp-viewer__pick-name">{{ selectedItem.name }}</span>
+          <span class="sp-viewer__pick-size">
+            {{ formatFileSize(selectedItem.size) }}
+            <ng-container *ngIf="selectedItem.lastModifiedDateTime">
+              &middot; {{ selectedItem.lastModifiedDateTime | date:'MMM d, y' }}
+            </ng-container>
+          </span>
+        </div>
+      </div>
+      <button type="button" class="sp-viewer__pick-btn" (click)="pickFile.emit()" [disabled]="pickFileBusy">
+        {{ pickFileBusy ? m.viewer.downloading : m.viewer.selectThisFile }}
+      </button>
+    </footer>
+  </div>
+</div>
+
+<!-- Shown only when choosing Logged In User from Connection options -->
+<div class="sp-curl-backdrop" *ngIf="userModeConfirmOpen" (click)="cancelSignedInUserMode()">
+  <div class="sp-curl-modal sp-account-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="user-mode-confirm-title">
+    <header class="sp-curl-modal__head">
+      <div class="sp-curl-modal__brand">
+        <span class="sp-curl-modal__icon" aria-hidden="true">
+          <sp-icon name="shield" size="lg" />
+        </span>
+        <div>
+          <h3 id="user-mode-confirm-title">{{ m.auth.userModeTitle }}</h3>
+          <p class="sp-curl-modal__subtitle">{{ m.auth.userModeSubtitle }}</p>
+        </div>
+      </div>
+      <button type="button" class="sp-curl-modal__close" (click)="cancelSignedInUserMode()" [attr.aria-label]="m.close">
+        <sp-icon name="x" />
+      </button>
+    </header>
+    <div class="sp-curl-modal__body">
+      <p class="sp-curl-modal__intro">
+        {{ m.auth.userModeIntro }}
+      </p>
+      <div class="sp-account-modal__actions">
+        <button type="button" class="sp-btn sp-btn--primary" (click)="confirmSignedInUserMode()">{{ m.auth.continue }}</button>
+        <button type="button" class="sp-btn sp-btn--secondary" (click)="cancelSignedInUserMode()">{{ m.auth.notNow }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Microsoft account (Logged In User mode) -->
+<div class="sp-curl-backdrop" *ngIf="userAccountModalOpen" (click)="closeUserAccountModal()">
+  <div class="sp-curl-modal sp-account-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
+    <header class="sp-curl-modal__head">
+      <div class="sp-curl-modal__brand">
+        <span class="sp-curl-modal__icon" aria-hidden="true">
+          <sp-icon name="shield" size="lg" />
+        </span>
+        <div>
+          <h3 id="account-modal-title">{{ m.auth.accountTitle }}</h3>
+          <p class="sp-curl-modal__subtitle">{{ m.auth.accountSubtitle }}</p>
+        </div>
+      </div>
+      <button type="button" class="sp-curl-modal__close" (click)="closeUserAccountModal()" [disabled]="userAccountBusy" [attr.aria-label]="m.close">
+        <sp-icon name="x" />
+      </button>
+    </header>
+    <div class="sp-curl-modal__body">
+      <ng-container *ngIf="auth.isSignedIn(); else accountSignIn">
+        <p class="sp-account-modal__user">{{ auth.account()?.username }}</p>
+        <p class="sp-curl-modal__intro" [innerHTML]="m.auth.sessionIntroHtml"></p>
+        <details class="sp-account-modal__scopes">
+          <summary>{{ m.auth.graphPermissionsSummary }}</summary>
+          <p>{{ m.auth.graphPermissionsDetail }}</p>
+        </details>
+        <div class="sp-account-modal__actions">
+          <button type="button" class="sp-btn sp-btn--primary" (click)="consentUserPopup()" [disabled]="userAccountBusy">
+            {{ userAccountBusy ? m.auth.pleaseWait : m.auth.updatePermissions }}
+          </button>
+          <button type="button" class="sp-btn sp-btn--secondary" (click)="signOutUserFromModal()" [disabled]="userAccountBusy">{{ m.auth.signOut }}</button>
+        </div>
+      </ng-container>
+      <ng-template #accountSignIn>
+        <p class="sp-curl-modal__intro">
+          {{ m.auth.signInIntro }}
+        </p>
+        <button type="button" class="sp-btn sp-btn--primary sp-btn--block" (click)="signInUserPopup()" [disabled]="userAccountBusy">
+          {{ userAccountBusy ? m.auth.pleaseWait : m.auth.signInWithMicrosoft }}
+        </button>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+<!-- Streaming API guide -->
+<div class="sp-curl-backdrop" *ngIf="curlModalOpen" (click)="closeCurlModal()">
+  <div class="sp-curl-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="curl-modal-title">
+    <header class="sp-curl-modal__head">
+      <div class="sp-curl-modal__brand">
+        <span class="sp-curl-modal__icon" aria-hidden="true">
+          <sp-icon name="file" size="lg" />
+        </span>
+        <div>
+          <h3 id="curl-modal-title">{{ curlModalData?.displayName || m.curl.defaultTitle }}</h3>
+          <p class="sp-curl-modal__subtitle">{{ m.curl.subtitle }}</p>
+        </div>
+      </div>
+      <button type="button" class="sp-curl-modal__close" (click)="closeCurlModal()" [attr.aria-label]="m.close">
+        <sp-icon name="x" />
+      </button>
+    </header>
+
+    <div class="sp-curl-modal__meta" *ngIf="curlModalData && !curlModalLoading">
+      <div class="sp-curl-meta-item">
+        <span class="sp-curl-meta-item__label">{{ m.curl.baseUrl }}</span>
+        <code class="sp-curl-meta-item__value">{{ curlModalData.baseUrl }}</code>
+      </div>
+      <div class="sp-curl-meta-item">
+        <span class="sp-curl-meta-item__label">{{ m.curl.apiVersionHeader }}</span>
+        <code class="sp-curl-meta-item__value">x-tpdi-api-version: {{ curlModalData.apiVersion }}</code>
+      </div>
+    </div>
+
+    <div class="sp-curl-modal__loader" *ngIf="curlModalLoading" aria-live="polite" aria-busy="true">
+      <span class="sp-curl-modal__spinner"></span>
+      <p>{{ m.curl.buildingSteps }}</p>
+    </div>
+
+    <div class="sp-curl-modal__body" *ngIf="curlModalData && !curlModalLoading">
+      <p class="sp-curl-modal__intro" [innerHTML]="m.curl.introHtml"></p>
+      <article class="sp-curl-step" *ngFor="let step of curlModalData.steps">
+        <div class="sp-curl-step__toolbar">
+          <div class="sp-curl-step__title-wrap">
+            <span class="sp-curl-step__badge">{{ m.curl.stepBadge(step.number) }}</span>
+            <h4 class="sp-curl-step__title">{{ step.title }}</h4>
+            <span class="sp-curl-step__optional" *ngIf="step.optional">{{ m.curl.optional }}</span>
+          </div>
+          <button
+            type="button"
+            class="sp-curl-step__copy"
+            (click)="copyCurlStep(step)"
+            [attr.aria-label]="m.curl.copyStepAria(step.number)">
+            <sp-icon *ngIf="curlStepCopied !== step.number" name="copy" size="sm" />
+            <sp-icon *ngIf="curlStepCopied === step.number" name="check" size="sm" />
+            {{ curlStepCopied === step.number ? m.curl.copied : m.curl.copy }}
+          </button>
+        </div>
+        <p class="sp-curl-step__desc" *ngIf="step.description">{{ step.description }}</p>
+        <div class="sp-curl-step__code-wrap">
+          <pre class="sp-curl-step__code"><code [innerHTML]="curlHighlight(step.command)"></code></pre>
+        </div>
+      </article>
+    </div>
+
+    <footer class="sp-curl-modal__foot" *ngIf="curlModalData && !curlModalLoading">
+      <button type="button" class="sp-btn sp-btn--ghost sp-btn--sm" (click)="downloadCurlScript()"><sp-icon name="download" size="sm" /> {{ m.curl.downloadTxt }}</button>
+      <button type="button" class="sp-btn sp-btn--primary sp-btn--sm" (click)="copyCurlModal()">
+        {{ curlModalCopied ? m.curl.copiedAll : m.curl.copyAll }}
+      </button>
+    </footer>
+  </div>
+</div>
+

@@ -1,0 +1,54 @@
+<p-table styleClass="p-datatable-striped" [value]="spNameDetails?.profilingRunHistoryLog" [paginator]="true"
+  [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+  [first]="first"
+  (onPage)="onPage($event)"
+  [loading]="false" [scrollable]="true" responsiveLayout="stack"
+  [totalRecords]="spNameDetails?.profilingRunHistoryLog.length" [showCurrentPageReport]="true"
+  currentPageReportTemplate="Showing {first} to {last} of {totalRecords}">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Run Id</th>
+      <th>Processed By</th>
+      <th>Started At</th>
+      <th>Ended At</th>
+      <th>Status</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-runHistory let-rowIndex="rowIndex">
+    @if (!searchLoading) {
+      <tr>
+        <td>{{runHistory.runId}}</td>
+        <td>{{runHistory.processedBy}}</td>
+        <td>{{runHistory.startedAt}}</td>
+        <td>{{runHistory.endedAt}}</td>
+        <td>{{runHistory.status}}</td>
+      </tr>
+    }
+    @if (searchLoading) {
+      <tr class="loading-row">
+        <td colspan="7" class="text-center">
+          <!-- <p-progressSpinner strokeWidth="4"></p-progressSpinner> -->
+          <h3 class="pb-2">Please wait... records are coming!</h3>
+        </td>
+      </tr>
+    }
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    @if (!searchLoading) {
+      <tr>
+        <td colspan="8" class="text-center">
+          <img src="no-data-found.svg" class="no-data" />
+          <h3 class="pb-2">No Data Found!</h3>
+        </td>
+      </tr>
+    }
+    @if (searchLoading) {
+      <tr class="loading-row">
+        <td colspan="7" class="text-center">
+          <!-- <p-progressSpinner strokeWidth="4"></p-progressSpinner> -->
+          <h3 class="pb-2">Please wait... records are coming!</h3>
+        </td>
+      </tr>
+    }
+  </ng-template>
+</p-table>

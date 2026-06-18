@@ -1,0 +1,54 @@
+.status-list-container {
+  padding: 0.5rem 0;
+}
+
+.eib-bp-mapped-list {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.eib-bp-mapped-list:hover {
+  background: #f9fafb;
+}
+
+.eib-bp-mapped-list:last-child {
+  border-bottom: none;
+}
+
+.status {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.status .d-flex {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.border-bottom-1 {
+  border-bottom: none;
+}
+
+.sm-font {
+  font-size: 1.1rem;
+}
+
+.sm-font:hover {
+  opacity: 0.75;
+}
+
+.material-symbols-outlined {
+  vertical-align: middle;
+}
+
+.h-80 {
+  height: 80%;
+  overflow-y: auto;
+}
+
+.float-end {
+  float: right;
+}

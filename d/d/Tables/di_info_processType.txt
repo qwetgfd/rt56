@@ -1,0 +1,31 @@
+﻿-- Data Ingestion table: di_info_processType
+-- Backup existing table data before seed. Adds process type 6 (SharePoint Workspace).
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[di_info_processType]', N'U') IS NOT NULL
+BEGIN
+    IF OBJECT_ID(N'[dbo].[di_info_processType_backup18June2026]', N'U') IS NOT NULL
+        DROP TABLE [dbo].[di_info_processType_backup18June2026];
+    SELECT * INTO [dbo].[di_info_processType_backup18June2026] FROM [dbo].[di_info_processType];
+END
+GO
+
+BEGIN TRANSACTION;
+BEGIN TRY
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[di_info_processType] WHERE [processTypeId] = 6)
+    BEGIN
+        SET IDENTITY_INSERT [dbo].[di_info_processType] ON;
+        INSERT INTO [dbo].[di_info_processType] ([processTypeId], [processTypeName], [active], [processConfigurationDisplay])
+        VALUES (6, N'SharePoint Workspace', 1, 1);
+        SET IDENTITY_INSERT [dbo].[di_info_processType] OFF;
+    END
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO

@@ -1,0 +1,62 @@
+<section class="sp-page">
+  <header class="sp-hero">
+    <p class="sp-eyebrow"><sp-icon name="cloud" size="sm" /> {{ page.eyebrow }}</p>
+    <h1 class="sp-hero__title">{{ branding.title }}</h1>
+    <p class="sp-hero__lead">{{ branding.homeLead }}</p>
+  </header>
+
+  @if (auth.isConfigured) {
+    <section class="sp-home-auth" [attr.aria-label]="authMsg.ariaLabel">
+      @if (auth.isSignedIn()) {
+        <sp-icon name="shield" size="sm" aria-hidden="true" />
+        <div class="sp-home-auth__body">
+          <span class="sp-home-auth__label">{{ authMsg.signedInLabel }}</span>
+          <span class="sp-home-auth__user">{{ auth.account()?.username }}</span>
+        </div>
+        <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="signOut()">{{ authMsg.signOut }}</button>
+      } @else {
+        <sp-icon name="shield" size="sm" aria-hidden="true" />
+        <p class="sp-home-auth__prompt">
+          {{ authMsg.signInPromptBefore }}<strong>{{ authMsg.signInProfile }}</strong>{{ authMsg.signInPromptAfter }}
+        </p>
+        <button type="button" class="sp-btn sp-btn--primary sp-btn--sm" (click)="signIn()" [disabled]="signingIn">
+          {{ signingIn ? authMsg.signInRedirecting : authMsg.signInWithMicrosoft }}
+        </button>
+      }
+      @if (authError) {
+        <p class="sp-home-auth__error" role="alert">{{ authError }}</p>
+      }
+    </section>
+  }
+
+  <nav class="sp-nav-grid" [attr.aria-label]="branding.navAriaLabel">
+    <button type="button" class="sp-nav-card" (click)="openApplications.emit()">
+      <span class="sp-nav-card__icon sp-nav-card__icon--apps" aria-hidden="true"><sp-icon name="apps" size="lg" /></span>
+      <span class="sp-nav-card__body">
+        <strong>{{ page.applicationsNavTitle }}</strong>
+        <small>{{ branding.applicationsNavHint }}</small>
+      </span>
+      <sp-icon class="sp-nav-card__chevron" name="chevron-right" />
+    </button>
+    <button type="button" class="sp-nav-card" (click)="openWorkspace.emit()">
+      <span class="sp-nav-card__icon sp-nav-card__icon--workspace" aria-hidden="true"><sp-icon name="workspace" size="lg" /></span>
+      <span class="sp-nav-card__body">
+        <strong>{{ branding.browseNavTitle }}</strong>
+        <small>{{ branding.browseNavHint }}</small>
+      </span>
+      <sp-icon class="sp-nav-card__chevron" name="chevron-right" />
+    </button>
+  </nav>
+
+  <section class="sp-info-block" aria-labelledby="capabilities-heading">
+    <h2 id="capabilities-heading" class="sp-info-block__title"><sp-icon name="info" size="sm" /> {{ page.aboutTitle }}</h2>
+    <ul class="sp-info-list">
+      @for (item of page.capabilities; track item.label) {
+        <li>
+          <span class="sp-info-list__label"><sp-icon [name]="item.icon" size="sm" /> {{ item.label }}</span>
+          <span class="sp-info-list__text">{{ item.text }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+</section>

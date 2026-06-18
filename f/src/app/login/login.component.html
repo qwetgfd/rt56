@@ -1,0 +1,33 @@
+<section id="loginBody">
+  <div id="loginPanel">
+    <div class="login-top">
+      <img src="DI-logo_login.svg" />
+    </div>
+    <div class="login-gap"></div>
+    <div class="login-action">
+      <label class="text-center pb-2"
+        ><span style="color: #253788">Login with </span>
+        <span class="semi-bold">TP ID</span></label
+      >
+      <button type="button" class="btn btn-dark login-btn" (click)="login()">
+        Login
+      </button>
+      @if (!environment.production) {
+        <button type="button" class="btn btn-outline-secondary guest-login-btn" (click)="guestLogin()">
+          Continue as Guest
+        </button>
+      }
+    </div>
+    <div class="login-bottom">
+      <div class="login-footer">
+        <img src="tp-loader.png" />
+        <!-- <div class="TPicon-blue icon-tpicon footer-icon"></div> -->
+        <div>
+          Product Development Team. <br />
+          &copy;Copyright - TP 2024
+        </div>
+      </div>
+      <div>Version: 2.0.0</div>
+    </div>
+  </div>
+</section>

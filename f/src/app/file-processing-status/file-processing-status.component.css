@@ -1,0 +1,192 @@
+#processFilePage {
+  padding: 0;
+}
+
+.page-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.page-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.25rem;
+  background: #fff;
+}
+
+.file-process-list {
+  margin-bottom: 0.5rem;
+}
+
+.process-list {
+  position: relative;
+}
+
+.process-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+  font-size: 0.9rem;
+}
+
+.process-title:hover {
+  background: #f3f4f6;
+}
+
+.contol {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.process-title b {
+  font-weight: 600;
+}
+
+.file-process-list ul {
+  list-style: none;
+  padding-left: 2rem;
+  margin: 0.25rem 0;
+}
+
+.file-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: #fafafa;
+  transition: box-shadow 0.15s;
+}
+
+.file-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.file-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.block {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.fileIconSuccess {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.fileIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.fileIconDanger {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.fileIconStarted {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.file-img {
+  max-width: 28px;
+  max-height: 28px;
+}
+
+.wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.file-name.text-success {
+  color: #059669;
+}
+
+.file-name.text-danger {
+  color: #dc2626;
+}
+
+.file-name.text-primary {
+  color: #2563eb;
+}
+
+.f-12 {
+  font-size: 0.75rem;
+}
+
+.f-12 strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+.loaderA {
+  display: none;
+}
+
+.btn.btn-primary {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.btn.btn-primary span {
+  display: block;
+}
+
+.text-break {
+  word-break: break-word;
+}
+
+.ps-0 {
+  padding-left: 0;
+}
+
+.pb-4 {
+  padding-bottom: 1.5rem;
+}

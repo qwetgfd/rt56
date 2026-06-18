@@ -1,0 +1,28 @@
+.add-details-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.p-div {
+  text-align: center;
+}
+
+.details-fields img {
+  max-width: 200px;
+  margin-bottom: 1rem;
+}
+
+.details-fields h4 {
+  font-size: 1.2rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 1rem;
+}
+
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}

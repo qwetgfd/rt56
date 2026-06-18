@@ -1,0 +1,12 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ title }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
+</div>
+<div class="modal-body">
+  <div [innerHTML]="message"></div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-primary" (click)="onYesClick()">Yes</button>
+  <button type="button" class="btn btn-secondary" (click)="onNoClick()">No</button>
+
+</div>

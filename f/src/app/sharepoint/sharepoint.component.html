@@ -1,0 +1,24 @@
+﻿<div class="sp-app">
+  <main class="sp-app-main">
+    @switch (view) {
+      @case ('home') {
+        <app-sharepoint-home
+          (openWorkspace)="goWorkspace()"
+          (openApplications)="goApplications()" />
+      }
+      @case ('applications') {
+        <app-sharepoint-applications
+          (useApplication)="onUseApplication($event)"
+          (navigateHome)="goHome()" />
+      }
+      @case ('workspace') {
+        <app-sharepoint-workspace
+          [initialApplicationId]="pendingApplicationId"
+          (navigateHome)="goHome()"
+          (navigateApplications)="goApplications()"
+          (registerInternal)="goApplications()"
+          (launchApplicationConsumed)="onLaunchApplicationConsumed()" />
+      }
+    }
+  </main>
+</div>

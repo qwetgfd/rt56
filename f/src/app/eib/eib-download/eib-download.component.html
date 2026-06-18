@@ -1,0 +1,32 @@
+<ng-container>
+  @if (eibConfiguration) {
+    <div class="status-list-container d-flex flex-column justify-between h-80">
+      <div class="">
+        @for (eib of eibConfiguration.businessProcessFileUrlMapping; track eib; let i = $index) {
+          <div class="eib-bp-mapped-list"
+            >
+            <!-- <div class="status-indi-holder">
+            <div class="status-indicator"></div>
+          </div> -->
+          <div class="status d-flex">
+            <div class="d-flex border-bottom-1">
+              <div class="d-flex">
+                <div class="me-2">{{i+1}}. </div>
+                {{eib.filename}}
+              </div>
+              <span class="material-symbols-outlined sm-font" data-toggle="tooltip" title="Download File"
+                (click)="downloadFile(eib)" [style.cursor]="'pointer'">
+                download
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+    <!--Todo put this always at the bottom of the container-->
+    <div class="mt-2">
+      <input type="button" class="btn btn-primary float-end" value="Download" (click)="downloadAllViaAnchorStaggered()">
+    </div>
+  </div>
+}
+</ng-container>

@@ -1,0 +1,39 @@
+﻿-- SharePoint-only table: di_application
+-- Safe to backup, drop, recreate. Replace backup18June2026 with your date.
+
+SET NOCOUNT ON;
+GO
+
+IF OBJECT_ID(N'[dbo].[di_application]', N'U') IS NOT NULL
+BEGIN
+    IF OBJECT_ID(N'[dbo].[di_application_backup18June2026]', N'U') IS NOT NULL
+        DROP TABLE [dbo].[di_application_backup18June2026];
+    EXEC sp_rename N'dbo.di_application', N'di_application_backup18June2026', N'OBJECT';
+END
+GO
+
+CREATE TABLE [dbo].[di_application] (
+    [applicationid] UNIQUEIDENTIFIER NOT NULL DEFAULT (newid()),
+    [applicationtypeid] INT NOT NULL,
+    [ownerkey] NVARCHAR(128) NOT NULL DEFAULT (N'system'),
+    [displayname] NVARCHAR(128) NOT NULL,
+    [tenantid] NVARCHAR(64) NOT NULL,
+    [clientid] NVARCHAR(64) NOT NULL,
+    [clientsecret] NVARCHAR(512) NOT NULL,
+    [hostname] NVARCHAR(256) NOT NULL,
+    [sitename] NVARCHAR(256),
+    [libraryname] NVARCHAR(256),
+    [consumerclientid] NVARCHAR(64),
+    [consumersecret] NVARCHAR(512),
+    [notes] NVARCHAR(1024),
+    [isactive] BIT NOT NULL DEFAULT ((1)),
+    [createdon] DATETIME2(3) NOT NULL DEFAULT (getutcdate()),
+    [modifiedon] DATETIME2(3),
+    [owner] NVARCHAR(256) NOT NULL DEFAULT (N''),
+    [coowner] NVARCHAR(256),
+    [ownerupn] NVARCHAR(256),
+    [coownerupn] NVARCHAR(256),
+    CONSTRAINT [PK_di_application] PRIMARY KEY CLUSTERED ([applicationid])
+);
+CREATE NONCLUSTERED INDEX [ix_di_application_ownerkey] ON [dbo].[di_application] ([ownerkey]);
+CREATE NONCLUSTERED INDEX [ix_di_application_typeid] ON [dbo].[di_application] ([applicationtypeid]);

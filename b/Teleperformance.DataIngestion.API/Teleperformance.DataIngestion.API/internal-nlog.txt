@@ -1,0 +1,213 @@
+2026-06-15 19:25:48.3017 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:25:48.3017 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:25:48.3141 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:25:48.3141 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:25:48.3141 Info Configuration initialized.
+2026-06-15 19:25:52.7003 Info Shutdown() called. Logger closing...
+2026-06-15 19:25:52.7003 Info Closing old configuration.
+2026-06-15 19:25:52.7003 Info Logger has been closed down.
+2026-06-15 19:26:31.3624 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:26:31.3624 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:26:31.3624 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:26:31.3624 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:26:31.3810 Info Configuration initialized.
+2026-06-15 19:28:10.1362 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:28:10.1407 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:28:10.1407 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:28:10.1407 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:28:10.1550 Info Configuration initialized.
+2026-06-15 19:32:05.2583 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:32:05.2583 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:32:05.2583 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:32:05.2744 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:32:05.2744 Info Configuration initialized.
+2026-06-15 19:32:05.6226 Warn FileTarget(Name=file): Failed to create file appender: C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs/2026-06-15.log Exception: System.IO.IOException: The process cannot access the file 'C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs\2026-06-15.log' because it is being used by another process.
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateDirectoryFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.CreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender..ctor(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender.Factory.NLog.Internal.FileAppenders.IFileAppenderFactory.Open(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.FileAppenderCache.CreateAppender(String fileName, Int32 freeSpot)
+2026-06-15 19:32:05.7440 Warn FileTarget(Name=file): Failed to create file appender: C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs/2026-06-15.log Exception: System.IO.IOException: The process cannot access the file 'C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs\2026-06-15.log' because it is being used by another process.
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateDirectoryFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.CreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender..ctor(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender.Factory.NLog.Internal.FileAppenders.IFileAppenderFactory.Open(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.FileAppenderCache.CreateAppender(String fileName, Int32 freeSpot)
+2026-06-15 19:32:05.7675 Warn FileTarget(Name=file): Failed to create file appender: C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs/2026-06-15.log Exception: System.IO.IOException: The process cannot access the file 'C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs\2026-06-15.log' because it is being used by another process.
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateDirectoryFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.CreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender..ctor(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender.Factory.NLog.Internal.FileAppenders.IFileAppenderFactory.Open(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.FileAppenderCache.CreateAppender(String fileName, Int32 freeSpot)
+2026-06-15 19:32:05.7675 Warn FileTarget(Name=file): Failed to create file appender: C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs/2026-06-15.log Exception: System.IO.IOException: The process cannot access the file 'C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs\2026-06-15.log' because it is being used by another process.
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateDirectoryFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.CreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender..ctor(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender.Factory.NLog.Internal.FileAppenders.IFileAppenderFactory.Open(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.FileAppenderCache.CreateAppender(String fileName, Int32 freeSpot)
+2026-06-15 19:32:05.7675 Warn FileTarget(Name=file): Failed to create file appender: C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs/2026-06-15.log Exception: System.IO.IOException: The process cannot access the file 'C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\logs\2026-06-15.log' because it is being used by another process.
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.TryCreateDirectoryFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.BaseFileAppender.CreateFileStream(Boolean allowFileSharedWriting, Int32 overrideBufferSize)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender..ctor(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.SingleProcessFileAppender.Factory.NLog.Internal.FileAppenders.IFileAppenderFactory.Open(String fileName, ICreateFileParameters parameters)
+   at NLog.Internal.FileAppenders.FileAppenderCache.CreateAppender(String fileName, Int32 freeSpot)
+2026-06-15 19:32:43.8333 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:32:43.8333 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:32:43.8333 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:32:43.8522 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:32:43.8522 Info Configuration initialized.
+2026-06-15 19:44:21.3468 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:44:21.3468 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:44:21.3468 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:44:21.3635 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:44:21.3635 Info Configuration initialized.
+2026-06-15 19:47:31.2376 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:47:31.2376 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:47:31.2376 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:47:31.2563 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:47:31.2563 Info Configuration initialized.
+2026-06-15 19:49:00.9742 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:49:00.9742 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:49:00.9742 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:49:00.9884 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:49:00.9884 Info Configuration initialized.
+2026-06-15 19:49:16.7311 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:49:16.7358 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:49:16.7358 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:49:16.7358 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:49:16.7358 Info Configuration initialized.
+2026-06-15 19:51:47.1671 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:51:47.1712 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:51:47.1712 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:51:47.1859 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:51:47.1859 Info Configuration initialized.
+2026-06-15 19:55:39.7197 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 19:55:39.7197 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 19:55:39.7287 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 19:55:39.7374 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 19:55:39.7374 Info Configuration initialized.
+2026-06-15 20:03:03.4874 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 20:03:03.4874 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 20:03:03.4874 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 20:03:03.5053 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 20:03:03.5053 Info Configuration initialized.
+2026-06-15 20:21:15.8545 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 20:21:15.8545 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 20:21:15.8632 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 20:21:15.8632 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 20:21:15.8632 Info Configuration initialized.
+2026-06-15 20:28:26.2750 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 20:28:26.2750 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 20:28:26.2844 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 20:28:26.2844 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 20:28:26.2844 Info Configuration initialized.
+2026-06-15 20:48:00.3132 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 20:48:00.3132 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 20:48:00.3132 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 20:48:00.3315 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 20:48:00.3315 Info Configuration initialized.
+2026-06-15 21:16:30.8368 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 21:16:30.8368 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 21:16:30.8452 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 21:16:30.8452 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 21:16:30.8601 Info Configuration initialized.
+2026-06-15 21:22:33.7443 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 21:22:33.7443 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 21:22:33.7540 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 21:22:33.7540 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 21:22:33.7681 Info Configuration initialized.
+2026-06-15 21:49:12.5650 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 21:49:12.5650 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 21:49:12.5809 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 21:49:12.5933 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 21:49:12.5933 Info Configuration initialized.
+2026-06-15 21:54:59.4251 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 21:54:59.4251 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 21:54:59.4251 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 21:54:59.4391 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 21:54:59.4391 Info Configuration initialized.
+2026-06-15 21:59:47.0457 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 21:59:47.0457 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 21:59:47.0631 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 21:59:47.0631 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 21:59:47.0785 Info Configuration initialized.
+2026-06-15 22:30:07.4499 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-15 22:30:07.4499 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-15 22:30:07.4644 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-15 22:30:07.4734 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-15 22:30:07.4734 Info Configuration initialized.
+2026-06-16 10:54:10.7578 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-16 10:54:10.7578 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-16 10:54:10.7578 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-16 10:54:10.7738 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-16 10:54:10.7738 Info Configuration initialized.
+2026-06-16 16:05:45.3952 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-16 16:05:45.3952 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-16 16:05:45.4049 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-16 16:05:45.4049 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-16 16:05:45.4203 Info Configuration initialized.
+2026-06-16 17:47:06.5660 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-16 17:47:06.5660 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-16 17:47:06.5660 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-16 17:47:06.5868 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-16 17:47:06.5868 Info Configuration initialized.
+2026-06-16 20:35:26.7824 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-16 20:35:26.7824 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-16 20:35:26.7824 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-16 20:35:26.7980 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-16 20:35:26.7980 Info Configuration initialized.
+2026-06-16 20:58:34.8083 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-16 20:58:34.8118 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-16 20:58:34.8118 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-16 20:58:34.8118 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-16 20:58:34.8288 Info Configuration initialized.
+2026-06-17 09:01:32.2105 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-17 09:01:32.2141 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-17 09:01:32.2191 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-17 09:01:32.2191 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-17 09:01:32.2325 Info Configuration initialized.
+2026-06-17 18:26:41.1954 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-17 18:26:41.1993 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-17 18:26:41.1993 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-17 18:26:41.1993 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-17 18:26:41.2197 Info Configuration initialized.
+2026-06-17 20:56:38.4452 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-17 20:56:38.4497 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-17 20:56:38.4497 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-17 20:56:38.4644 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-17 20:56:38.4644 Info Configuration initialized.
+2026-06-18 11:24:38.4877 Info Registered target NLog.Targets.FileTarget(Name=file)
+2026-06-18 11:24:38.4877 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2026-06-18 11:24:38.4877 Info NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 5.3.3.2683. Product version: 5.3.3+341c753ad4dce4dd476dcf0bc3ff2cfd9db76493. GlobalAssemblyCache: False
+2026-06-18 11:24:38.5058 Info Validating config: TargetNames=file, console, ConfigItems=25, FilePath=C:\Users\user\Desktop\s\Integration_Project\Backend\Teleperformance.DataIngestion.API\Teleperformance.DataIngestion.API\bin\Debug\net8.0\nlog.config
+2026-06-18 11:24:38.5058 Info Configuration initialized.

@@ -1,0 +1,18 @@
+<button
+  class="nav-link npc-sp-nav"
+  [id]="sharePointSettingsTabId"
+  type="button"
+  role="tab"
+  [attr.aria-controls]="sharePointSettingsTabPaneId"
+  [attr.aria-selected]="isNavActive"
+  [attr.title]="navTitle"
+  (click)="onTabClick($event)"
+  [ngClass]="{
+    'd-none': !(processType == sharePointProcessTypeId),
+    'active': isNavActive
+  }"
+  [disabled]="processType == ''">
+  <i class="material-symbols-rounded tab-icon" aria-hidden="true">cloud</i>
+  <span class="npc-sp-nav__label">{{ navLabel }}</span>
+  <i class="material-icons-outlined npc-sp-nav__chevron" aria-hidden="true">chevron_right</i>
+</button>

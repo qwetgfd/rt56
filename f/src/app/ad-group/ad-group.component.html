@@ -1,0 +1,30 @@
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Change Group </h3> 
+        <span class="material-icons float-end close-icon cursor-pointer" (click)="close()">
+          close
+        </span>
+      </div>
+      <div class="modal-body mb-2">
+        <div >
+          <ng-select [(ngModel)]="securityGroupId" placeholder="Select Group"
+            [multiple]="false" [clearable]="false">
+            <ng-option selected disabled value="">Select Group</ng-option>
+            @for (gp of securityGroup; track gp) {
+              <ng-option [value]="gp.securityGroupId">
+              {{gp.securityGroupName}}</ng-option>
+            }
+          </ng-select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light ms-1" (click)="close()">Close</button>
+        <!-- <button class="btn btn-primary me-1" type="button" (click)="updateGroup()">Update</button> -->
+        <button  class="btn btn-primary me-1"  type="button"  (click)="updateGroup()"  [disabled]="!securityGroupId || securityGroupId === previousGroupId">
+          Update
+        </button>
+      </div>
+    </div>
+  </div>
+  

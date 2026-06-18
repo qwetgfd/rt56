@@ -1,0 +1,1078 @@
+/* Registration — layered cinematic showcase (right panel) */
+
+.sp-page--form .sp-reg-aside {
+  position: sticky;
+  top: 20px;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  animation: sp-reg-aside-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+.sp-page--form .sp-reg-magic__canvas {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 380px;
+  max-height: min(76vh, 540px);
+  border-radius: 16px;
+  overflow: hidden;
+  isolation: isolate;
+  scrollbar-width: none;
+  box-shadow:
+    0 24px 64px rgba(8, 12, 28, 0.38),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+.sp-page--form .sp-reg-magic__canvas::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Ambient base ── */
+.sp-page--form .sp-reg-magic__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 70% at 12% 88%, rgba(227, 6, 19, 0.24), transparent 55%),
+    radial-gradient(ellipse 75% 55% at 90% 10%, rgba(37, 99, 235, 0.3), transparent 52%),
+    radial-gradient(ellipse 55% 45% at 48% 42%, rgba(3, 131, 135, 0.14), transparent 58%),
+    linear-gradient(155deg, #060a14 0%, #0f172a 40%, #101827 100%);
+}
+
+.sp-page--form .sp-reg-magic__mesh {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(ellipse 42% 38% at 18% 32%, rgba(46, 68, 177, 0.22), transparent 70%),
+    radial-gradient(ellipse 38% 36% at 82% 68%, rgba(55, 198, 208, 0.18), transparent 68%),
+    radial-gradient(ellipse 34% 32% at 55% 52%, rgba(46, 68, 177, 0.1), transparent 65%);
+  filter: blur(42px);
+  animation: sp-magic-mesh-drift 22s ease-in-out infinite alternate, sp-magic-mesh-shimmer 8s ease-in-out infinite;
+}
+
+.sp-page--form .sp-reg-magic__grid {
+  position: absolute;
+  inset: -8%;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, #000 15%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, #000 15%, transparent 78%);
+  opacity: 0.5;
+  animation: sp-magic-grid-shift 40s linear infinite;
+}
+
+.sp-page--form .sp-reg-magic__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 10, 20, 0.1) 0%, rgba(6, 10, 20, 0.78) 100%);
+}
+
+.sp-page--form .sp-reg-magic__accent {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(52px);
+  pointer-events: none;
+}
+
+.sp-page--form .sp-reg-magic__accent--red {
+  width: 200px;
+  height: 200px;
+  left: -50px;
+  bottom: 8%;
+  background: #e30613;
+  opacity: 0.55;
+  animation: sp-magic-accent-a 10s ease-in-out infinite alternate;
+}
+
+.sp-page--form .sp-reg-magic__accent--blue {
+  width: 220px;
+  height: 220px;
+  right: -60px;
+  top: 6%;
+  background: #2563eb;
+  opacity: 0.5;
+  animation: sp-magic-accent-b 12s ease-in-out infinite alternate;
+}
+
+.sp-page--form .sp-reg-magic__accent--teal {
+  width: 160px;
+  height: 160px;
+  left: 42%;
+  top: 55%;
+  background: #038387;
+  opacity: 0.35;
+  animation: sp-magic-accent-c 14s ease-in-out infinite alternate;
+}
+
+.sp-page--form .sp-reg-magic__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Partner brand strip */
+.sp-page--form .sp-reg-magic__brand {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(8, 12, 24, 0.72);
+  border: 1px solid rgba(46, 68, 177, 0.32);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+.sp-page--form .sp-reg-magic__brand sp-tp-logo {
+  --sp-tp-logo-size: 28px;
+}
+
+.sp-page--form .sp-magic-snap__badge--logo sp-tp-logo {
+  --sp-tp-logo-size: 18px;
+}
+
+.sp-page--form .sp-reg-magic__cap-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sp-page--form .sp-demo-mask {
+  color: rgba(148, 163, 184, 0.95);
+  letter-spacing: 0.04em;
+}
+
+/* ── Floating snapshot images ── */
+.sp-page--form .sp-magic-snaps {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sp-page--form .sp-magic-snap {
+  position: absolute;
+  width: 168px;
+  height: 104px;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.55;
+  filter: blur(2px) saturate(1.05) brightness(0.95);
+  border: 1px solid rgba(46, 68, 177, 0.22);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.sp-page--form .sp-magic-snap--register { background-image: url('/sharepoint/snap-register.svg'); }
+.sp-page--form .sp-magic-snap--sites    { background-image: url('/sharepoint/snap-sites.svg'); }
+.sp-page--form .sp-magic-snap--workspace { background-image: url('/sharepoint/snap-workspace.svg'); }
+.sp-page--form .sp-magic-snap--stream   { background-image: url('/sharepoint/snap-stream.svg'); }
+.sp-page--form .sp-magic-snap--verify   { background-image: url('/sharepoint/snap-verify.svg'); }
+
+.sp-page--form .sp-magic-snap--register.sp-magic-snap--a {
+  top: 4%;
+  left: 3%;
+  animation: sp-magic-snap-float-a 20s ease-in-out infinite;
+}
+
+.sp-page--form .sp-magic-snap--sites.sp-magic-snap--a {
+  top: 10%;
+  right: 2%;
+  animation: sp-magic-snap-float-c 22s ease-in-out infinite;
+}
+
+.sp-page--form .sp-magic-snap--workspace.sp-magic-snap--a {
+  bottom: 14%;
+  left: 2%;
+  animation: sp-magic-snap-float-d 21s ease-in-out infinite;
+}
+
+.sp-page--form .sp-magic-snap--stream.sp-magic-snap--a {
+  bottom: 4%;
+  right: 4%;
+  width: 156px;
+  height: 96px;
+  animation: sp-magic-snap-float-b 23s ease-in-out infinite;
+}
+
+.sp-page--form .sp-magic-snap--verify.sp-magic-snap--a {
+  top: 32%;
+  left: 1%;
+  width: 140px;
+  height: 88px;
+  opacity: 0.55;
+  animation: sp-magic-snap-float-c 24s ease-in-out infinite reverse;
+}
+
+/* Snapshot corner badges — mono technical */
+.sp-page--form .sp-magic-snap__badge {
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(12, 18, 32, 0.92);
+  border: 1px solid rgba(46, 68, 177, 0.4);
+  color: #a5b4fc;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sp-page--form .sp-magic-snap__badge--logo {
+  padding: 4px;
+}
+
+.sp-page--form .sp-magic-snap__badge--logo sp-sharepoint-logo {
+  --sp-sharepoint-logo-size: 18px;
+}
+
+/* Contextual capability chips */
+.sp-page--form .sp-magic-caps {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 42% 40% at 50% 46%, transparent 0%, #000 72%);
+  -webkit-mask-image: radial-gradient(ellipse 42% 40% at 50% 46%, transparent 0%, #000 72%);
+}
+
+.sp-page--form .sp-magic-cap {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 148px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(12, 18, 32, 0.78);
+  border: 1px solid rgba(46, 68, 177, 0.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  color: #c7d2fe;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.sp-page--form .sp-magic-cap span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-page--form .sp-magic-cap sp-icon,
+.sp-page--form .sp-magic-cap .sp-icon {
+  flex-shrink: 0;
+  color: #7dd3fc;
+}
+
+.sp-page--form .sp-magic-cap--1 { top: 6%;  left: 5%;  animation: sp-magic-cap-drift-a 14s ease-in-out infinite; }
+.sp-page--form .sp-magic-cap--2 { top: 5%;  right: 4%; animation: sp-magic-cap-drift-b 16s ease-in-out infinite; }
+.sp-page--form .sp-magic-cap--3 { top: 20%; left: 3%;  animation: sp-magic-cap-drift-c 15s ease-in-out infinite reverse; }
+.sp-page--form .sp-magic-cap--4 { top: 18%; right: 3%; animation: sp-magic-cap-drift-d 17s ease-in-out infinite; }
+.sp-page--form .sp-magic-cap--5 { bottom: 20%; left: 4%; animation: sp-magic-cap-drift-a 18s ease-in-out infinite reverse; }
+.sp-page--form .sp-magic-cap--6 { bottom: 18%; right: 4%; animation: sp-magic-cap-drift-b 14s ease-in-out infinite; }
+.sp-page--form .sp-magic-cap--7 { bottom: 6%; left: 7%; animation: sp-magic-cap-drift-c 16s ease-in-out infinite; }
+.sp-page--form .sp-magic-cap--8 { bottom: 6%; right: 7%; animation: sp-magic-cap-drift-d 15s ease-in-out infinite reverse; }
+
+/* Center vignette — keeps hero readable */
+.sp-page--form .sp-reg-magic__focus {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 58% 52% at 50% 46%, rgba(6, 10, 20, 0.55) 0%, transparent 68%),
+    linear-gradient(180deg, transparent 62%, rgba(6, 10, 20, 0.45) 100%);
+}
+
+/* ── Hero stage (one scene at a time) ── */
+.sp-page--form .sp-magic-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  padding: 52px 20px 40px;
+  overflow: hidden;
+}
+
+/* ── Hero moments (9 × 4s = 36s) ── */
+.sp-page--form .sp-moment {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: sp-moment-cycle 36s linear infinite;
+}
+
+.sp-page--form .sp-moment--1 { animation-delay: 0s; }
+.sp-page--form .sp-moment--2 { animation-delay: -4s; }
+.sp-page--form .sp-moment--3 { animation-delay: -8s; }
+.sp-page--form .sp-moment--4 { animation-delay: -12s; }
+.sp-page--form .sp-moment--5 { animation-delay: -16s; }
+.sp-page--form .sp-moment--6 { animation-delay: -20s; }
+.sp-page--form .sp-moment--7 { animation-delay: -24s; }
+.sp-page--form .sp-moment--8 { animation-delay: -28s; }
+.sp-page--form .sp-moment--9 { animation-delay: -32s; }
+
+.sp-page--form .sp-moment__hero {
+  position: relative;
+  width: min(100%, 300px);
+  padding: 18px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.sp-page--form .sp-moment__label {
+  display: block;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+  line-height: 1.35;
+}
+
+/* Hero icon badges — enterprise glass */
+.sp-page--form .sp-moment__ico {
+  align-self: center;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(12, 18, 32, 0.88);
+  border: 1px solid rgba(46, 68, 177, 0.38);
+  color: #93c5fd;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  animation: sp-moment-ico-subtle 4s ease-in-out infinite;
+}
+
+.sp-page--form .sp-moment__ico--cloud {
+  color: #7dd3fc;
+  border-color: rgba(55, 198, 208, 0.35);
+}
+
+.sp-page--form .sp-moment__ico--cloud sp-sharepoint-logo {
+  --sp-sharepoint-logo-size: 30px;
+}
+
+.sp-page--form .sp-moment__ico--verify {
+  color: #6ee7b7;
+  border-color: rgba(55, 198, 208, 0.4);
+  margin-bottom: 4px;
+}
+
+/* URL moment */
+.sp-page--form .sp-moment__hero--url {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sp-page--form .sp-moment__glow {
+  position: absolute;
+  inset: -15%;
+  background: radial-gradient(circle at 50% 50%, rgba(46, 68, 177, 0.18), transparent 62%);
+  animation: sp-moment-glow-pulse 4s ease-in-out infinite;
+}
+
+.sp-page--form .sp-moment__url {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(8, 15, 30, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #e0f2fe;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+}
+
+.sp-page--form .sp-moment__url-text {
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 0;
+  animation: sp-moment-type 4s steps(34) infinite;
+}
+
+.sp-page--form .sp-moment__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.4;
+}
+
+/* Sites moment */
+.sp-page--form .sp-moment__hero--sites {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-page--form .sp-moment__site {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transform: translateX(-14px);
+  animation: sp-moment-site-in 4s ease-out infinite;
+}
+
+.sp-page--form .sp-moment__site em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 700;
+  color: #6ee7b7;
+}
+
+.sp-page--form .sp-moment__site--a { animation-delay: 0s; border-color: rgba(96, 165, 250, 0.35); }
+.sp-page--form .sp-moment__site--b { animation-delay: 0.15s; border-color: rgba(52, 211, 153, 0.35); }
+.sp-page--form .sp-moment__site--c {
+  animation-delay: 0.3s;
+  color: #93c5fd;
+  border-style: dashed;
+  background: transparent;
+}
+
+/* Library moment */
+.sp-page--form .sp-moment__hero--library {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-page--form .sp-moment__lib-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #bae6fd;
+  margin-bottom: 2px;
+}
+
+.sp-page--form .sp-moment__lib-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: sp-moment-lib-in 4s ease-out infinite;
+}
+
+.sp-page--form .sp-moment__lib-opt--on {
+  color: #e0f2fe;
+  background: rgba(37, 99, 235, 0.28);
+  border-color: rgba(96, 165, 250, 0.45);
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.18);
+}
+
+.sp-page--form .sp-moment__lib-opt:nth-child(2) { animation-delay: 0s; }
+.sp-page--form .sp-moment__lib-opt:nth-child(3) { animation-delay: 0.12s; }
+.sp-page--form .sp-moment__lib-opt:nth-child(4) { animation-delay: 0.24s; }
+
+/* Verify moment */
+.sp-page--form .sp-moment__hero--verify {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+  justify-content: center;
+}
+
+.sp-page--form .sp-moment__phase {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sp-page--form .sp-moment__phase--done {
+  color: #a7f3d0;
+  border-color: rgba(52, 211, 153, 0.3);
+  animation: sp-moment-phase-done 4s ease-out infinite;
+}
+
+.sp-page--form .sp-moment__phase--active {
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+  animation: sp-moment-phase-active 4s ease-in-out infinite;
+}
+
+.sp-page--form .sp-moment__verify-ring {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin-top: -28px;
+  border-radius: 50%;
+  border: 2px solid rgba(52, 211, 153, 0.5);
+  animation: sp-moment-radar 4s ease-out infinite;
+}
+
+/* Register moment */
+.sp-page--form .sp-moment__hero--register {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.sp-page--form .sp-moment__appico {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 12px 32px rgba(46, 68, 177, 0.35);
+  animation: sp-moment-app-pop 4s ease-in-out infinite;
+}
+
+.sp-page--form .sp-moment__appico sp-tp-logo,
+.sp-page--form .sp-moment__appico .sp-tp-logo {
+  --sp-tp-logo-size: 38px;
+}
+
+.sp-page--form .sp-moment__appico-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 20px;
+  border: 1px solid rgba(46, 68, 177, 0.45);
+  animation: sp-moment-radar 4s ease-out infinite;
+}
+
+.sp-page--form .sp-moment__hero--register strong {
+  font-size: 13px;
+  color: #f8fafc;
+}
+
+.sp-page--form .sp-moment__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Site type moment */
+.sp-page--form .sp-moment__hero--types {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-page--form .sp-moment__type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: none;
+}
+
+.sp-page--form .sp-moment__type--on {
+  color: #e0f2fe;
+  background: rgba(37, 99, 235, 0.28);
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 24px rgba(37, 99, 235, 0.2);
+  animation: sp-moment-type-glow 4s ease-in-out infinite;
+}
+
+/* Browse moment */
+.sp-page--form .sp-moment__hero--browse {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.sp-page--form .sp-moment__crumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 2px;
+}
+
+.sp-page--form .sp-moment__file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-size: 11px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transform: translateX(-12px);
+  animation: sp-moment-file-in 4s ease-out infinite;
+}
+
+.sp-page--form .sp-moment__file--a { border-color: rgba(248, 113, 113, 0.35); color: #fecaca; }
+.sp-page--form .sp-moment__file--b { animation-delay: 0.12s; border-color: rgba(74, 222, 128, 0.35); color: #bbf7d0; }
+.sp-page--form .sp-moment__file--c { animation-delay: 0.24s; border-color: rgba(56, 189, 248, 0.35); color: #bae6fd; }
+
+.sp-page--form .sp-moment__view-toggle {
+  display: flex;
+  gap: 6px;
+  align-self: flex-end;
+  margin-top: 4px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Stream moment */
+.sp-page--form .sp-moment__hero--stream {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.sp-page--form .sp-moment__node {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.sp-page--form .sp-moment__node--sp {
+  color: #7dd3fc;
+  box-shadow: 0 0 12px rgba(55, 198, 208, 0.2);
+}
+
+.sp-page--form .sp-moment__node--sp sp-sharepoint-logo {
+  --sp-sharepoint-logo-size: 26px;
+}
+.sp-page--form .sp-moment__node--api { color: #93c5fd; box-shadow: 0 0 12px rgba(46, 68, 177, 0.22); }
+
+.sp-page--form .sp-moment__stream {
+  position: relative;
+  flex: 1;
+  min-width: 60px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sp-page--form .sp-moment__packet {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: #37c6d0;
+  box-shadow: 0 0 6px rgba(55, 198, 208, 0.55);
+  animation: sp-moment-packet 4s ease-in-out infinite;
+}
+
+.sp-page--form .sp-moment__packet--2 { animation-delay: 0.35s; opacity: 0.85; }
+.sp-page--form .sp-moment__packet--3 { animation-delay: 0.7s; opacity: 0.7; }
+
+.sp-page--form .sp-moment__curl {
+  width: 100%;
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  color: #67e8f9;
+  text-align: center;
+}
+
+/* Ready moment */
+.sp-page--form .sp-moment__hero--ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  min-height: 130px;
+  justify-content: center;
+}
+
+.sp-page--form .sp-moment__ready-ring {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1px solid rgba(55, 198, 208, 0.35);
+  animation: sp-moment-radar 4s ease-out infinite;
+}
+
+.sp-page--form .sp-moment__ready-check {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(12, 18, 32, 0.92);
+  border: 2px solid rgba(55, 198, 208, 0.5);
+  color: #6ee7b7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+  animation: sp-moment-check-pop 4s ease-in-out infinite;
+}
+
+.sp-page--form .sp-moment__hero--ready strong {
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.sp-page--form .sp-moment__ready-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sp-page--form .sp-moment__ready-actions em {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  color: #c7d2fe;
+  background: rgba(12, 18, 32, 0.75);
+  border: 1px solid rgba(46, 68, 177, 0.35);
+  opacity: 0;
+  animation: sp-moment-ready-action 4s ease-out infinite;
+}
+
+.sp-page--form .sp-moment__ready-actions em:last-child {
+  animation-delay: 0.2s;
+  color: #a5f3fc;
+  border-color: rgba(55, 198, 208, 0.35);
+}
+
+
+@keyframes sp-reg-aside-in {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-magic-mesh-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(3%, -2%) scale(1.04); }
+}
+
+@keyframes sp-magic-grid-shift {
+  from { background-position: 0 0; }
+  to   { background-position: 24px 24px; }
+}
+
+@keyframes sp-magic-accent-a {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(28px, -18px) scale(1.12); }
+}
+
+@keyframes sp-magic-accent-b {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-22px, 20px) scale(1.08); }
+}
+
+@keyframes sp-magic-accent-c {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to   { transform: translate(calc(-50% + 16px), calc(-50% - 12px)) scale(1.15); }
+}
+
+
+@keyframes sp-magic-mesh-shimmer {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.82; }
+}
+
+@keyframes sp-magic-snap-float-a {
+  0%, 100% { transform: translate(0, 0) rotate(-2deg) scale(1); }
+  33%      { transform: translate(14px, -10px) rotate(1deg) scale(1.04); }
+  66%      { transform: translate(-8px, 8px) rotate(-1deg) scale(0.98); }
+}
+
+@keyframes sp-magic-snap-float-b {
+  0%, 100% { transform: translate(0, 0) rotate(1deg); }
+  50%      { transform: translate(-12px, -14px) rotate(-2deg) scale(1.05); }
+}
+
+@keyframes sp-magic-snap-float-c {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.65; }
+  50%      { transform: translate(10px, 12px) scale(1.03); opacity: 0.78; }
+}
+
+@keyframes sp-magic-snap-float-d {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50%      { transform: translate(16px, -8px) rotate(2deg); }
+}
+
+@keyframes sp-magic-cap-drift-a {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(6px, -8px); }
+}
+
+@keyframes sp-magic-cap-drift-b {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-7px, 6px); }
+}
+
+@keyframes sp-magic-cap-drift-c {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes sp-magic-cap-drift-d {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(5px, 7px); }
+}
+
+@keyframes sp-moment-ico-subtle {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50%      { transform: translateY(-3px); opacity: 0.92; }
+}
+
+@keyframes sp-moment-lib-in {
+  0%, 14%   { opacity: 0; transform: translateX(-10px); }
+  30%, 100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-magic-snap-a {
+  0%, 100% { transform: translate(0, 0) rotate(-2deg) scale(1); opacity: 0.32; }
+  50%      { transform: translate(10px, -6px) rotate(1deg) scale(1.03); opacity: 0.44; }
+}
+
+@keyframes sp-magic-snap-b {
+  0%, 100% { transform: translate(0, 0) rotate(2deg); opacity: 0.3; }
+  50%      { transform: translate(-8px, 8px) rotate(-1deg); opacity: 0.42; }
+}
+
+@keyframes sp-magic-snap-c {
+  0%, 100% { transform: translate(0, 0); opacity: 0.34; }
+  50%      { transform: translate(12px, 4px); opacity: 0.46; }
+}
+
+@keyframes sp-magic-snap-d {
+  0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+  50%      { transform: translate(-10px, -6px); opacity: 0.4; }
+}
+
+@keyframes sp-magic-ghost-a {
+  0%, 100% { transform: translate(0, 0) rotate(-2deg); opacity: 0.38; }
+  50%      { transform: translate(12px, -8px) rotate(1deg); opacity: 0.52; }
+}
+
+@keyframes sp-magic-ghost-b {
+  0%, 100% { transform: translate(0, 0) rotate(2deg); opacity: 0.35; }
+  50%      { transform: translate(-10px, 10px) rotate(-1deg); opacity: 0.48; }
+}
+
+@keyframes sp-magic-ghost-c {
+  0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+  50%      { transform: translate(14px, 6px); opacity: 0.55; }
+}
+
+@keyframes sp-magic-ghost-d {
+  0%, 100% { transform: translate(0, 0); opacity: 0.36; }
+  50%      { transform: translate(-12px, -8px); opacity: 0.5; }
+}
+
+@keyframes sp-magic-float-a {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(6px, -10px); }
+}
+
+@keyframes sp-magic-float-b {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50%      { transform: translate(-8px, 8px) rotate(4deg); }
+}
+
+@keyframes sp-magic-float-c {
+  0%, 100% { transform: translate(0, 0); }
+  33%      { transform: translate(5px, 6px); }
+  66%      { transform: translate(-4px, -5px); }
+}
+
+@keyframes sp-magic-float-d {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+@keyframes sp-magic-orbit-slow {
+  from { transform: rotate(0deg) translateX(42px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(42px) rotate(-360deg); }
+}
+
+@keyframes sp-moment-cycle {
+  0%, 0.4%    { opacity: 0; visibility: hidden; transform: scale(0.96); }
+  0.8%, 10%   { opacity: 1; visibility: visible; transform: scale(1); }
+  10.8%, 100% { opacity: 0; visibility: hidden; transform: scale(1.01); }
+}
+
+@keyframes sp-moment-glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.96); }
+  50%      { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes sp-moment-type {
+  0%, 10%   { max-width: 0; }
+  60%, 100% { max-width: 240px; }
+}
+
+@keyframes sp-moment-site-in {
+  0%, 18%   { opacity: 0; transform: translateX(-14px); }
+  32%, 100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-moment-phase-done {
+  0%, 8%    { opacity: 0; transform: translateX(-10px); }
+  20%, 100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-moment-phase-active {
+  0%, 100% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.15); }
+  50%      { box-shadow: 0 0 28px rgba(56, 189, 248, 0.35); }
+}
+
+@keyframes sp-moment-radar {
+  0%   { transform: scale(0.5); opacity: 0.85; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+@keyframes sp-moment-app-pop {
+  0%, 12%  { transform: scale(0.55) rotate(-6deg); opacity: 0; }
+  28%, 88% { transform: scale(1) rotate(0); opacity: 1; }
+  100%     { transform: scale(1.03); opacity: 1; }
+}
+
+@keyframes sp-moment-type-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.15); }
+  50%      { box-shadow: 0 0 32px rgba(37, 99, 235, 0.35); }
+}
+
+@keyframes sp-moment-file-in {
+  0%, 14%   { opacity: 0; transform: translateX(-12px); }
+  30%, 100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-moment-packet {
+  0%   { left: 0; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: calc(100% - 7px); opacity: 0; }
+}
+
+@keyframes sp-moment-check-pop {
+  0%, 15%  { transform: scale(0.55); opacity: 0; }
+  32%, 85% { transform: scale(1); opacity: 1; }
+  100%     { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes sp-moment-ready-action {
+  0%, 35%  { opacity: 0; transform: translateY(8px); }
+  50%, 100% { opacity: 1; transform: translateY(0); }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-page--form .sp-reg-magic__mesh,
+  .sp-page--form .sp-reg-magic__grid,
+  .sp-page--form .sp-reg-magic__accent,
+  .sp-page--form .sp-magic-snap,
+  .sp-page--form .sp-magic-cap,
+  .sp-page--form .sp-moment,
+  .sp-page--form .sp-moment__url-text,
+  .sp-page--form .sp-moment__site,
+  .sp-page--form .sp-moment__lib-opt,
+  .sp-page--form .sp-moment__file,
+  .sp-page--form .sp-moment__packet,
+  .sp-page--form .sp-moment__ready-actions em {
+    animation: none !important;
+  }
+
+  .sp-page--form .sp-moment--1 { opacity: 1; }
+  .sp-page--form .sp-moment--2,
+  .sp-page--form .sp-moment--3,
+  .sp-page--form .sp-moment--4,
+  .sp-page--form .sp-moment--5,
+  .sp-page--form .sp-moment--6,
+  .sp-page--form .sp-moment--7,
+  .sp-page--form .sp-moment--8,
+  .sp-page--form .sp-moment--9 { display: none; }
+
+  .sp-page--form .sp-moment__site,
+  .sp-page--form .sp-moment__lib-opt,
+  .sp-page--form .sp-moment__file,
+  .sp-page--form .sp-moment__ready-actions em { opacity: 1; transform: none; }
+}

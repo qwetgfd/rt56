@@ -1,0 +1,767 @@
+<ng-container *ngIf="view === 'list'">
+  <section class="sp-page">
+    <header class="sp-page__head">
+      <div>
+        <button type="button" class="sp-back" (click)="navigateHome.emit()">
+          <sp-icon name="back" size="sm" /> {{ m.list.backToHome }}
+        </button>
+        <h2 class="sp-page__title">{{ m.list.title }}</h2>
+        <p class="sp-page__lead">{{ branding.applicationsPageLead }}</p>
+      </div>
+      <div class="sp-page__actions">
+        <div class="sp-view-toggle" role="group" [attr.aria-label]="m.list.viewAria">
+          <button type="button" class="sp-view-toggle__button" [class.sp-view-toggle__button--active]="displayMode === 'cards'" [attr.aria-pressed]="displayMode === 'cards'" (click)="setDisplayMode('cards')">
+            <sp-icon name="grid" size="sm" /> {{ m.list.cards }}
+          </button>
+          <button type="button" class="sp-view-toggle__button" [class.sp-view-toggle__button--active]="displayMode === 'table'" [attr.aria-pressed]="displayMode === 'table'" (click)="setDisplayMode('table')">
+            <sp-icon name="list" size="sm" /> {{ m.list.listView }}
+          </button>
+        </div>
+        <button type="button" class="sp-btn sp-btn--primary" (click)="showForm()">
+          <sp-icon name="plus" size="sm" /> {{ m.list.registerApplication }}
+        </button>
+      </div>
+    </header>
+
+    <sp-status-alerts
+      [error]="status.error"
+      [success]="status.success"
+      mode="alert"
+      (dismissSuccess)="status.dismissSuccess()" />
+
+    <section class="sp-app-summary" *ngIf="applications.length" [attr.aria-label]="m.list.summaryAria">
+      <button type="button" class="sp-summary-card sp-summary-card--blue" [class.sp-summary-card--active]="typeFilter === 'all'" (click)="setTypeFilter('all')">
+        <sp-icon class="sp-summary-card__icon" name="apps" />
+        <span>{{ m.list.totalApplications }}</span>
+        <strong>{{ applications.length }}</strong>
+      </button>
+      <button type="button" class="sp-summary-card sp-summary-card--green" [class.sp-summary-card--active]="typeFilter === 'tp_internal'" (click)="setTypeFilter('tp_internal')">
+        <sp-icon class="sp-summary-card__icon" name="building" />
+        <span>{{ internalTypeLabel }}</span>
+        <strong>{{ countByType('tp_internal') }}</strong>
+      </button>
+      <button type="button" class="sp-summary-card sp-summary-card--amber" [class.sp-summary-card--active]="typeFilter === 'tp_external'" (click)="setTypeFilter('tp_external')">
+        <sp-icon class="sp-summary-card__icon" name="cloud" />
+        <span>{{ externalTypeLabel }}</span>
+        <strong>{{ countByType('tp_external') }}</strong>
+      </button>
+      <button type="button" class="sp-summary-card sp-summary-card--blue" [class.sp-summary-card--active]="typeFilter === 'tp_user_delegated'" (click)="setTypeFilter('tp_user_delegated')">
+        <sp-icon class="sp-summary-card__icon" name="shield" />
+        <span>{{ userTypeLabel }}</span>
+        <strong>{{ countByType('tp_user_delegated') }}</strong>
+      </button>
+    </section>
+
+    <section class="sp-filter-bar" *ngIf="applications.length" [attr.aria-label]="m.list.filtersAria">
+      <label class="sp-search">
+        <sp-icon name="search" size="sm" />
+        <span class="sp-sr-only">{{ m.list.searchSrOnly }}</span>
+        <input type="search" class="sp-input" [(ngModel)]="searchTerm" name="applicationSearch" [placeholder]="m.list.searchPlaceholder" />
+      </label>
+      <select class="sp-input sp-filter-select" [(ngModel)]="typeFilter" name="applicationTypeFilter" [attr.aria-label]="m.list.typeFilterAria">
+        <option value="all">{{ m.list.allTypes }}</option>
+        <option value="tp_internal">{{ internalTypeLabel }}</option>
+        <option value="tp_external">{{ externalTypeLabel }}</option>
+        <option value="tp_user_delegated">{{ userTypeLabel }}</option>
+      </select>
+    </section>
+
+    <div class="sp-empty-state" *ngIf="!applications.length">
+      <div class="sp-empty-state__icon" aria-hidden="true">
+        <sp-icon name="apps" size="lg" />
+      </div>
+      <h3>{{ m.list.noApplicationsTitle }}</h3>
+      <p>{{ branding.applicationsEmptyHint }}</p>
+      <button type="button" class="sp-btn sp-btn--primary" (click)="showForm()">{{ m.list.registerAnApplication }}</button>
+    </div>
+
+    <div class="sp-empty-state sp-empty-state--compact" *ngIf="applications.length && !filteredApplications.length">
+      <div class="sp-empty-state__icon" aria-hidden="true">
+        <sp-icon name="search" size="lg" />
+      </div>
+      <h3>{{ m.list.noMatchTitle }}</h3>
+      <p>{{ m.list.noMatchHint }}</p>
+    </div>
+
+    <div class="sp-card-grid" *ngIf="filteredApplications.length && displayMode === 'cards'">
+      <article class="sp-app-card" *ngFor="let app of filteredApplications; trackBy: trackByApplicationId">
+        <header class="sp-app-card__head">
+          <div>
+            <span class="sp-chip sp-chip--{{ app.applicationTypeCode | lowercase }}">{{ app.applicationTypeName }}</span>
+            <h3 class="sp-app-card__name">{{ app.displayName }}</h3>
+          </div>
+        </header>
+        <dl class="sp-keyvals">
+          <div><dt>{{ m.list.owner }}</dt><dd>{{ app.owner || m.emptyDash }}</dd></div>
+          <div *ngIf="app.coOwner"><dt>{{ m.list.coOwner }}</dt><dd>{{ app.coOwner }}</dd></div>
+          <div><dt>{{ m.list.sites }}</dt><dd>{{ siteCountLabel(app) }}</dd></div>
+          <div><dt>Primary {{ branding.siteLabel | lowercase }}</dt><dd>{{ app.siteName || m.emptyDash }}</dd></div>
+          <div><dt>{{ m.list.tenantId }}</dt><dd class="sp-mono">{{ app.tenantId }}</dd></div>
+          <div><dt>{{ m.list.entraAppId }}</dt><dd class="sp-mono">{{ app.clientId }}</dd></div>
+          <div><dt>{{ m.list.streamingApiId }}</dt><dd class="sp-mono">{{ app.applicationId }}</dd></div>
+        </dl>
+        <p class="sp-app-card__notes" *ngIf="app.notes">{{ app.notes }}</p>
+        <footer class="sp-app-card__foot">
+          <button type="button" class="sp-btn sp-btn--icon" (click)="editApplication(app)" [title]="m.list.edit" [attr.aria-label]="m.list.editAria(app.displayName)">
+            <sp-icon name="edit" />
+          </button>
+          <button type="button" class="sp-btn sp-btn--icon" (click)="useApplication.emit(app)" [title]="m.list.use" [attr.aria-label]="m.list.useAria(app.displayName)">
+            <sp-icon name="play" />
+          </button>
+          <button type="button" class="sp-btn sp-btn--icon sp-btn--danger-icon" (click)="deleteApplication(app)" [title]="m.list.delete" [attr.aria-label]="m.list.deleteAria(app.displayName)">
+            <sp-icon name="trash" />
+          </button>
+        </footer>
+      </article>
+    </div>
+
+    <div class="sp-table-card" *ngIf="filteredApplications.length && displayMode === 'table'">
+      <table class="sp-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ m.list.applicationName }}</th>
+            <th scope="col">{{ m.list.owner }}</th>
+            <th scope="col">{{ m.list.type }}</th>
+            <th scope="col">{{ m.list.sites }}</th>
+            <th scope="col">{{ m.list.primarySite }}</th>
+            <th scope="col">{{ m.list.updatedColumn }}</th>
+            <th scope="col" class="sp-table__actions">{{ m.list.actions }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let app of filteredApplications; trackBy: trackByApplicationId">
+            <td>
+              <div class="sp-table__primary">{{ app.displayName }}</div>
+              <div class="sp-table__secondary sp-mono">{{ app.applicationId }}</div>
+            </td>
+            <td>
+              <div class="sp-table__primary">{{ app.owner || m.emptyDash }}</div>
+              <div class="sp-table__secondary" *ngIf="app.coOwner">{{ app.coOwner }}</div>
+            </td>
+            <td><span class="sp-chip sp-chip--{{ app.applicationTypeCode | lowercase }}">{{ app.applicationTypeName }}</span></td>
+            <td>{{ siteCountLabel(app) }}</td>
+            <td>{{ app.siteName || m.emptyDash }}</td>
+            <td>{{ (app.modifiedOn || app.createdOn) | date:'mediumDate' }}</td>
+            <td>
+              <div class="sp-row-actions">
+                <button type="button" class="sp-btn sp-btn--icon sp-btn--sm" (click)="editApplication(app)" [title]="m.list.edit" [attr.aria-label]="m.list.editAria(app.displayName)">
+                  <sp-icon name="edit" size="sm" />
+                </button>
+                <button type="button" class="sp-btn sp-btn--icon sp-btn--sm" (click)="useApplication.emit(app)" [title]="m.list.use" [attr.aria-label]="m.list.useAria(app.displayName)">
+                  <sp-icon name="play" size="sm" />
+                </button>
+                <button type="button" class="sp-btn sp-btn--icon sp-btn--sm sp-btn--danger-icon" (click)="deleteApplication(app)" [title]="m.list.delete" [attr.aria-label]="m.list.deleteAria(app.displayName)">
+                  <sp-icon name="trash" size="sm" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</ng-container>
+
+<ng-container *ngIf="view === 'form'">
+  <section class="sp-page sp-page--form">
+    <div class="sp-reg-layout">
+      <div class="sp-reg-layout__main">
+        <header class="sp-page__head sp-page__head--reg">
+          <button type="button" class="sp-back" (click)="showList()">
+            <sp-icon name="back" size="sm" /> {{ m.form.backToApplications }}
+          </button>
+          <div class="sp-page__head-body">
+            <h2 class="sp-page__title">{{ applicationForm.applicationId ? m.form.editApplication : m.form.registerApplication }}</h2>
+          </div>
+        </header>
+
+        <sp-status-alerts
+          [error]="status.error"
+          [success]="status.success"
+          mode="banner"
+          (dismissSuccess)="status.dismissSuccess()" />
+
+        <form class="sp-reg-form sp-reg-form--streamlined" (ngSubmit)="saveApplication()" novalidate>
+      <section class="sp-grp sp-grp--compact sp-grp--identity">
+        <div class="sp-grp__body sp-reg-sheet">
+          <div class="sp-grid sp-grid--2 sp-reg-essentials">
+            <div class="sp-field">
+              <label for="app-name">{{ m.form.applicationName }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+              <input id="app-name" class="sp-input" type="text" [(ngModel)]="applicationForm.displayName" name="displayName" [placeholder]="m.form.applicationNamePlaceholder" />
+            </div>
+            <div class="sp-field sp-field--owner">
+              <label for="app-owner">{{ m.form.owner }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+              <input id="app-owner" class="sp-input" type="text" [(ngModel)]="applicationForm.owner" name="owner" [placeholder]="m.form.ownerPlaceholder" autocomplete="name" />
+            </div>
+          </div>
+
+          <div class="sp-field sp-reg-url">
+            <label for="app-site-url">{{ m.form.sharePointUrl }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+            <div
+              class="sp-reg-url__field"
+              [class.sp-reg-url__field--parsing]="siteUrlParsing"
+              [class.sp-reg-url__field--parsed]="siteUrlParsed && !siteUrlParsing">
+              <input
+                id="app-site-url"
+                class="sp-input sp-input--url"
+                type="url"
+                [(ngModel)]="siteUrlInput"
+                name="siteUrlInput"
+                [placeholder]="m.form.urlPlaceholder"
+                (input)="onSiteUrlInput()"
+                (blur)="onSiteUrlBlur()"
+                (paste)="onSiteUrlPaste()" />
+              <div class="sp-url-inline-loader" *ngIf="siteUrlParsing" role="status" aria-live="polite" [attr.aria-label]="m.form.urlParsingAria">
+                <span class="sp-url-inline-loader__visual" aria-hidden="true">
+                  <span class="sp-url-inline-loader__ring"></span>
+                  <span class="sp-url-inline-loader__core"></span>
+                  <span class="sp-url-inline-loader__beam"></span>
+                </span>
+                <span class="sp-url-inline-loader__label">{{ m.form.extracting }}</span>
+              </div>
+              <span class="sp-url-inline-ok" *ngIf="siteUrlParsed && !siteUrlParsing" [attr.aria-label]="m.form.urlParsedAria">
+                <sp-icon name="check" size="sm" />
+              </span>
+            </div>
+            <p class="sp-field__hint" *ngIf="!siteUrlParsing && !siteUrlParsed">{{ m.form.urlHint }}</p>
+          </div>
+
+          <div class="sp-reg-sites" *ngIf="applicationForm.sites.length">
+            <div class="sp-reg-sites__head">
+              <span class="sp-reg-sites__title">{{ m.form.sitesInApplication }}</span>
+              <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="addSite()">
+                <sp-icon name="plus" size="sm" /> {{ m.form.addSite }}
+              </button>
+            </div>
+            <div class="sp-reg-sites__list" *ngIf="applicationForm.sites.length">
+              <button
+                type="button"
+                class="sp-reg-sites__item"
+                *ngFor="let site of applicationForm.sites; let i = index; trackBy: trackBySiteIndex"
+                [class.sp-reg-sites__item--on]="i === activeSiteIndex"
+                [class.sp-reg-sites__item--verified]="isSiteConnectivityVerified(i)"
+                (click)="selectSite(i)">
+                <span class="sp-reg-sites__item-label">{{ (site.siteName || m.form.newSite).split('/').pop() || site.siteName || m.form.newSite }}</span>
+                <button
+                  type="button"
+                  class="sp-reg-sites__remove"
+                  *ngIf="applicationForm.sites.length > 1"
+                  (click)="removeSite(i); $event.stopPropagation()"
+                  [attr.aria-label]="m.form.removeSiteAria(site.siteName || i + 1)">
+                  <sp-icon name="x" size="sm" />
+                </button>
+              </button>
+            </div>
+          </div>
+
+          <fieldset class="sp-reg-type-field" *ngIf="!isEditMode">
+            <legend class="sp-reg-type-field__legend">{{ m.form.siteType }}</legend>
+            <div class="sp-reg-radios" role="radiogroup" [attr.aria-label]="m.form.siteTypeAria">
+              <label
+                *ngFor="let type of registrationTypeOptions"
+                class="sp-reg-radio"
+                [class.sp-reg-radio--on]="applicationForm.applicationTypeId === type.applicationTypeId">
+                <input
+                  type="radio"
+                  class="sp-reg-radio__input"
+                  name="applicationTypeChoice"
+                  [value]="type.applicationTypeId"
+                  [checked]="applicationForm.applicationTypeId === type.applicationTypeId"
+                  (change)="setRegistrationType(type.applicationTypeId)" />
+                <span class="sp-reg-radio__ring" aria-hidden="true"></span>
+                <span class="sp-reg-radio__content">
+                  <span class="sp-reg-radio__label">{{ type.displayName }}</span>
+                </span>
+              </label>
+            </div>
+            <p class="sp-reg-type-field__hint" *ngIf="isInternalForm">{{ m.form.hintInternal }}</p>
+            <p class="sp-reg-type-field__hint" *ngIf="isExternalForm">{{ m.form.hintExternal }}</p>
+            <p class="sp-reg-type-field__hint" *ngIf="isUserForm">{{ m.form.hintUser }}</p>
+          </fieldset>
+
+          <div class="sp-advanced" *ngIf="!isEditMode">
+            <button type="button" class="sp-advanced__toggle" (click)="toggleSiteDetails()" [attr.aria-expanded]="siteDetailsOpen">
+              <sp-icon class="sp-advanced__chev" [class.sp-advanced__chev--open]="siteDetailsOpen" name="chevron-right" size="sm" />
+              <span>{{ m.form.reviewSiteDetails }}</span>
+              <span class="sp-advanced__hint">{{ m.form.reviewSiteHint }}</span>
+            </button>
+            <div class="sp-advanced__body" *ngIf="siteDetailsOpen">
+              <div class="sp-grid sp-grid--2">
+                <div class="sp-field">
+                  <label for="app-host">{{ branding.hostLabel }}</label>
+                  <input
+                    id="app-host"
+                    class="sp-input"
+                    [class.sp-input--readonly]="isInternalForm"
+                    type="text"
+                    [(ngModel)]="applicationForm.hostName"
+                    (ngModelChange)="onSiteFieldChange()"
+                    name="hostName"
+                    [readonly]="isInternalForm"
+                    [placeholder]="isInternalForm ? m.form.hostFromEnv : m.form.hostPlaceholder" />
+                  <p class="sp-field__hint" *ngIf="isInternalForm">{{ m.form.hostInternalHint }}</p>
+                </div>
+                <div class="sp-field">
+                  <label for="app-site">{{ branding.siteLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                  <input id="app-site" class="sp-input" type="text" [(ngModel)]="applicationForm.siteName" (ngModelChange)="onSiteFieldChange()" name="siteName" [placeholder]="m.form.sitePathPlaceholder" />
+                </div>
+                <div class="sp-field">
+                  <label for="app-library">{{ m.form.library }}</label>
+                  <select
+                    *ngIf="availableLibraries.length; else libraryTextInput"
+                    id="app-library"
+                    class="sp-input sp-input--select"
+                    [(ngModel)]="applicationForm.libraryName"
+                    name="libraryNameSelect">
+                    <option value="">{{ m.form.selectLibrary }}</option>
+                    <option *ngFor="let lib of availableLibraries" [value]="lib.name">{{ lib.name }}</option>
+                  </select>
+                  <ng-template #libraryTextInput>
+                    <input id="app-library" class="sp-input" type="text" [(ngModel)]="applicationForm.libraryName" name="libraryName" [placeholder]="m.form.libraryOptionalPlaceholder" />
+                    <p class="sp-field__hint" *ngIf="needsConnectivityTest && connectivityTestState !== 'success'">{{ m.form.testToListLibraries }}</p>
+                  </ng-template>
+                </div>
+                <div class="sp-field">
+                  <label for="app-folder">{{ m.form.folderPath }}</label>
+                  <input id="app-folder" class="sp-input" type="text" [(ngModel)]="applicationForm.folderPath" name="folderPath" [placeholder]="m.form.optional" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sp-advanced" *ngIf="!isEditMode">
+            <button type="button" class="sp-advanced__toggle" (click)="toggleAdvancedSettings()" [attr.aria-expanded]="advancedSettingsOpen">
+              <sp-icon class="sp-advanced__chev" [class.sp-advanced__chev--open]="advancedSettingsOpen" name="chevron-right" size="sm" />
+              <span>{{ m.form.moreOptions }}</span>
+              <span class="sp-advanced__hint">{{ m.form.optionalSection }}</span>
+            </button>
+            <div class="sp-advanced__body" *ngIf="advancedSettingsOpen">
+              <div class="sp-grid sp-grid--2">
+                <div class="sp-field">
+                  <label for="app-coowner">{{ m.form.coOwner }}</label>
+                  <input id="app-coowner" class="sp-input" type="text" [(ngModel)]="applicationForm.coOwner" name="coOwner" [placeholder]="m.form.optional" autocomplete="name" />
+                </div>
+                <div class="sp-field sp-field--wide">
+                  <label for="app-notes">{{ m.form.notes }}</label>
+                  <input id="app-notes" class="sp-input" type="text" [(ngModel)]="applicationForm.notes" name="notes" [placeholder]="m.form.notesPlaceholder" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-container *ngIf="isEditMode">
+            <div class="sp-grid sp-grid--2">
+              <div class="sp-field">
+                <label for="app-host-edit">{{ branding.hostLabel }}</label>
+                <input id="app-host-edit" class="sp-input" type="text" [(ngModel)]="applicationForm.hostName" (ngModelChange)="onConnectivityInputsChange()" name="hostNameEdit" />
+              </div>
+              <div class="sp-field">
+                <label for="app-site-edit">{{ branding.siteLabel }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+                <input id="app-site-edit" class="sp-input" type="text" [(ngModel)]="applicationForm.siteName" (ngModelChange)="onConnectivityInputsChange()" name="siteNameEdit" />
+              </div>
+              <div class="sp-field">
+                <label for="app-library-edit">{{ m.form.library }}</label>
+                <input id="app-library-edit" class="sp-input" type="text" [(ngModel)]="applicationForm.libraryName" name="libraryNameEdit" [placeholder]="m.form.libraryDocuments" />
+              </div>
+              <div class="sp-field">
+                <label for="app-folder-edit">{{ m.form.folderPath }}</label>
+                <input id="app-folder-edit" class="sp-input" type="text" [(ngModel)]="applicationForm.folderPath" name="folderPathEdit" [placeholder]="m.form.optional" />
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </section>
+
+      <section class="sp-grp sp-grp--compact" *ngIf="formUi.entra">
+        <div class="sp-grp__head sp-grp__head--compact">
+          <span class="sp-grp__bar" aria-hidden="true"></span>
+          <h3 class="sp-grp__title">{{ m.form.entraTitle }}</h3>
+        </div>
+        <div class="sp-grp__body sp-grid sp-grid--2">
+          <div class="sp-field">
+            <label for="app-tenant">{{ m.form.tenantId }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+            <input id="app-tenant" class="sp-input sp-input--mono" type="text" [(ngModel)]="applicationForm.tenantId" name="tenantId" [placeholder]="m.form.guidPlaceholder" spellcheck="false" />
+          </div>
+          <div class="sp-field">
+            <label for="app-client">{{ m.form.clientId }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+            <input id="app-client" class="sp-input sp-input--mono" type="text" [(ngModel)]="applicationForm.clientId" name="clientId" [placeholder]="m.form.guidPlaceholder" spellcheck="false" />
+          </div>
+          <div class="sp-field sp-field--wide">
+            <label for="app-secret">{{ m.form.clientSecret }} <span class="sp-required" [attr.aria-label]="m.requiredAria">*</span></label>
+            <div class="sp-secret-field">
+              <input id="app-secret" class="sp-input sp-secret-field__input sp-input--mono" [type]="appSecretVisible ? 'text' : 'password'" [(ngModel)]="applicationForm.clientSecret" name="clientSecret" autocomplete="off" placeholder=" " />
+              <button type="button" class="sp-secret-field__toggle" (click)="appSecretVisible = !appSecretVisible" [attr.aria-label]="appSecretVisible ? m.form.hideClientSecret : m.form.showClientSecret">
+                <sp-icon [name]="appSecretVisible ? 'eye-off' : 'eye'" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sp-grp" *ngIf="isEditMode && applicationForm.applicationId">
+        <div class="sp-grp__head">
+          <span class="sp-grp__bar" aria-hidden="true"></span>
+          <div class="sp-grp__heading">
+            <h3 class="sp-grp__title">{{ m.form.apiCredentials }}</h3>
+          </div>
+        </div>
+        <div class="sp-grp__body sp-grid sp-grid--2">
+          <div class="sp-field">
+            <label for="app-registered-id">{{ m.form.apiApplicationId }}</label>
+            <input id="app-registered-id" class="sp-input sp-input--readonly sp-input--mono" type="text" [readonly]="true" [(ngModel)]="applicationForm.applicationId" name="registeredAppId" />
+          </div>
+          <div class="sp-field">
+            <label for="app-consumer-secret">{{ m.form.apiSecret }}</label>
+            <div class="sp-secret-field">
+              <input id="app-consumer-secret" class="sp-input sp-secret-field__input sp-input--mono" [type]="appConsumerSecretVisible ? 'text' : 'password'" [readonly]="true" [(ngModel)]="applicationForm.consumerSecret" name="consumerSecret" autocomplete="off" />
+              <button type="button" class="sp-secret-field__toggle" (click)="appConsumerSecretVisible = !appConsumerSecretVisible" [attr.aria-label]="appConsumerSecretVisible ? m.form.hideConsumerSecret : m.form.showConsumerSecret">
+                <sp-icon [name]="appConsumerSecretVisible ? 'eye-off' : 'eye'" />
+              </button>
+            </div>
+          </div>
+          <div class="sp-field sp-field--wide" *ngIf="isEditMode">
+            <label for="app-notes-edit">{{ m.form.notes }}</label>
+            <input id="app-notes-edit" class="sp-input" type="text" [(ngModel)]="applicationForm.notes" name="notesEdit" [placeholder]="m.form.notesPlaceholder" />
+          </div>
+          <div class="sp-field" *ngIf="isEditMode">
+            <label for="app-coowner-edit">{{ m.form.coOwner }}</label>
+            <input id="app-coowner-edit" class="sp-input" type="text" [(ngModel)]="applicationForm.coOwner" name="coOwnerEdit" [placeholder]="m.form.optional" autocomplete="name" />
+          </div>
+        </div>
+      </section>
+
+      <section class="sp-grp sp-grp--compact sp-grp--verify" *ngIf="formUi.connectivity">
+        <div class="sp-grp__head sp-grp__head--compact">
+          <span class="sp-grp__bar" aria-hidden="true"></span>
+          <h3 class="sp-grp__title">{{ m.form.verification }}</h3>
+        </div>
+        <div class="sp-grp__body">
+          <ng-container [ngTemplateOutlet]="verifyBlock" />
+        </div>
+      </section>
+
+      <ng-template #verifyBlock>
+        <div
+          class="sp-vrf"
+          [class.sp-vrf--idle]="connectivityTestState === 'idle'"
+          [class.sp-vrf--testing]="connectivityTestState === 'testing'"
+          [class.sp-vrf--ok]="connectivityTestState === 'success'"
+          [class.sp-vrf--fail]="connectivityTestState === 'failed'"
+          [attr.data-phase]="connectivityVerifyPhaseIndex"
+          aria-live="polite"
+          role="status"
+          [attr.aria-label]="connectivityAriaLabel">
+
+          <span class="sp-vrf__fx sp-vrf__fx--bg" aria-hidden="true"></span>
+          <span class="sp-vrf__fx sp-vrf__fx--mesh" aria-hidden="true"></span>
+          <span class="sp-vrf__fx sp-vrf__fx--scan" *ngIf="connectivityTestState === 'testing'" aria-hidden="true"></span>
+          <span class="sp-vrf__fx sp-vrf__fx--track" *ngIf="connectivityTestState === 'testing'" aria-hidden="true">
+            <span class="sp-vrf__fx-track-fill" [style.width.%]="verifyProgressPct"></span>
+          </span>
+
+          <span class="sp-vrf__ico" aria-hidden="true">
+            <span class="sp-vrf__hub" *ngIf="connectivityTestState === 'idle'">
+              <span class="sp-vrf__radar"></span>
+              <span class="sp-vrf__radar sp-vrf__radar--2"></span>
+              <span class="sp-vrf__radar sp-vrf__radar--3"></span>
+              <span class="sp-vrf__sweep"></span>
+              <span class="sp-vrf__core"></span>
+            </span>
+            <span class="sp-vrf__pulse" aria-hidden="true"></span>
+            <span class="sp-vrf__orbit" *ngIf="connectivityTestState === 'testing'" aria-hidden="true"></span>
+            <span class="sp-vrf__spin" *ngIf="connectivityTestState === 'testing'"></span>
+            <span class="sp-vrf__spin sp-vrf__spin--inner" *ngIf="connectivityTestState === 'testing'" aria-hidden="true"></span>
+            <sp-icon class="sp-vrf__mark sp-vrf__mark--ok" *ngIf="connectivityTestState === 'success'" name="check" size="sm" />
+            <sp-icon class="sp-vrf__mark sp-vrf__mark--fail" *ngIf="connectivityTestState === 'failed'" name="alert" size="sm" />
+          </span>
+
+          <div class="sp-vrf__console" [attr.data-state]="connectivityTestState" [attr.data-phase]="connectivityVerifyPhaseIndex">
+            <ng-container *ngIf="connectivityTestState === 'idle'">
+              <div class="sp-vrf__row sp-vrf__row--single sp-vrf__row--idle">
+                <span class="sp-vrf__headline">{{ m.connectivity.connectionCheck }}</span>
+                <span class="sp-vrf__badge sp-vrf__badge--idle">{{ m.connectivity.awaitingProbe }}</span>
+                <span class="sp-vrf__target" *ngIf="activeSite.siteName.trim(); else vrfNoSite" [title]="connectivityTestTarget">
+                  <sp-icon name="folder" size="sm" />
+                  <span>{{ activeSite.siteName.trim() }}</span>
+                </span>
+                <ng-template #vrfNoSite>
+                  <span class="sp-vrf__hint">{{ m.connectivity.selectSiteToProbe }}</span>
+                </ng-template>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="connectivityTestState === 'testing'">
+              <div class="sp-vrf__row sp-vrf__row--top">
+                <span class="sp-vrf__phase" [title]="connectivityVerifyPhaseLabel">{{ connectivityVerifyPhaseLabel }}</span>
+                <span class="sp-vrf__cursor" aria-hidden="true"></span>
+                <span class="sp-vrf__pct">{{ verifyProgressPct | number:'1.0-0' }}%</span>
+              </div>
+              <div class="sp-vrf__row sp-vrf__row--bot">
+                <span class="sp-vrf__target sp-vrf__target--live" [title]="connectivityTestTarget">
+                  <span class="sp-vrf__live-dot" aria-hidden="true"></span>
+                  <span>{{ connectivityTestTarget }}</span>
+                </span>
+                <span class="sp-vrf__rail" aria-hidden="true">
+                  <span
+                    *ngFor="let phase of verifyPhases(); let i = index"
+                    class="sp-vrf__rail-seg"
+                    [class.is-done]="i < connectivityVerifyPhaseIndex"
+                    [class.is-active]="i === connectivityVerifyPhaseIndex"
+                    [class.is-pending]="i > connectivityVerifyPhaseIndex">
+                    <span class="sp-vrf__rail-cap"></span>
+                    <span class="sp-vrf__rail-lbl">{{ verifyPhaseShort(i) }}</span>
+                  </span>
+                </span>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="connectivityTestState === 'success'">
+              <div class="sp-vrf__row sp-vrf__row--single sp-vrf__row--ok">
+                <span class="sp-vrf__headline sp-vrf__headline--ok">{{ m.connectivity.connectionVerified }}</span>
+                <span class="sp-vrf__badge sp-vrf__badge--ok">{{ m.connectivity.reachable }}</span>
+                <span class="sp-vrf__target sp-vrf__target--ok sp-vrf__target--compact" [title]="connectivityTestTarget">
+                  <sp-icon name="check" size="sm" />
+                  <span>{{ connectivityTestTarget }}</span>
+                </span>
+                <span class="sp-vrf__stats sp-vrf__stats--inline" *ngIf="connectivityInlineResult?.libraryCount">
+                  <span class="sp-vrf__stat">{{ connectivityInlineResult.libraryCount }} {{ m.connectivity.libAbbrev(connectivityInlineResult.libraryCount) }}</span>
+                </span>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="connectivityTestState === 'failed'">
+              <div class="sp-vrf__row sp-vrf__row--top">
+                <span class="sp-vrf__headline sp-vrf__headline--fail">{{ m.connectivity.verificationFailed }}</span>
+                <span class="sp-vrf__badge sp-vrf__badge--fail">{{ m.connectivity.blocked }}</span>
+              </div>
+              <div class="sp-vrf__row sp-vrf__row--bot">
+                <span class="sp-vrf__err" [title]="connectivityInlineError || connectivityInlineResult?.message || m.connectivity.checkPermissions">
+                  {{ connectivityInlineError || connectivityInlineResult?.message || m.connectivity.checkPermissions }}
+                </span>
+              </div>
+            </ng-container>
+          </div>
+
+          <div class="sp-vrf__action">
+            <button type="button" class="sp-vrf__probe" [class.sp-vrf__probe--ready]="canTestConnectivity" *ngIf="connectivityTestState === 'idle'" (click)="testSiteConnectivity()" [disabled]="!canTestConnectivity">
+              <span class="sp-vrf__probe-ico" aria-hidden="true"><sp-icon name="play" size="sm" /></span>
+              <span>{{ m.connectivity.testConnection }}</span>
+            </button>
+            <button type="button" class="sp-vrf__probe sp-vrf__probe--ghost" *ngIf="connectivityTestState === 'success'" (click)="testSiteConnectivity()">
+              <span class="sp-vrf__probe-ico" aria-hidden="true"><sp-icon name="refresh" size="sm" /></span>
+              <span>{{ m.connectivity.retest }}</span>
+            </button>
+            <button type="button" class="sp-vrf__probe sp-vrf__probe--warn" [class.sp-vrf__probe--ready]="canTestConnectivity" *ngIf="connectivityTestState === 'failed'" (click)="testSiteConnectivity()" [disabled]="!canTestConnectivity">
+              <span class="sp-vrf__probe-ico" aria-hidden="true"><sp-icon name="refresh" size="sm" /></span>
+              <span>{{ m.connectivity.retry }}</span>
+            </button>
+          </div>
+        </div>
+      </ng-template>
+
+      <footer class="sp-reg-actions">
+        <p class="sp-reg-actions__hint" *ngIf="!applicationForm.applicationId && formUi.connectivity && connectivityTestState === 'idle'">
+          <sp-icon name="info" size="sm" /> <span [innerHTML]="m.connectivity.hintBeforeRegisterHtml"></span>
+        </p>
+        <p class="sp-reg-actions__hint sp-reg-actions__hint--ok" *ngIf="!applicationForm.applicationId && formUi.connectivity && connectivityTestState === 'success'">
+          <sp-icon name="check" size="sm" /> {{ m.connectivity.hintVerified }}
+        </p>
+        <p class="sp-reg-actions__hint sp-reg-actions__hint--warn" *ngIf="!applicationForm.applicationId && formUi.connectivity && connectivityTestState === 'failed'">
+          <sp-icon name="alert" size="sm" /> {{ m.connectivity.hintFixConnection }}
+        </p>
+        <p class="sp-reg-actions__hint sp-reg-actions__hint--busy" *ngIf="!applicationForm.applicationId && formUi.connectivity && connectivityTestState === 'testing'">
+          <span class="sp-reg-actions__pulse" aria-hidden="true"></span> {{ m.connectivity.hintVerifying }}
+        </p>
+        <div class="sp-reg-actions__buttons">
+          <button type="button" class="sp-btn sp-btn--ghost" (click)="showList()">{{ m.form.cancel }}</button>
+          <button type="submit" class="sp-btn sp-btn--primary sp-btn--cta" [class.sp-btn--cta-ready]="isFormValid && !checkingConnectivity" [disabled]="!isFormValid || checkingConnectivity">
+            <span class="sp-btn__spinner" *ngIf="checkingConnectivity" aria-hidden="true"></span>
+            {{ checkingConnectivity ? m.form.verifying : (applicationForm.applicationId ? m.form.saveChanges : m.form.registerApplication) }}
+          </button>
+        </div>
+      </footer>
+      <ng-template #regDropdownOptionTpl let-item="item">
+        <span class="sp-ngx-dropdown__option-text" [attr.title]="item.searchText || item.label">{{ item.label }}</span>
+      </ng-template>
+      <ng-template #regInternalAppButtonTpl>
+        <button type="button" class="sp-ngx-dropdown__trigger" [disabled]="!internalApplications.length" [attr.aria-label]="selectedInternalSourceLabel || m.form.selectApplication">
+          <span class="sp-ngx-dropdown__trigger-text">{{ selectedInternalAppDropdown?.label || m.form.selectApplication }}</span>
+          <sp-icon name="chevron-right" size="sm" class="sp-ngx-dropdown__chevron" />
+        </button>
+      </ng-template>
+        </form>
+
+        <div class="sp-reg-download" *ngIf="applicationForm.applicationId">
+          <p>{{ m.form.downloadGuidePrompt }}</p>
+          <button type="button" class="sp-btn sp-btn--secondary sp-btn--sm" (click)="downloadCurlForApp()">{{ m.form.downloadTxt }}</button>
+        </div>
+      </div>
+
+      <aside class="sp-reg-aside sp-reg-magic" *ngIf="!applicationForm.applicationId" aria-hidden="true">
+        <div class="sp-reg-magic__canvas">
+          <div class="sp-reg-magic__bg" aria-hidden="true"></div>
+          <div class="sp-reg-magic__mesh" aria-hidden="true"></div>
+          <div class="sp-reg-magic__grid" aria-hidden="true"></div>
+          <div class="sp-reg-magic__veil" aria-hidden="true"></div>
+          <div class="sp-reg-magic__accent sp-reg-magic__accent--red" aria-hidden="true"></div>
+          <div class="sp-reg-magic__accent sp-reg-magic__accent--blue" aria-hidden="true"></div>
+          <div class="sp-reg-magic__accent sp-reg-magic__accent--teal" aria-hidden="true"></div>
+          <div class="sp-reg-magic__grain" aria-hidden="true"></div>
+
+          <div class="sp-reg-magic__brand" aria-hidden="true">
+            <sp-tp-logo file="pa-big-d" />
+          </div>
+
+          <!-- Floating app snapshots -->
+          <div class="sp-magic-snaps" aria-hidden="true">
+            <div class="sp-magic-snap sp-magic-snap--register sp-magic-snap--a">
+              <span class="sp-magic-snap__badge sp-magic-snap__badge--logo"><sp-tp-logo file="pa-big" /></span>
+            </div>
+            <div class="sp-magic-snap sp-magic-snap--sites sp-magic-snap--a">
+              <span class="sp-magic-snap__badge"><sp-icon name="cloud" size="sm" /></span>
+            </div>
+            <div class="sp-magic-snap sp-magic-snap--workspace sp-magic-snap--a">
+              <span class="sp-magic-snap__badge"><sp-icon name="workspace" size="sm" /></span>
+            </div>
+            <div class="sp-magic-snap sp-magic-snap--stream sp-magic-snap--a">
+              <span class="sp-magic-snap__badge"><sp-icon name="code" size="sm" /></span>
+            </div>
+            <div class="sp-magic-snap sp-magic-snap--verify sp-magic-snap--a">
+              <span class="sp-magic-snap__badge"><sp-icon name="check" size="sm" /></span>
+            </div>
+          </div>
+
+          <!-- Contextual capability chips -->
+          <div class="sp-magic-caps" aria-hidden="true">
+            <span class="sp-magic-cap sp-magic-cap--1">
+              <img class="sp-reg-magic__cap-logo" src="/sharepoint/sharepoint-mark.svg" alt="" />
+              <span>{{ m.form.sharePointUrl }}</span>
+            </span>
+            <span class="sp-magic-cap sp-magic-cap--2"><sp-icon name="folder" size="sm" /><span>{{ m.form.sitesInApplication }}</span></span>
+            <span class="sp-magic-cap sp-magic-cap--3"><sp-icon name="folder-open" size="sm" /><span>{{ m.form.library }}</span></span>
+            <span class="sp-magic-cap sp-magic-cap--4"><sp-icon name="refresh" size="sm" /><span>{{ m.connectivity.testConnection }}</span></span>
+            <span class="sp-magic-cap sp-magic-cap--5">
+              <sp-icon name="plus" size="sm" />
+              <span>{{ m.form.registerApplication }}</span>
+            </span>
+            <span class="sp-magic-cap sp-magic-cap--6"><sp-icon name="building" size="sm" /><span>{{ m.form.siteType }}</span></span>
+            <span class="sp-magic-cap sp-magic-cap--7"><sp-icon name="code" size="sm" /><span>{{ m.form.apiCredentials }}</span></span>
+            <span class="sp-magic-cap sp-magic-cap--8"><sp-icon name="download" size="sm" /><span>{{ m.form.downloadTxt }}</span></span>
+          </div>
+
+          <div class="sp-reg-magic__focus" aria-hidden="true"></div>
+
+          <div class="sp-magic-stage">
+          <div class="sp-moment sp-moment--1">
+            <div class="sp-moment__hero sp-moment__hero--url">
+              <span class="sp-moment__glow" aria-hidden="true"></span>
+              <span class="sp-moment__ico sp-moment__ico--cloud">
+                <sp-sharepoint-logo />
+              </span>
+              <span class="sp-moment__url">
+                <span class="sp-moment__url-text">
+                  <span class="sp-demo-mask">{{ regDemo.siteUrlHost }}</span>{{ regDemo.siteUrlPath }}
+                </span>
+              </span>
+              <span class="sp-moment__hint"><sp-icon name="info" size="sm" /> {{ m.form.urlHint | slice:0:42 }}…</span>
+              <span class="sp-moment__label">{{ m.form.sharePointUrl }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--2">
+            <div class="sp-moment__hero sp-moment__hero--sites">
+              <span class="sp-moment__site sp-moment__site--a"><sp-icon name="folder" size="sm" /> {{ regDemo.sitePrimary }} <em>2 libs</em></span>
+              <span class="sp-moment__site sp-moment__site--b"><sp-icon name="folder" size="sm" /> {{ regDemo.siteSecondary }} <em>1 lib</em></span>
+              <span class="sp-moment__site sp-moment__site--c"><sp-icon name="plus" size="sm" /> {{ m.form.addSite }}</span>
+              <span class="sp-moment__label">{{ m.form.sitesInApplication }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--3">
+            <div class="sp-moment__hero sp-moment__hero--library">
+              <span class="sp-moment__lib-head"><sp-icon name="workspace" size="sm" /> {{ m.form.library }}</span>
+              <span class="sp-moment__lib-opt sp-moment__lib-opt--on"><sp-icon name="folder-open" size="sm" /> {{ m.form.libraryDocuments }}</span>
+              <span class="sp-moment__lib-opt"><sp-icon name="folder" size="sm" /> {{ regDemo.libraryShared }}</span>
+              <span class="sp-moment__lib-opt"><sp-icon name="folder" size="sm" /> {{ regDemo.libraryArchive }}</span>
+              <span class="sp-moment__label">{{ m.form.library }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--4">
+            <div class="sp-moment__hero sp-moment__hero--verify">
+              <span class="sp-moment__ico sp-moment__ico--verify"><sp-icon name="refresh" size="sm" spin /></span>
+              <span class="sp-moment__phase sp-moment__phase--done"><sp-icon name="check" size="sm" /> {{ m.connectivity.phaseShortExternal[0] }}</span>
+              <span class="sp-moment__phase sp-moment__phase--done"><sp-icon name="check" size="sm" /> {{ m.connectivity.phaseShortExternal[1] }}</span>
+              <span class="sp-moment__phase sp-moment__phase--active"><sp-icon name="refresh" size="sm" spin /> {{ m.connectivity.phaseShortExternal[2] }}</span>
+              <span class="sp-moment__verify-ring" aria-hidden="true"></span>
+              <span class="sp-moment__label">{{ m.connectivity.testConnection }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--5">
+            <div class="sp-moment__hero sp-moment__hero--register">
+              <span class="sp-moment__appico">
+                <sp-tp-logo file="pa" />
+                <span class="sp-moment__appico-ring" aria-hidden="true"></span>
+              </span>
+              <strong>{{ regDemo.appName }}</strong>
+              <span class="sp-moment__meta"><sp-icon name="building" size="sm" /> {{ m.typeFallback.internal }}</span>
+              <span class="sp-moment__meta"><sp-icon name="shield" size="sm" /> {{ regDemo.servicePrincipal }}</span>
+              <span class="sp-moment__label">{{ m.form.registerApplication }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--6">
+            <div class="sp-moment__hero sp-moment__hero--types">
+              <span class="sp-moment__type"><sp-icon name="building" size="sm" /> {{ m.typeFallback.internal }}</span>
+              <span class="sp-moment__type sp-moment__type--on"><sp-icon name="cloud" size="sm" /> {{ m.typeFallback.external }}</span>
+              <span class="sp-moment__type"><sp-icon name="shield" size="sm" /> {{ m.typeFallback.userDelegated }}</span>
+              <span class="sp-moment__label">{{ m.form.siteType }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--7">
+            <div class="sp-moment__hero sp-moment__hero--browse">
+              <span class="sp-moment__crumb"><sp-icon name="home" size="sm" /> {{ regDemo.sitePrimary }} / {{ m.form.libraryDocuments }}</span>
+              <span class="sp-moment__file sp-moment__file--a"><sp-icon name="file" size="sm" /> {{ regDemo.fileContract }}</span>
+              <span class="sp-moment__file sp-moment__file--b"><sp-icon name="file" size="sm" /> {{ regDemo.fileForecast }}</span>
+              <span class="sp-moment__file sp-moment__file--c"><sp-icon name="folder-open" size="sm" /> {{ regDemo.folderReports }}</span>
+              <span class="sp-moment__view-toggle"><sp-icon name="grid" size="sm" /><sp-icon name="list" size="sm" /></span>
+              <span class="sp-moment__label">{{ m.form.library }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--8">
+            <div class="sp-moment__hero sp-moment__hero--stream">
+              <span class="sp-moment__node sp-moment__node--sp"><sp-sharepoint-logo /></span>
+              <span class="sp-moment__stream" aria-hidden="true">
+                <span class="sp-moment__packet"></span>
+                <span class="sp-moment__packet sp-moment__packet--2"></span>
+                <span class="sp-moment__packet sp-moment__packet--3"></span>
+              </span>
+              <span class="sp-moment__node sp-moment__node--api"><sp-icon name="code" size="sm" /></span>
+              <span class="sp-moment__curl">{{ regDemo.streamEndpoint }}</span>
+              <span class="sp-moment__label">{{ m.form.apiCredentials }}</span>
+            </div>
+          </div>
+
+          <div class="sp-moment sp-moment--9">
+            <div class="sp-moment__hero sp-moment__hero--ready">
+              <span class="sp-moment__ready-ring" aria-hidden="true"></span>
+              <span class="sp-moment__ready-check"><sp-icon name="check" size="sm" /></span>
+              <strong>{{ m.connectivity.connectionVerified }}</strong>
+              <span class="sp-moment__ready-actions">
+                <em><sp-icon name="play" size="sm" /> {{ m.list.use }}</em>
+                <em><sp-icon name="download" size="sm" /> {{ m.form.downloadTxt }}</em>
+              </span>
+              <span class="sp-moment__label">{{ m.connectivity.hintVerified }}</span>
+            </div>
+          </div>
+          </div>
+
+        </div>
+      </aside>
+    </div>
+  </section>
+</ng-container>
+

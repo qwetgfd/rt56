@@ -1,0 +1,141 @@
+#dataSourcePage {
+  padding: 4px 0 24px;
+  max-width: 980px;
+}
+
+section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-03, #989898);
+  margin-bottom: 16px;
+}
+
+.sub-section > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.sub-section a {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+  min-height: 72px;
+  padding: 20px 24px;
+  background: var(--background-01, #fff);
+  border: 1px solid var(--stroke-01, #dedae4);
+  border-radius: 12px;
+  color: var(--text-01, #2e2e2e);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.sub-section a:hover:not(.disabled) {
+  border-color: #b8c4ef;
+  box-shadow: 0 8px 20px rgba(37, 55, 136, 0.1);
+  transform: translateY(-1px);
+}
+
+.sub-section a.disabled {
+  background: rgba(255, 255, 255, 0.65);
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+  min-width: 150px;
+  min-height: 56px;
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sub-section .icon {
+  font-size: 24px;
+  color: var(--link-color, #253788);
+}
+
+.sub-section a img.icon {
+  width: 24px;
+  height: 24px;
+}
+
+.badge-up {
+  display: inline-block;
+  background: #ccfbf1;
+  color: #0f766e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+#dataSourcePage .sub-section a.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Configuration First card — blue accent per design */
+#dataSourcePage .sub-section > div > span:nth-child(2) a {
+  border-color: #253788;
+  color: #253788;
+}
+
+#dataSourcePage .sub-section > div > span:nth-child(2) a .icon {
+  color: #253788;
+}
+
+#dataSourcePage .sub-section > div > span:nth-child(2) a:hover {
+  border-color: #1e2d6e;
+  box-shadow: 0 8px 20px rgba(37, 55, 136, 0.14);
+}
+
+#exampleModal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+}
+
+#exampleModal .modal-body h5 {
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--text-01, #2e2e2e);
+}
+
+#exampleModal .btn.btn-outline-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 156px;
+  justify-content: center;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-color: #d14343;
+  color: #d14343;
+  border-radius: 10px;
+  background: #fff;
+}
+
+#exampleModal .btn.btn-outline-secondary:hover {
+  background: rgba(209, 67, 67, 0.06);
+  color: #d14343;
+  border-color: #d14343;
+}
+
+#exampleModal .btn.btn-outline-secondary img.icon {
+  width: 22px;
+  height: 22px;
+}
