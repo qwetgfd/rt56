@@ -1,0 +1,118 @@
+﻿SET ANSI_NULLS ON;
+GO
+
+SET QUOTED_IDENTIFIER ON;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sel_flpConfigurationList
+    @processTypeId INT,
+    @fileProcessingServerTypeId INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        SELECT
+            flp.id,
+            flp.process_name,
+            flp.flpConfigurationId,
+            flp.locationTypeId,
+            flp.destinationLocationTypeId,
+            flp.is_active,
+            flp.sourcePath,
+            flp.destinationPath,
+            flp.sender_communication_email,
+            flp.support_communication_email,
+            flp.loginid,
+            flp.processTypeId,
+            flp.securityGroupId,
+            sad.storageAccountName AS [sourceStorageAccount],
+            ssai.storageContainerName AS [sourceContainerName],
+            dbo.fn_decrypt(sad.storageAccountKey) AS [sourceStorageAccountKey],
+            dbo.fn_decrypt(sad.sasKey) AS [sasKey],
+            sad.sasKeyToken,
+            fsd.serverName,
+            slsi.sharedLocationServerInfoId AS [sharedLocationServerInfoId],
+            dbo.fn_decrypt(fsd.userName) AS [userName],
+            dbo.fn_decrypt(fsd.password) AS [password],
+            fsd.domain,
+            slsi.folderName,
+            dc.databaseConnectionSecret,
+            dc.databaseName,
+            flp.regionId,
+            flp.subRegionId,
+            flp.fileProcessingServerTypeId,
+            flp.clientId,
+            flp.search_string_in_file_name,
+            sc.scheduleStartDate,
+            sc.scheduleStartTime,
+            sc.scheduleEndDate,
+            sc.scheduleEndTime,
+            flp.sharePointApplicationId,
+            flp.sharePointApplicationSiteId,
+            flp.sharePointLibraryName,
+            flp.sharePointFolderPath
+        FROM dbo.di_flpConfiguration flp
+        LEFT JOIN dbo.di_flpSourceStorageAccountInfo ssai
+            ON flp.flpConfigurationId = ssai.flpConfigurationId AND ssai.active = 1
+        LEFT JOIN dbo.di_info_storageAccountDetails sad
+            ON sad.storageAccountId = ssai.storageAccountId AND sad.active = 1
+        LEFT JOIN dbo.di_sharedLocationSourceServer slsi
+            ON flp.flpConfigurationId = slsi.flpConfigurationId AND slsi.active = 1
+        LEFT JOIN dbo.di_info_fileServerDetails fsd
+            ON fsd.fileServerId = slsi.fileServerId AND fsd.active = 1
+        LEFT JOIN dbo.di_configurationTableMapping ctm
+            ON flp.flpConfigurationId = ctm.flpConfigurationId AND ctm.active = 1
+        LEFT JOIN dbo.di_databaseConfiguration dc
+            ON ctm.databaseConfigurationId = dc.id AND dc.active = 1
+        INNER JOIN dbo.di_flpSchedulerConfiguration sc
+            ON flp.flpConfigurationId = sc.flpConfigurationId AND sc.active = 1
+        LEFT JOIN dbo.di_processScheduler ps
+            ON flp.flpConfigurationId = ps.flpConfigurationId AND ps.active = 1
+        WHERE flp.is_active = 1
+          AND flp.processTypeId = @processTypeId
+          AND (
+                (@fileProcessingServerTypeId IS NULL AND flp.fileProcessingServerTypeId IN (1, 2, 4))
+                OR (@fileProcessingServerTypeId IS NOT NULL AND flp.fileProcessingServerTypeId = 3)
+              )
+          AND (
+                (CAST(sc.scheduleEndDate AS DATETIME) + CAST(sc.scheduleEndTime AS DATETIME) >= GETUTCDATE())
+                OR sc.scheduleEndDate IS NULL
+              )
+          AND (
+                (sc.scheduleTypeId != 1 AND ps.nextRun <= GETUTCDATE())
+                OR (
+                    sc.scheduleTypeId = 1
+                    AND (CAST(sc.scheduleStartDate AS DATETIME) + CAST(sc.scheduleStartTime AS DATETIME) <= GETUTCDATE())
+                )
+              );
+    END TRY
+    BEGIN CATCH
+        SELECT 'Error' AS [Result], 'Oops! Something unexpected occurred.' AS [Message];
+
+        IF OBJECT_ID(N'dbo.NLog', N'U') IS NOT NULL
+        BEGIN
+            INSERT INTO dbo.NLog (
+                MachineName, Logged, Level, Message, Logger, Properties, Callsite, Exception
+            )
+            VALUES (
+                @@SERVERNAME,
+                GETUTCDATE(),
+                'Error',
+                ERROR_MESSAGE(),
+                'sel_flpConfigurationList',
+                '',
+                '',
+                CONCAT(
+                    'Error Number: ', ERROR_NUMBER(),
+                    ', Error Severity: ', ERROR_SEVERITY(),
+                    ', Error State: ', ERROR_STATE(),
+                    ', Error Procedure: ', ERROR_PROCEDURE(),
+                    ', Error Line: ', ERROR_LINE(),
+                    ', Error Message: ', ERROR_MESSAGE()
+                )
+            );
+        END
+    END CATCH
+END;
+GO
