@@ -1,112 +1,553 @@
-CREATE OR ALTER PROCEDURE dbo.sel_flpConfigurationList
-    @processTypeId INT,
-    @fileProcessingServerTypeId INT = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
+# Google Drive Integration — REST API & Configuration Guide
 
-    BEGIN TRY
-        SELECT
-            flp.id,
-            flp.process_name,
-            flp.flpConfigurationId,
-            flp.locationTypeId,
-            flp.destinationLocationTypeId,
-            flp.is_active,
-            flp.sourcePath,
-            flp.destinationPath,
-            flp.sender_communication_email,
-            flp.support_communication_email,
-            flp.loginid,
-            flp.processTypeId,
-            flp.securityGroupId,
-            sad.storageAccountName AS [sourceStorageAccount],
-            ssai.storageContainerName AS [sourceContainerName],
-            dbo.fn_decrypt(sad.storageAccountKey) AS [sourceStorageAccountKey],
-            dbo.fn_decrypt(sad.sasKey) AS [sasKey],
-            sad.sasKeyToken,
-            fsd.serverName,
-            slsi.sharedLocationServerInfoId AS [sharedLocationServerInfoId],
-            dbo.fn_decrypt(fsd.userName) AS [userName],
-            dbo.fn_decrypt(fsd.password) AS [password],
-            fsd.domain,
-            slsi.folderName,
-            dc.databaseConnectionSecret,
-            dc.databaseName,
-            flp.regionId,
-            flp.subRegionId,
-            flp.fileProcessingServerTypeId,
-            flp.clientId,
-            flp.search_string_in_file_name,
-            sc.scheduleStartDate,
-            sc.scheduleStartTime,
-            sc.scheduleEndDate,
-            sc.scheduleEndTime,
-            flp.sharePointApplicationId,
-            flp.sharePointApplicationSiteId,
-            flp.sharePointLibraryName,
-            flp.sharePointFolderPath
-        FROM dbo.di_flpConfiguration flp
-        LEFT JOIN dbo.di_flpSourceStorageAccountInfo ssai
-            ON flp.flpConfigurationId = ssai.flpConfigurationId AND ssai.active = 1
-        LEFT JOIN dbo.di_info_storageAccountDetails sad
-            ON sad.storageAccountId = ssai.storageAccountId AND sad.active = 1
-        LEFT JOIN dbo.di_sharedLocationSourceServer slsi
-            ON flp.flpConfigurationId = slsi.flpConfigurationId AND slsi.active = 1
-        LEFT JOIN dbo.di_info_fileServerDetails fsd
-            ON fsd.fileServerId = slsi.fileServerId AND fsd.active = 1
-        LEFT JOIN dbo.di_configurationTableMapping ctm
-            ON flp.flpConfigurationId = ctm.flpConfigurationId AND ctm.active = 1
-        LEFT JOIN dbo.di_databaseConfiguration dc
-            ON ctm.databaseConfigurationId = dc.id AND dc.active = 1
-        INNER JOIN dbo.di_flpSchedulerConfiguration sc
-            ON flp.flpConfigurationId = sc.flpConfigurationId AND sc.active = 1
-        LEFT JOIN dbo.di_processScheduler ps
-            ON flp.flpConfigurationId = ps.flpConfigurationId AND ps.active = 1
-        WHERE flp.is_active = 1
-          AND flp.processTypeId = @processTypeId
-          AND (
-                (@fileProcessingServerTypeId IS NULL AND flp.fileProcessingServerTypeId IN (1, 2, 4))
-                OR (@fileProcessingServerTypeId IS NOT NULL AND flp.fileProcessingServerTypeId = 3)
-              )
-          AND (
-                (CAST(sc.scheduleEndDate AS DATETIME) + CAST(sc.scheduleEndTime AS DATETIME) >= GETUTCDATE())
-                OR sc.scheduleEndDate IS NULL
-              )
-          AND (
-                (sc.scheduleTypeId != 1 AND ps.nextRun <= GETUTCDATE())
-                OR (
-                    sc.scheduleTypeId = 1
-                    AND (CAST(sc.scheduleStartDate AS DATETIME) + CAST(sc.scheduleStartTime AS DATETIME) <= GETUTCDATE())
-                )
-              );
-    END TRY
-    BEGIN CATCH
-        SELECT 'Error' AS [Result], 'Oops! Something unexpected occurred.' AS [Message];
+How to list, download, and read permissions from org Google Drive — mirroring a SharePoint/Graph workspace design.
 
-        IF OBJECT_ID(N'dbo.NLog', N'U') IS NOT NULL
-        BEGIN
-            INSERT INTO dbo.NLog (
-                MachineName, Logged, Level, Message, Logger, Properties, Callsite, Exception
-            )
-            VALUES (
-                @@SERVERNAME,
-                GETUTCDATE(),
-                'Error',
-                ERROR_MESSAGE(),
-                'sel_flpConfigurationList',
-                '',
-                '',
-                CONCAT(
-                    'Error Number: ', ERROR_NUMBER(),
-                    ', Error Severity: ', ERROR_SEVERITY(),
-                    ', Error State: ', ERROR_STATE(),
-                    ', Error Procedure: ', ERROR_PROCEDURE(),
-                    ', Error Line: ', ERROR_LINE(),
-                    ', Error Message: ', ERROR_MESSAGE()
-                )
-            );
-        END
-    END CATCH
-END;
-GO
+> **Microsoft Graph cannot access Google Drive.** All file operations use **Google Drive API v3** (+ Admin SDK for user listing in Model B).
+
+---
+
+## 1. Auth models (pick one)
+
+| Model | Who authorizes | Token identity | Use when |
+|-------|----------------|----------------|----------|
+| **A. User OAuth** | Each user logs in | The user | Per-user browse; user self-onboards |
+| **B. Service Account + DWD** | Workspace super admin (once) | Impersonated user (`sub` in JWT) | Org-wide ingestion; no user interaction |
+| **C. Shared Drive** *(recommended)* | Drive owner shares with SA | Service account itself | Secure, least-privilege; fixed ingestion area |
+
+### Decision tree
+
+```
+Need files from individual users' My Drive?
+  YES → Model A (user OAuth) or Model B (DWD + loop users)
+  NO  → Model C (Shared Drive only)
+
+Want tightest access boundary (no impersonation)?
+  → Model C
+
+Want zero user interaction + all users?
+  → Model B (requires super-admin trust)
+```
+
+---
+
+## 2. Google raw REST endpoints
+
+Base URL: `https://www.googleapis.com/drive/v3`  
+Auth header on every call: `Authorization: Bearer {access_token}`
+
+### 2.1 Token generation
+
+#### Model A — User OAuth (refresh token)
+
+**Initial consent (browser, one-time per user):**
+```http
+GET https://accounts.google.com/o/oauth2/v2/auth
+  ?client_id={oauth_client_id}
+  &redirect_uri={redirect_uri}
+  &response_type=code
+  &scope=https://www.googleapis.com/auth/drive.readonly
+  &access_type=offline
+  &prompt=consent
+```
+
+Exchange `code` for tokens:
+```http
+POST https://oauth2.googleapis.com/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code={auth_code}
+&client_id={oauth_client_id}
+&client_secret={oauth_client_secret}
+&redirect_uri={redirect_uri}
+```
+
+Store `refresh_token` per user. Later fetches:
+```http
+POST https://oauth2.googleapis.com/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token
+&refresh_token={user_refresh_token}
+&client_id={oauth_client_id}
+&client_secret={oauth_client_secret}
+```
+
+#### Model B / C — Service Account (JWT bearer)
+
+```http
+POST https://oauth2.googleapis.com/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer
+&assertion={signed_jwt}
+```
+
+**JWT claims (RS256 signed with SA private key):**
+
+| Claim | Model B (DWD) | Model C (Shared Drive) |
+|-------|---------------|------------------------|
+| `iss` | `service-account@project.iam.gserviceaccount.com` | same |
+| `sub` | `user@yourorg.com` (impersonate) | **omit** |
+| `scope` | `https://www.googleapis.com/auth/drive.readonly` | same |
+| `aud` | `https://oauth2.googleapis.com/token` | same |
+| `iat` / `exp` | now / now+3600 | same |
+
+---
+
+### 2.2 Drive operations
+
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| List Shared Drives | GET | `/drive/v3/drives` |
+| List files in a drive | GET | `/drive/v3/files?driveId={id}&corpora=drive&includeItemsFromAllDrives=true&supportsAllDrives=true` |
+| List folder children | GET | `/drive/v3/files?q='{folderId}'+in+parents+and+trashed=false&supportsAllDrives=true&includeItemsFromAllDrives=true` |
+| List user's My Drive | GET | `/drive/v3/files?corpora=user` |
+| Get metadata | GET | `/drive/v3/files/{fileId}?supportsAllDrives=true` |
+| Download binary | GET | `/drive/v3/files/{fileId}?alt=media&supportsAllDrives=true` |
+| Export Google Doc | GET | `/drive/v3/files/{fileId}/export?mimeType=application/pdf` |
+| Get permissions | GET | `/drive/v3/files/{fileId}/permissions?supportsAllDrives=true` |
+| List org users (Model B) | GET | `https://admin.googleapis.com/admin/directory/v1/users?customer=my_customer` |
+
+**Pagination:** all list calls return `nextPageToken` — pass as `&pageToken={token}` until absent.
+
+**Permission roles:** `owner`, `organizer`, `fileOrganizer`, `writer`, `commenter`, `reader`.
+
+---
+
+### 2.3 End-to-end flows
+
+#### Model C — Shared Drive (recommended)
+
+```
+1. Admin: create Shared Drive "Ingestion-Inbox"
+2. Admin: add service-account@... as Viewer member
+3. App:  POST oauth2.googleapis.com/token  (JWT, no sub)
+4. App:  GET  /drive/v3/drives              → pick driveId
+5. App:  GET  /drive/v3/files?driveId=...  → list root
+6. App:  GET  /drive/v3/files?q='{folderId}' in parents  → drill into folder
+7. App:  GET  /drive/v3/files/{fileId}?alt=media  → download
+```
+
+#### Model B — All 10 users' My Drive
+
+```
+1. Admin: enable Domain-Wide Delegation for SA client_id + scopes
+2. App:   GET admin/directory/v1/users  → [user1..user10]
+3. For each user:
+     a. Mint JWT with sub=user@org.com
+     b. POST oauth2.googleapis.com/token
+     c. GET /drive/v3/files?corpora=user
+     d. Aggregate results
+```
+
+#### Model A — Single logged-in user
+
+```
+1. User:  OAuth consent → store refresh_token
+2. App:   POST token (refresh_token grant)
+3. App:   GET /drive/v3/files?corpora=user
+4. App:   GET /drive/v3/files/{id}?alt=media
+```
+
+---
+
+## 3. SharePoint (Graph) → Google mapping
+
+| SharePoint / Graph | Google Drive v3 |
+|--------------------|-----------------|
+| `POST login.microsoftonline.com/{tenant}/oauth2/v2.0/token` (`client_credentials`) | `POST oauth2.googleapis.com/token` (`jwt-bearer` or `refresh_token`) |
+| Azure App Registration (tenantId, clientId, secret) | Google Cloud Service Account JSON **or** OAuth client |
+| `GET graph.microsoft.com/v1.0/sites/{host}:/sites/{slug}` | `GET /drive/v3/drives` or resolve folder by ID |
+| `GET .../sites/{id}/drives` | `GET /drive/v3/drives` |
+| `GET .../drives/{id}/root/children` | `GET /drive/v3/files?q='{folderId}' in parents` |
+| `GET .../root:/path:/content` | `GET /drive/v3/files/{fileId}?alt=media` |
+| `hostName + siteName + libraryName + folderPath` | `sharedDriveId + folderId` |
+| `Sites.Read.All` + `Files.Read.All` (app perms) | `drive.readonly` + DWD or drive membership |
+| User MSAL token (delegated) | User OAuth refresh token (delegated) |
+
+---
+
+## 4. Configuration reference
+
+### 4.1 Google Cloud Console (all models)
+
+| Step | Action |
+|------|--------|
+| 1 | Create GCP project |
+| 2 | Enable **Google Drive API** |
+| 3 | Enable **Admin SDK API** (Model B only) |
+| 4 | Create credentials (OAuth client **or** Service Account) |
+
+### 4.2 Model A — OAuth client config
+
+| Setting | Value |
+|---------|-------|
+| Application type | Web application |
+| Authorized redirect URIs | `https://your-app/callback` |
+| Scopes | `https://www.googleapis.com/auth/drive.readonly` |
+| Store per user | `refresh_token`, `user_email` |
+
+### 4.3 Model B — Service Account + DWD config
+
+| Setting | Where | Value |
+|---------|-------|-------|
+| Service account JSON | GCP → IAM → Service Accounts | `client_email`, `private_key`, `client_id` |
+| Domain-wide delegation | Google Admin → Security → API controls | Client ID + scopes below |
+| Scopes | Admin Console | `https://www.googleapis.com/auth/drive.readonly` |
+| User listing scope | Admin Console | `https://www.googleapis.com/auth/admin.directory.user.readonly` |
+| Impersonation | JWT `sub` claim | `user@yourorg.com` per loop |
+
+### 4.4 Model C — Shared Drive config (recommended)
+
+| Setting | Where | Value |
+|---------|-------|-------|
+| Service account JSON | GCP | `client_email`, `private_key` |
+| Shared Drive | Google Drive UI | e.g. `Ingestion-Inbox` |
+| SA membership | Shared Drive → Manage members | Add `client_email` as **Viewer** |
+| Store in app | DB / Key Vault | `sharedDriveId`, `rootFolderId` (optional), SA JSON ref |
+| JWT | App runtime | **No `sub`** — SA acts as itself |
+
+### 4.5 What to store (app registry pattern)
+
+| Field | Model A | Model B | Model C |
+|-------|---------|---------|---------|
+| `authType` | `user_oauth` | `service_account_dwd` | `service_account_drive` |
+| `oauthClientId` | ✓ | — | — |
+| `oauthClientSecret` | ✓ | — | — |
+| `refreshToken` | per user | — | — |
+| `serviceAccountEmail` | — | ✓ | ✓ |
+| `privateKeyRef` | — | ✓ (vault) | ✓ (vault) |
+| `impersonateUser` | — | optional default | — |
+| `sharedDriveId` | — | optional | ✓ |
+| `rootFolderId` | — | optional | optional |
+| `consumerApiSecret` | ✓ (your API) | ✓ | ✓ |
+
+---
+
+## 5. Recommended wrapper API (mirror SharePoint workspace)
+
+Your backend proxies Google calls so the UI never holds Google keys. Same shape as SharePoint plugin:
+
+### 5.1 Application registry
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/google/applications/types` | `user_oauth`, `service_account_dwd`, `service_account_drive` |
+| GET | `/api/google/applications` | List registered connections |
+| GET | `/api/google/applications/{id}` | Get one |
+| POST | `/api/google/applications` | Register (store SA ref or OAuth client) |
+| DELETE | `/api/google/applications/{id}` | Remove |
+| POST | `/api/google/applications/validate-drive` | Test connectivity to a Shared Drive |
+| POST | `/api/google/applications/drives` | List Shared Drives the SA can see |
+
+### 5.2 Workspace (browse / download)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/google/workspace/browse` | List folder children (`driveId`, `folderId`) |
+| POST | `/api/google/workspace/fetchfile` | Download file by `fileId` |
+| GET | `/api/google/workspace/file?path={fileId}&access_token={jwt}` | Stream for browser preview |
+| POST | `/api/google/workspace/file` | Stream with Bearer JWT (API consumers) |
+
+### 5.3 User-delegated (Model A)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/google/oauth/authorize` | Redirect user to Google consent |
+| GET | `/api/google/oauth/callback` | Exchange code → store refresh token |
+| POST | `/api/google/workspace/user/browse` | Browse with user's stored token |
+| POST | `/api/google/workspace/user/fetchfile` | Download with user's token |
+
+### 5.4 Auth (your API consumers)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/google/auth/token` | Issue your JWT (`x-application-id` + `x-client-secret`) |
+
+**Request body examples:**
+
+Browse:
+```json
+{
+  "credentials": {
+    "applicationId": "guid-or-null",
+    "sharedDriveId": "0ABC...",
+    "folderId": "root-folder-id-or-omit-for-drive-root"
+  },
+  "pageToken": null
+}
+```
+
+Fetch file:
+```json
+{
+  "credentials": { "applicationId": "...", "sharedDriveId": "..." },
+  "fileId": "1a2b3c..."
+}
+```
+
+---
+
+## 6. Process configuration (ingestion job)
+
+Mirror SharePoint `processTypeId = 6` pattern:
+
+| SharePoint field | Google field |
+|------------------|--------------|
+| `sharePointApplicationId` | `googleApplicationId` |
+| `sharePointApplicationSiteId` | `googleDriveId` (Shared Drive ID) |
+| `sharePointLibraryName` | *(not needed — drive is the library)* |
+| `sharePointFolderPath` | `googleFolderId` |
+
+Side table example: `di_flpGoogleDriveSource`
+
+```
+flpConfigurationId, googleApplicationId, googleDriveId, googleFolderId, active
+```
+
+---
+
+## 7. Security notes
+
+| Topic | Guidance |
+|-------|----------|
+| SA private key | Never in frontend; store in Key Vault / env / encrypted DB |
+| DWD (Model B) | Super-admin power — impersonates any user; audit heavily |
+| Shared Drive (Model C) | Least privilege — SA only sees drives it's a member of |
+| Refresh tokens (Model A) | Encrypt at rest; revoke on user offboarding |
+| Your API JWT | Separate from Google token — same pattern as SharePoint `consumerSecret` |
+| Graph API | **Cannot** proxy Google Drive — no workaround for file fetch |
+
+---
+
+## 8. Quick reference — curl examples (Model C)
+
+```bash
+# 1. Get token (after building JWT in your app)
+curl -X POST https://oauth2.googleapis.com/token \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion={JWT}"
+
+# 2. List Shared Drives
+curl -H "Authorization: Bearer {token}" \
+  "https://www.googleapis.com/drive/v3/drives"
+
+# 3. List files in drive root
+curl -H "Authorization: Bearer {token}" \
+  "https://www.googleapis.com/drive/v3/files?driveId={driveId}&corpora=drive&includeItemsFromAllDrives=true&supportsAllDrives=true&fields=files(id,name,mimeType)"
+
+# 4. Download file
+curl -H "Authorization: Bearer {token}" \
+  "https://www.googleapis.com/drive/v3/files/{fileId}?alt=media&supportsAllDrives=true" \
+  -o downloaded.bin
+
+# 5. Get permissions
+curl -H "Authorization: Bearer {token}" \
+  "https://www.googleapis.com/drive/v3/files/{fileId}/permissions?supportsAllDrives=true"
+```
+
+---
+
+## 9. Bottom line
+
+| Question | Answer |
+|----------|--------|
+| Can we list + download org Google Drive files? | **Yes** — Drive API v3 |
+| Can we get permissions? | **Yes** — file/drive level only (`/permissions`) |
+| User login based? | **Yes** — Model A (OAuth) |
+| Admin / app-level (SPN-like)? | **Yes** — Model B (DWD) or **Model C (Shared Drive)** |
+| Azure App Registration for Google? | **No** — use Google Cloud credentials |
+| Microsoft Graph for Google? | **No** — must use Google APIs |
+| Best secure org design? | **Model C** — Shared Drive + SA membership |
+| 10 users, each unique My Drive? | Model A (10 consents) or Model B (loop + impersonate) |  # Google Drive Integration Feasibility (Equivalent to SharePoint Ingestion)
+
+## Overview
+
+This document explains how a SharePoint-style ingestion system can be implemented using Google Drive APIs. It covers two approaches:
+
+1. Delegated (User-based access)
+2. Application-level access (Service Account with Domain-Wide Delegation)
+
+---
+
+## Key Differences from SharePoint
+
+- Google Drive does not have a "Site" concept.
+- The closest equivalent is "Shared Drives".
+- Permissions are defined at file, folder, or drive level (not site level).
+- Application-level access is achieved via user impersonation, not pure app-only access.
+
+---
+
+## Approach 1: Delegated Access (User-Based)
+
+### Description
+Access is granted based on the logged-in user. The application only accesses files visible to that user.
+
+### Steps
+
+1. Create a project in Google Cloud Console.
+2. Enable Google Drive API.
+3. Configure OAuth Consent Screen.
+4. Define scopes:
+   - https://www.googleapis.com/auth/drive.readonly
+   - https://www.googleapis.com/auth/drive.metadata.readonly
+5. Implement OAuth 2.0 login for users.
+6. Obtain access token after user login.
+7. Fetch files using:
+   - GET /drive/v3/files
+   - Use parameters:
+     - includeItemsFromAllDrives=true
+     - supportsAllDrives=true
+8. Fetch permissions per file:
+   - GET /drive/v3/files/{fileId}/permissions
+
+### Outcome
+
+- Access limited to user-visible files
+- Suitable for user-driven scenarios
+- Matches SharePoint delegated permissions model
+
+---
+
+## Approach 2: Application-Level Access (Service Account)
+
+### Description
+Backend application accesses data without user interaction using a service account and domain-wide delegation.
+
+### Important Note
+
+- This is not true app-only access.
+- The application operates by impersonating users.
+
+---
+
+### Steps
+
+#### 1. Create Google Cloud Project
+
+- Go to Google Cloud Console
+- Create a new project
+- Enable Google Drive API
+
+---
+
+#### 2. Create Service Account
+
+- Navigate to IAM and Admin → Service Accounts
+- Create a new service account
+- Download JSON key file
+
+---
+
+#### 3. Enable Domain-Wide Delegation
+
+- Open the service account
+- Enable domain-wide delegation
+- Copy the client ID
+
+---
+
+#### 4. Configure in Google Workspace Admin
+
+- Go to admin.google.com
+- Navigate to:
+  Security → API Controls → Domain-wide Delegation
+- Add new client:
+  - Client ID: Service account client ID
+  - Scopes:
+    - https://www.googleapis.com/auth/drive
+    - https://www.googleapis.com/auth/drive.readonly
+    - https://www.googleapis.com/auth/drive.metadata.readonly
+
+---
+
+#### 5. Implement User Impersonation
+
+In backend application:
+
+- Use service account credentials
+- Specify user to impersonate
+
+Example:
+
+- subject = user@domain.com
+
+This allows the application to act as that user.
+
+---
+
+#### 6. Fetch Files
+
+- Call:
+  GET /drive/v3/files
+- Use:
+  - includeItemsFromAllDrives=true
+  - supportsAllDrives=true
+  - corpora=allDrives
+
+---
+
+#### 7. Fetch Permissions
+
+- Call:
+  GET /drive/v3/files/{fileId}/permissions
+
+---
+
+#### 8. Shared Drive Handling
+
+- Treat Shared Drives as:
+  Equivalent to SharePoint Sites
+
+- Fetch files from a specific drive:
+
+  GET /drive/v3/files?driveId=XXX&corpora=drive
+
+---
+
+#### 9. Ingestion Model
+
+Option A: User-based ingestion
+
+- For each user:
+  - Impersonate user
+  - Fetch files
+  - Fetch permissions
+  - Store results
+
+Option B: Shared Drive-based ingestion
+
+- For each shared drive:
+  - Fetch files
+  - Fetch permissions
+
+---
+
+## Limitations
+
+- No native site-level abstraction
+- No equivalent to Sites.Selected permission
+- No true app-only tenant-wide access
+- Permissions are only at file or drive level
+
+---
+
+## Recommended Architecture
+
+- Use Shared Drives as workspace containers
+- Use service account with domain-wide delegation
+- Combine:
+  - Shared Drive ingestion for organization data
+  - User impersonation for personal drives
+- Store metadata and permissions in a central system
+
+---
+
+## Conclusion
+
+- The system can be implemented in Google Drive
+- Delegated access is straightforward
+- Application-level access is possible via impersonation
+- Architecture differs from SharePoint and requires redesign
+
