@@ -1,22 +1,12 @@
-﻿-- Data Ingestion stored procedure: commit_InsertFlpConfiguration
--- Safe to recreate. Backed up before alteration.
-
-SET NOCOUNT ON;
+USE [SharepointPlugin]
 GO
-
-IF OBJECT_ID(N'[dbo].[commit_InsertFlpConfiguration_backup18June2026]', N'P') IS NOT NULL
-    DROP PROCEDURE [dbo].[commit_InsertFlpConfiguration_backup18June2026];
-IF OBJECT_ID(N'[dbo].[commit_InsertFlpConfiguration]', N'P') IS NOT NULL
-    EXEC sp_rename N'dbo.commit_InsertFlpConfiguration', N'commit_InsertFlpConfiguration_backup18June2026', N'OBJECT';
-GO
-
+/****** Object:  StoredProcedure [dbo].[commit_InsertFlpConfiguration]    Script Date: 6/23/2026 4:17:22 PM ******/
 SET ANSI_NULLS ON
 GO
-
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[commit_InsertFlpConfiguration]
+ALTER   PROCEDURE [dbo].[commit_InsertFlpConfiguration]
     @process_name NVARCHAR(255),
     @locationTypeId INT,
     @sender_communication_email NVARCHAR(255),
@@ -60,393 +50,292 @@ CREATE OR ALTER PROCEDURE [dbo].[commit_InsertFlpConfiguration]
     @flpConfigurationId NVARCHAR(100) OUTPUT
 AS
 BEGIN
-    -- Start a transaction
-    BEGIN TRANSACTION;
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
     BEGIN TRY
-        DECLARE @configurationId NVARCHAR(100);
-        DECLARE @destinationPath NVARCHAR(255);
-        --DECLARE @Region VARCHAR(400)
-        --DECLARE @SubRegion VARCHAR(400)
-        --DECLARE @Clientname VARCHAR(400)
-        DECLARE @nextRun DATETIME = NULL;
+        BEGIN TRANSACTION;
 
-        --select @Region = [Name] from di_info_region WHERE Id = @regionId
-        --select @SubRegion = [Name] from di_info_sub_region WHERE Id = @subRegionId
-        --select @ClientName = [Name] from di_info_clientnames WHERE Id = @clientId
-        SET @configurationId = NEWID();
-        SET @destinationPath = @Region + '/' + @SubRegion + '/' + @ClientName + '/';
+        DECLARE @configurationId NVARCHAR(100) = ISNULL(@configId, CONVERT(NVARCHAR(100), NEWID()));
+        DECLARE @destinationPath NVARCHAR(255) = @region + N'/' + @subRegion + N'/' + @clientName + N'/';
+        DECLARE @nextRun DATETIME;
+        DECLARE @startDate DATE = TRY_CAST(@scheduledDate AS DATE);
+        DECLARE @startTime TIME(0) = TRY_CAST(@scheduledTime AS TIME(0));
+        DECLARE @endDate DATE = TRY_CAST(@scheduledEndDate AS DATE);
+        DECLARE @endTime TIME(0) = TRY_CAST(@scheduledEndTime AS TIME(0));
 
-        -- Insert into di_flpConfiguration table
         IF (@configId IS NULL)
         BEGIN
-            --Add securityGroupId from user selected group
-            INSERT INTO [di_flpConfiguration] (
-                flpConfigurationId,
-                process_name,
-                locationTypeId,
-                destinationLocationTypeId,
-                sourcePath,
-                destinationPath,
-                sender_communication_email,
-                support_communication_email,
-                created_by,
-                userName,
-                created_date,
-                --modified_date,
-                loginid,
-                process_group_name,
-                Description,
-                billing_client_name,
-                processTypeId,
-                is_active,
-                regionId,
-                subRegionId,
-                clientId,
-                search_string_in_file_name,
-                --securityGroupId,
-                region,
-                subRegion,
-                clientName,
-                fileProcessingServerTypeId,
-                datalakeStorageAccountPath,
-                sharePointApplicationId,
-                sharePointApplicationSiteId,
-                sharePointLibraryName,
-                sharePointFolderPath
+            INSERT INTO dbo.di_flpConfiguration (
+                flpConfigurationId, process_name, locationTypeId, destinationLocationTypeId,
+                sourcePath, destinationPath, sender_communication_email, support_communication_email,
+                created_by, userName, created_date, loginid, process_group_name, Description,
+                billing_client_name, processTypeId, is_active, regionId, subRegionId, clientId,
+                search_string_in_file_name, region, subRegion, clientName, fileProcessingServerTypeId,
+                datalakeStorageAccountPath
             )
             VALUES (
-                @configurationId,
-                @process_name,
-                @locationTypeId,
-                1,
+                @configurationId, @process_name, @locationTypeId, 1,
                 CASE @processTypeId
                     WHEN 1 THEN @destinationPath
                     WHEN 3 THEN @blobSourcePath
                     WHEN 6 THEN ISNULL(@sharePointFolderPath, N'')
                     ELSE @sourceFolderLocation
                 END,
-                @destinationPath,
-                @sender_communication_email,
-                NULL,
-                @created_by,
-                @userName,
-                GETUTCDATE(),
-                --null,
-                @created_by,
-                NULL,
-                @description,
-                NULL,
-                @processTypeId,
-                1,
-                @regionId,
-                @subRegionId,
-                @clientId,
-                @search_string_in_file_name,
-                @region,
-                @subRegion,
-                @clientName,
-                @flpProcessingServerTypeId,
-                @deltaSource,
-                CASE WHEN @processTypeId = 6 THEN @sharePointApplicationId ELSE NULL END,
-                CASE WHEN @processTypeId = 6 THEN @sharePointApplicationSiteId ELSE NULL END,
-                CASE WHEN @processTypeId = 6 THEN @sharePointLibraryName ELSE NULL END,
-                CASE WHEN @processTypeId = 6 THEN @sharePointFolderPath ELSE NULL END
+                @destinationPath, @sender_communication_email, NULL, @created_by, @userName,
+                GETUTCDATE(), @created_by, NULL, @description, NULL, @processTypeId, 1,
+                @regionId, @subRegionId, @clientId, @search_string_in_file_name,
+                @region, @subRegion, @clientName, @flpProcessingServerTypeId, @deltaSource
             );
 
-            IF (@internalCampaignId IS NOT NULL AND @internalCampaignId <> '' AND @internalCampaignId <> '')
+            IF (@internalCampaignId IS NOT NULL AND @internalCampaignId <> '')
             BEGIN
-                INSERT INTO di_flpConfigurationCampaignMapping (
-                    configurationCampaignMappingId,
-                    flpConfigurationId,
-                    internalCampaignId,
-                    active
-                )
-                VALUES (NEWID(), @configurationId, @internalCampaignId, 1);
+                IF COL_LENGTH('dbo.di_flpConfigurationCampaignMapping', 'configurationCampaignMappingId') IS NOT NULL
+                    EXEC sp_executesql
+                        N'INSERT INTO dbo.di_flpConfigurationCampaignMapping (configurationCampaignMappingId, flpConfigurationId, internalCampaignId, active)
+                          VALUES (NEWID(), @flpConfigurationId, @internalCampaignId, 1);',
+                        N'@flpConfigurationId NVARCHAR(100), @internalCampaignId NVARCHAR(200)',
+                        @configurationId, @internalCampaignId;
+                ELSE
+                    INSERT INTO dbo.di_flpConfigurationCampaignMapping (flpConfigurationId, internalCampaignId, active)
+                    VALUES (@configurationId, @internalCampaignId, 1);
             END
 
-            EXEC [dbo].[commit_flpSecurityGroupMapping] @securityGroupId, @configurationId;
-            EXEC [dbo].[commit_SecurityGroupIdForUser] @created_by, @configurationId;
+            EXEC dbo.commit_flpSecurityGroupMapping @securityGroupId, @configurationId;
+            EXEC dbo.commit_SecurityGroupIdForUser @created_by, @configurationId;
+
+            IF (@processTypeId = 6)
+            BEGIN
+                EXEC dbo.commit_InsertFlpSharePointSource
+                    @flpConfigurationId = @configurationId,
+                    @sharePointApplicationId = @sharePointApplicationId,
+                    @sharePointApplicationSiteId = @sharePointApplicationSiteId,
+                    @sharePointLibraryName = @sharePointLibraryName,
+                    @sharePointFolderPath = @sharePointFolderPath;
+            END
         END
         ELSE
         BEGIN
-            UPDATE di_flpConfiguration
-            SET
-                process_name = @process_name,
-                locationTypeId = @locationTypeId,
-                sourcePath = CASE @processTypeId
-                    WHEN 1 THEN @destinationPath
-                    WHEN 3 THEN @blobSourcePath
-                    WHEN 6 THEN ISNULL(@sharePointFolderPath, N'')
-                    ELSE @sourceFolderLocation
-                END,
-                sharePointApplicationId = CASE WHEN @processTypeId = 6 THEN @sharePointApplicationId ELSE sharePointApplicationId END,
-                sharePointApplicationSiteId = CASE WHEN @processTypeId = 6 THEN @sharePointApplicationSiteId ELSE sharePointApplicationSiteId END,
-                sharePointLibraryName = CASE WHEN @processTypeId = 6 THEN @sharePointLibraryName ELSE sharePointLibraryName END,
-                sharePointFolderPath = CASE WHEN @processTypeId = 6 THEN @sharePointFolderPath ELSE sharePointFolderPath END,
-                destinationPath = @destinationPath,
-                sender_communication_email = @sender_communication_email,
-                updatedByName = @userName,
-                updatedBy = @created_by,
-                modified_date = GETUTCDATE(),
-                loginid = @created_by,
-                [Description] = @description,
-                processTypeId = @processTypeId,
-                --regionId = @regionId,
-                --subRegionId = @subRegionId,
-                --clientId = @clientId,
-                search_string_in_file_name = @search_string_in_file_name,
-                --region = @region,
-                --subRegion = @subRegion,
-                --clientName = @clientName
-                datalakeStorageAccountPath = @deltaSource
-            WHERE flpConfigurationId = @configId;
+            IF COL_LENGTH('dbo.di_flpConfiguration', 'updatedByName') IS NOT NULL
+                EXEC sp_executesql
+                    N'UPDATE dbo.di_flpConfiguration
+                      SET process_name = @process_name,
+                          locationTypeId = @locationTypeId,
+                          sourcePath = CASE @processTypeId
+                              WHEN 1 THEN @destinationPath
+                              WHEN 3 THEN @blobSourcePath
+                              WHEN 6 THEN ISNULL(@sharePointFolderPath, N'''')
+                              ELSE @sourceFolderLocation
+                          END,
+                          destinationPath = @destinationPath,
+                          sender_communication_email = @sender_communication_email,
+                          updatedByName = @userName,
+                          updatedBy = @created_by,
+                          modified_date = GETUTCDATE(),
+                          loginid = @created_by,
+                          Description = @description,
+                          processTypeId = @processTypeId,
+                          search_string_in_file_name = @search_string_in_file_name,
+                          datalakeStorageAccountPath = @deltaSource
+                      WHERE flpConfigurationId = @configId;',
+                    N'@process_name NVARCHAR(255), @locationTypeId INT, @processTypeId INT, @destinationPath NVARCHAR(255),
+                      @blobSourcePath VARCHAR(100), @sharePointFolderPath NVARCHAR(512), @sourceFolderLocation VARCHAR(100),
+                      @sender_communication_email NVARCHAR(255), @userName VARCHAR(100), @created_by NVARCHAR(255),
+                      @description NVARCHAR(MAX), @search_string_in_file_name NVARCHAR(255), @deltaSource VARCHAR(255),
+                      @configId NVARCHAR(100)',
+                    @process_name, @locationTypeId, @processTypeId, @destinationPath,
+                    @blobSourcePath, @sharePointFolderPath, @sourceFolderLocation,
+                    @sender_communication_email, @userName, @created_by,
+                    @description, @search_string_in_file_name, @deltaSource, @configId;
+            ELSE
+                UPDATE dbo.di_flpConfiguration
+                SET process_name = @process_name,
+                    locationTypeId = @locationTypeId,
+                    sourcePath = CASE @processTypeId
+                        WHEN 1 THEN @destinationPath
+                        WHEN 3 THEN @blobSourcePath
+                        WHEN 6 THEN ISNULL(@sharePointFolderPath, N'')
+                        ELSE @sourceFolderLocation
+                    END,
+                    destinationPath = @destinationPath,
+                    sender_communication_email = @sender_communication_email,
+                    Description = @description,
+                    processTypeId = @processTypeId,
+                    regionId = @regionId,
+                    subRegionId = @subRegionId,
+                    clientId = @clientId,
+                    search_string_in_file_name = @search_string_in_file_name,
+                    region = @region,
+                    subRegion = @subRegion,
+                    clientName = @clientName,
+                    fileProcessingServerTypeId = @flpProcessingServerTypeId,
+                    datalakeStorageAccountPath = @deltaSource
+                WHERE flpConfigurationId = @configId;
 
-            EXEC [dbo].[commit_flpSecurityGroupMapping] @securityGroupId, @configId;
+            EXEC dbo.commit_flpSecurityGroupMapping @securityGroupId, @configId;
+
+            IF (@processTypeId = 6)
+            BEGIN
+                EXEC dbo.commit_InsertFlpSharePointSource
+                    @flpConfigurationId = @configId,
+                    @sharePointApplicationId = @sharePointApplicationId,
+                    @sharePointApplicationSiteId = @sharePointApplicationSiteId,
+                    @sharePointLibraryName = @sharePointLibraryName,
+                    @sharePointFolderPath = @sharePointFolderPath;
+            END
         END
 
         IF (@configId IS NULL)
         BEGIN
-            INSERT INTO [di_flpSchedulerConfiguration] (
-                [flpConfigurationId],
-                [scheduleTypeId],
-                [scheduleValue],
-                [scheduleStartDate],
-                [scheduleEndDate],
-                [scheduleEndTime],
-                [creationDateTime],
-                [active]
+            INSERT INTO dbo.di_flpSchedulerConfiguration (
+                flpConfigurationId, scheduleTypeId, scheduleValue,
+                scheduleStartDate, scheduleStartTime, scheduleEndDate, scheduleEndTime,
+                creationDateTime, active
             )
             VALUES (
-                @configurationId,
-                @scheduledId,
-                @scheduleValue,
-                @scheduledDate,
-                @scheduledTime,
-                @scheduledEndDate,
-                GETUTCDATE(),
-                1
+                @configurationId, @scheduledId, @scheduleValue,
+                @startDate, @startTime, @endDate, @endTime, GETUTCDATE(), 1
             );
 
-            --insert custom schedulerdetails
-            IF (LEN(@weekDaysIds) > 0 AND (@frequencyHoursId > 0))
-            BEGIN
-                EXEC [commit_customSchedulerDetailsV2] @configurationId, @frequencyHoursId, @weekDaysIds;
-            END
+            IF (LEN(ISNULL(@weekDaysIds, N'')) > 0 AND ISNULL(@frequencyHoursId, 0) > 0)
+                EXEC dbo.commit_customSchedulerDetailsV2 @configurationId, @frequencyHoursId, @weekDaysIds;
 
             SET @nextRun = dbo.funSchdulerCalculateNextRun(@configurationId, 0);
 
-            INSERT INTO di_processScheduler (flpConfigurationId, flpProcessStatusId, starttime, nextRun, active)
+            INSERT INTO dbo.di_processScheduler (flpConfigurationId, flpProcessStatusId, starttime, nextRun, active)
             VALUES (@configurationId, 0, @scheduledTime, @nextRun, 1);
         END
-        ELSE
+        ELSE IF (@updateSchedular = 1)
         BEGIN
-            IF (@updateSchedular = 1)
-            BEGIN
-                UPDATE di_flpSchedulerConfiguration
-                SET
-                    scheduleTypeId = @scheduledId,
-                    scheduleStartDate = @scheduledDate,
-                    scheduleStartTime = @scheduledTime,
-                    scheduleValue = @scheduleValue,
-                    scheduleEndDate = @scheduledEndDate,
-                    scheduleEndTime = @scheduledEndTime,
-                    updationDateTime = GETDATE()
-                WHERE flpConfigurationId = @configId;
+            UPDATE dbo.di_flpSchedulerConfiguration
+            SET scheduleTypeId = @scheduledId,
+                scheduleStartDate = @startDate,
+                scheduleStartTime = @startTime,
+                scheduleValue = @scheduleValue,
+                scheduleEndDate = @endDate,
+                scheduleEndTime = @endTime,
+                updationDateTime = GETUTCDATE(),
+                active = 1
+            WHERE flpConfigurationId = @configId;
 
-                UPDATE di_processScheduler
-                SET active = 0
-                WHERE flpConfigurationId = @configId;
+            UPDATE dbo.di_processScheduler SET active = 0 WHERE flpConfigurationId = @configId;
+            UPDATE dbo.di_customSchedulerDetails SET active = 0 WHERE flpConfigurationId = @configId;
 
-                UPDATE di_customSchedulerDetails
-                SET active = 0
-                WHERE flpConfigurationId = @configId;
+            IF (LEN(ISNULL(@weekDaysIds, N'')) > 0 AND ISNULL(@frequencyHoursId, 0) > 0)
+                EXEC dbo.commit_customSchedulerDetailsV2 @configId, @frequencyHoursId, @weekDaysIds;
 
-                --insert custom scheduler details
-                IF (LEN(@weekDaysIds) > 0 AND (@frequencyHoursId > 0))
-                BEGIN
-                    EXEC [commit_customSchedulerDetailsV2] @configId, @frequencyHoursId, @weekDaysIds;
-                END
+            SET @nextRun = dbo.funSchdulerCalculateNextRun(@configId, 0);
 
-                SET @nextRun = dbo.funSchdulerCalculateNextRun(@configId, 0);
-
-                INSERT INTO di_processScheduler (flpConfigurationId, flpProcessStatusId, starttime, nextRun, active)
-                VALUES (@configId, 0, @scheduledTime, @nextRun, 1);
-            END
+            INSERT INTO dbo.di_processScheduler (flpConfigurationId, flpProcessStatusId, starttime, nextRun, active)
+            VALUES (@configId, 0, @scheduledTime, @nextRun, 1);
         END
 
         IF (@processTypeId = 1)
         BEGIN
-            --need to change in UAT and PROD
-            -- UAT/PROD --diframeworkonlinesource
             SET @blobContainerName = CASE
                 WHEN @flpProcessingServerTypeId = 3 THEN @blobContainerName
                 ELSE 'diframeworktestsource'
             END;
         END
 
-        IF (@flpProcessingServerTypeId = 2)
+        IF (@flpProcessingServerTypeId IN (2, 3))
         BEGIN
             IF (@configId IS NULL)
-            BEGIN
-                INSERT INTO [di_databricksDestinationStorageAccountInfo] (
-                    flpConfigurationId,
-                    storageContainerName,
-                    creationDateTime,
-                    updationDateTime,
-                    active,
-                    storageAccountId
+                INSERT INTO dbo.di_databricksDestinationStorageAccountInfo (
+                    flpConfigurationId, storageContainerName, active, storageAccountId
                 )
-                VALUES (@configurationId, @deltaContainerName, GETUTCDATE(), NULL, 1, @deltaStorageAccountId);
-            END
+                VALUES (@configurationId, @deltaContainerName, 1, @deltaStorageAccountId);
             ELSE
-            BEGIN
-                UPDATE [di_databricksDestinationStorageAccountInfo]
-                SET
-                    storageContainerName = @deltaContainerName,
-                    updationDateTime = GETUTCDATE(),
+                UPDATE dbo.di_databricksDestinationStorageAccountInfo
+                SET storageContainerName = @deltaContainerName,
                     storageAccountId = @deltaStorageAccountId
                 WHERE flpConfigurationId = @configId;
-            END
         END
 
-        IF (@flpProcessingServerTypeId = 3)
+        IF (@locationTypeId = 1 AND @processTypeId <> 6)
         BEGIN
             IF (@configId IS NULL)
-            BEGIN
-                INSERT INTO [di_databricksDestinationStorageAccountInfo] (
-                    flpConfigurationId,
-                    storageContainerName,
-                    creationDateTime,
-                    updationDateTime,
-                    active,
-                    storageAccountId
+                INSERT INTO dbo.di_flpSourceStorageAccountInfo (
+                    flpConfigurationId, storageContainerName, active, storageAccountId
                 )
-                VALUES (@configurationId, @deltaContainerName, GETUTCDATE(), NULL, 1, @deltaStorageAccountId);
-            END
+                VALUES (@configurationId, @blobContainerName, 1, @blobStorageAccount);
             ELSE
-            BEGIN
-                UPDATE [di_databricksDestinationStorageAccountInfo]
-                SET
-                    storageContainerName = @deltaContainerName,
-                    updationDateTime = GETUTCDATE(),
-                    storageAccountId = @deltaStorageAccountId
-                WHERE flpConfigurationId = @configId;
-            END
-        END
-
-        IF (@locationTypeId = 1)
-        BEGIN
-            IF (@configId IS NULL)
-            BEGIN
-                INSERT INTO [di_flpSourceStorageAccountInfo] (
-                    [flpConfigurationId],
-                    [storageContainerName],
-                    [creationDateTime],
-                    [updationDateTime],
-                    [active],
-                    [storageAccountId]
-                )
-                VALUES (@configurationId, @blobContainerName, GETUTCDATE(), NULL, 1, @blobStorageAccount);
-            END
-            ELSE
-            BEGIN
-                UPDATE di_flpSourceStorageAccountInfo
-                SET
-                    storageContainerName = @blobContainerName,
-                    updationDateTime = GETUTCDATE(),
+                UPDATE dbo.di_flpSourceStorageAccountInfo
+                SET storageContainerName = @blobContainerName,
                     storageAccountId = @blobStorageAccount
                 WHERE flpConfigurationId = @configId;
-            END
         END
-        ELSE IF (@locationTypeId != 4)
+        ELSE IF (@processTypeId <> 6)
         BEGIN
             IF (@configId IS NULL)
             BEGIN
-                INSERT INTO [di_sharedLocationSourceServer] (
-                    [flpConfigurationId],
-                    [sharedLocationServerInfoId],
-                    [folderName],
-                    [active],
-                    [creationDateTime],
-                    [updationDateTime],
-                    [fileServerId]
+                IF EXISTS (
+                    SELECT 1
+                    FROM sys.columns c
+                    INNER JOIN sys.types t ON c.user_type_id = t.user_type_id
+                    WHERE c.object_id = OBJECT_ID('dbo.di_sharedLocationSourceServer')
+                      AND c.name = 'sharedLocationServerInfoId'
+                      AND t.name IN ('uniqueidentifier', 'guid')
                 )
-                VALUES (@configurationId, NEWID(), @baseFolderName, 1, GETUTCDATE(), NULL, @serverLocationId);
+                    EXEC sp_executesql
+                        N'INSERT INTO dbo.di_sharedLocationSourceServer (
+                              flpConfigurationId, sharedLocationServerInfoId, folderName, active, fileServerId
+                          )
+                          VALUES (@configurationId, NEWID(), @baseFolderName, 1, @serverLocationId);',
+                        N'@configurationId NVARCHAR(100), @baseFolderName VARCHAR(100), @serverLocationId INT',
+                        @configurationId, @baseFolderName, @serverLocationId;
+                ELSE
+                    INSERT INTO dbo.di_sharedLocationSourceServer (
+                        flpConfigurationId, folderName, active, fileServerId
+                    )
+                    VALUES (@configurationId, @baseFolderName, 1, @serverLocationId);
             END
             ELSE
-            BEGIN
-                UPDATE di_sharedLocationSourceServer
-                SET
-                    folderName = @baseFolderName,
-                    updationDateTime = GETUTCDATE(),
+                UPDATE dbo.di_sharedLocationSourceServer
+                SET folderName = @baseFolderName,
                     fileServerId = @serverLocationId
                 WHERE flpConfigurationId = @configId;
-            END
         END
 
         IF (@configId IS NULL)
         BEGIN
-            --DEV use dataingestionframeworktest
-            --UAT use diframework
-            INSERT INTO [dbo].[di_flpDestinationStorageAccountInfo] (
-                [flpConfigurationId],
-                [storageContainerName],
-                [creationDateTime],
-                [updationDateTime],
-                [active],
-                [storageAccountId]
+            INSERT INTO dbo.di_flpDestinationStorageAccountInfo (
+                flpConfigurationId, storageContainerName, active, storageAccountId
             )
-            VALUES (@configurationId, 'dataingestionframeworktest', GETUTCDATE(), NULL, 1, 1);
+            VALUES (@configurationId, 'dataingestionframeworktest', 1, 1);
 
-            -- Get the last inserted ID
             SET @flpConfigurationId = @configurationId;
         END
         ELSE
         BEGIN
-            UPDATE di_flpDestinationStorageAccountInfo
-            SET updationDateTime = GETUTCDATE()
-            WHERE flpConfigurationId = @configId;
-
-            --DELETE FROM di_flpFileConfiguration WHERE flpConfigurationId = @configId;
-            -- COMMIT TRANSACTION;
-            --DELETE FROM di_configurationTableMapping WHERE flpConfigurationId = @configId;
-
             SET @flpConfigurationId = @configId;
         END
 
         COMMIT TRANSACTION;
-        -- Commit the transaction
     END TRY
     BEGIN CATCH
-        -- Rollback transaction in case of error
         IF @@TRANCOUNT > 0
-        BEGIN
             ROLLBACK TRANSACTION;
+
+        IF OBJECT_ID(N'dbo.NLog', N'U') IS NOT NULL
+        BEGIN
+            INSERT INTO dbo.NLog (
+                MachineName, Logged, Level, Message, Logger, Properties, Callsite, Exception
+            )
+            VALUES (
+                @@SERVERNAME, GETUTCDATE(), 'Error', ERROR_MESSAGE(), 'commit_InsertFlpConfiguration',
+                '', '',
+                CONCAT(
+                    'Error Number: ', ERROR_NUMBER(),
+                    ', Error Severity: ', ERROR_SEVERITY(),
+                    ', Error State: ', ERROR_STATE(),
+                    ', Error Procedure: ', ERROR_PROCEDURE(),
+                    ', Error Line: ', ERROR_LINE(),
+                    ', Error Message: ', ERROR_MESSAGE()
+                )
+            );
         END;
 
-        INSERT INTO [dbo].[NLog]
-        VALUES (
-            @@ServerName,
-            GETUTCDATE(),
-            'Error',
-            ERROR_MESSAGE(),
-            '[commit_InsertFlpConfiguration]',
-            '',
-            '',
-            CONCAT(
-                'Error Number: ', ERROR_NUMBER(),
-                ', Error Severity: ', ERROR_SEVERITY(),
-                ', Error State: ', ERROR_STATE(),
-                ', Error Procedure: ', ERROR_PROCEDURE(),
-                ', Error Line: ', ERROR_LINE(),
-                ', Error Message: ', ERROR_MESSAGE()
-            )
-        );
-
-        -- Raise the error
         THROW;
-    END CATCH;
+    END CATCH
 END;
-GO
-
