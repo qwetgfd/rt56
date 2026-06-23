@@ -1,18 +1,14 @@
-/* ============================================================
-   SharePoint Configuration First – READ-ONLY diagnostics
-   Database: DataIngestionV2
-   No INSERT / UPDATE / DELETE
-   ============================================================ */
+/* SharePoint Configuration First – READ-ONLY diagnostics (prod) */
 
 SET NOCOUNT ON;
 
 DECLARE @Id1 NVARCHAR(100) = '029B59E4-B249-47B3-B71D-662DF964E2E7';  -- DI_APNORAC14
-DECLARE @Id2 NVARCHAR(100) = 'F782404F-D85D-482F-A623-2C7451443CEE';  -- DI_ALALLAL (from list)
+DECLARE @Id2 NVARCHAR(100) = 'F782404F-D85D-482F-A623-2C7451443CEE';  -- second row from list
 
-PRINT '=== 1) Runtime list (what Function App / GetProcessList uses) ===';
+-- 1) What GetProcessList / Function App gets
 EXEC dbo.sel_flpConfigurationList @processTypeId = 6;
 
-PRINT '=== 2) Main config – SharePoint columns on di_flpConfiguration ===';
+-- 2) Main table SharePoint columns
 SELECT
     flpConfigurationId,
     process_name,
@@ -20,134 +16,41 @@ SELECT
     processTypeId,
     is_active,
     sourcePath,
-    destinationPath,
     sharePointApplicationId,
     sharePointApplicationSiteId,
     sharePointLibraryName,
-    sharePointFolderPath,
-    created_date,
-    modified_date
+    sharePointFolderPath
 FROM dbo.di_flpConfiguration
 WHERE flpConfigurationId IN (@Id1, @Id2);
 
-PRINT '=== 3) Side table – di_flpSharePointSource ===';
-SELECT
-    flpConfigurationId,
-    sharePointApplicationId,
-    sharePointApplicationSiteId,
-    sharePointLibraryName,
-    sharePointFolderPath,
-    active,
-    createdOn,
-    modifiedOn
+-- 3) Side table (your screenshot showed NO rows here)
+SELECT *
 FROM dbo.di_flpSharePointSource
 WHERE flpConfigurationId IN (@Id1, @Id2);
 
-PRINT '=== 4) Side table read SP – sel_flpSharePointSourceByConfigId (Id1) ===';
+-- 4) Side table read SP
 EXEC dbo.sel_flpSharePointSourceByConfigId @flpConfigurationId = @Id1;
-
-PRINT '=== 5) Side table read SP – sel_flpSharePointSourceByConfigId (Id2) ===';
 EXEC dbo.sel_flpSharePointSourceByConfigId @flpConfigurationId = @Id2;
 
-PRINT '=== 6) Edit wizard load SP – sel_processConfigurationById (Id1) ===';
-EXEC dbo.sel_processConfigurationById
-    @flpConfigurationId = @Id1,
-    @tabName = NULL;
+-- 5) Edit load SP (already joins side table in repo version)
+EXEC dbo.sel_processConfigurationById @flpConfigurationId = @Id1, @tabName = NULL;
 
-PRINT '=== 7) Scheduler (why process may / may not appear in list) ===';
-SELECT
-    sc.flpConfigurationId,
-    f.process_name,
-    sc.scheduleTypeId,
-    sc.scheduleValue,
-    sc.scheduleStartDate,
-    sc.scheduleStartTime,
-    sc.scheduleEndDate,
-    sc.scheduleEndTime,
-    sc.active AS schedulerActive,
-    ps.nextRun,
-    ps.lastRun
-FROM dbo.di_flpSchedulerConfiguration sc
-LEFT JOIN dbo.di_processScheduler ps
-    ON ps.flpConfigurationId = sc.flpConfigurationId
-   AND ps.active = 1
-LEFT JOIN dbo.di_flpConfiguration f
-    ON f.flpConfigurationId = sc.flpConfigurationId
-WHERE sc.flpConfigurationId IN (@Id1, @Id2)
-  AND sc.active = 1;
-
-PRINT '=== 8) File configuration (extensions / rules) ===';
-SELECT
-    flpConfigurationId,
-    fileNameString,
-    tabName,
-    delimiter,
-    is_header_provided,
-    skip_rows,
-    active
-FROM dbo.di_flpFileConfiguration
-WHERE flpConfigurationId IN (@Id1, @Id2)
-  AND active = 1;
-
-PRINT '=== 9) Prior upload attempts ===';
-SELECT
-    uploadedFileId,
-    flpConfigurationId,
-    uploadedFileName,
-    uploadedDate,
-    active
-FROM dbo.di_uploadedFile
-WHERE flpConfigurationId IN (@Id1, @Id2);
-
-PRINT '=== 10) SharePoint app exists (if IDs are present) ===';
-SELECT
-    s.flpConfigurationId,
-    s.sharePointApplicationId,
-    a.displayname AS applicationName,
-    a.active AS applicationActive,
-    s.sharePointApplicationSiteId,
-    site.sitename AS siteName,
-    site.active AS siteActive
-FROM dbo.di_flpSharePointSource s
-LEFT JOIN dbo.di_application a
-    ON a.applicationid = s.sharePointApplicationId
-LEFT JOIN dbo.di_applicationsite site
-    ON site.applicationsiteid = s.sharePointApplicationSiteId
-WHERE s.flpConfigurationId IN (@Id1, @Id2)
-  AND s.active = 1;
-
-PRINT '=== 11) Deployed SP definitions (read-only metadata) ===';
-SELECT
-    OBJECT_NAME(object_id) AS objectName,
-    OBJECT_DEFINITION(object_id) AS definitionText
-FROM sys.procedures
-WHERE name IN (
-    'sel_flpConfigurationList',
-    'commit_InsertFlpConfiguration',
-    'commit_InsertFlpSharePointSource',
-    'sel_flpSharePointSourceByConfigId',
-    'sel_processConfigurationById'
-)
-ORDER BY name;
-
-PRINT '=== 12) All active SharePoint processes (processTypeId = 6) ===';
+-- 6) All SharePoint configs: main vs side table in one view
 SELECT
     f.flpConfigurationId,
     f.process_name,
-    f.locationTypeId,
     f.sourcePath,
-    f.sharePointApplicationId     AS main_sharePointApplicationId,
-    f.sharePointApplicationSiteId AS main_sharePointApplicationSiteId,
-    f.sharePointLibraryName       AS main_sharePointLibraryName,
-    f.sharePointFolderPath        AS main_sharePointFolderPath,
-    s.sharePointApplicationId     AS side_sharePointApplicationId,
-    s.sharePointApplicationSiteId AS side_sharePointApplicationSiteId,
-    s.sharePointLibraryName       AS side_sharePointLibraryName,
-    s.sharePointFolderPath        AS side_sharePointFolderPath
+    f.sharePointApplicationId     AS main_appId,
+    f.sharePointApplicationSiteId AS main_siteId,
+    f.sharePointLibraryName       AS main_library,
+    f.sharePointFolderPath        AS main_folder,
+    s.sharePointApplicationId     AS side_appId,
+    s.sharePointApplicationSiteId AS side_siteId,
+    s.sharePointLibraryName       AS side_library,
+    s.sharePointFolderPath        AS side_folder
 FROM dbo.di_flpConfiguration f
 LEFT JOIN dbo.di_flpSharePointSource s
-    ON s.flpConfigurationId = f.flpConfigurationId
-   AND s.active = 1
+    ON s.flpConfigurationId = f.flpConfigurationId AND s.active = 1
 WHERE f.is_active = 1
   AND f.processTypeId = 6
   AND f.locationTypeId = 4
