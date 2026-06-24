@@ -1,7 +1,124 @@
-SELECT flpConfigurationId, processTypeId, locationTypeId, sourcePath
-FROM dbo.di_flpConfiguration
-WHERE flpConfigurationId = 'F782404F-D85D-482F-A623-2C7451443CEE';
+public async Task<APIResponse<FlpProcessResponseDto>> ProcessExcelFile(FlpRequestDto flpRequestDto)
+{
+    var configurationResult = await _fileLoadingProcessConfiguration.GetFlpProcessByConfigurationId(flpRequestDto.FlpConfigurationId,"");
+    if (configurationResult.ResponseCode == 200)
+    {
+        var flpConfigurationRequestDto = configurationResult.Result;
+        DestinationStorageAccountDto destinationStorageAccountDto = null;
+        SharedLocationDestinationServerDto sharedLocationDestinationServerDto = null;
+        if ( flpConfigurationRequestDto.LocationTypeId == (int)SourceLocationTypeEnum.Azure)
+        {
 
-SELECT sharePointApplicationId, sharePointLibraryName, sharePointFolderPath
-FROM dbo.di_flpSharePointSource
-WHERE flpConfigurationId = 'F782404F-D85D-482F-A623-2C7451443CEE' AND active = 1;
+            flpConfigurationRequestDto.BlobClients = flpRequestDto.BlobClients;
+            flpConfigurationRequestDto.UploadedFileId = flpRequestDto.BlobClients.UploadedId;
+            var blobClients = flpConfigurationRequestDto.BlobClients;
+            if (blobClients == null)
+            {
+                await _fileLoadingProcessConfiguration.UpdateFlpProcessStatus(flpConfigurationRequestDto.FlpConfigurationId, APIResultStatus.Error);
+                return await Task.FromResult(new APIResponse<FlpProcessResponseDto>
+                {
+                    ResultStatus = APIResultStatus.InvalidParameters,
+                    ResponseMessage = new List<string> { "Not found blob client details" },
+                    Result = null
+                });
+            }
+            var isValidFile1 = await _fileLoadingProcessConfiguration.IsValidFile(flpConfigurationRequestDto.FlpConfigurationId, blobClients.Name, ".xlsx");
+            var isValidFile2 = await _fileLoadingProcessConfiguration.IsValidFile(flpConfigurationRequestDto.FlpConfigurationId, blobClients.Name, ".xls");
+            if (!isValidFile1 && !isValidFile2)
+            {
+                await _fileLoadingProcessConfiguration.UpdateFlpProcessStatus(flpConfigurationRequestDto.FlpConfigurationId, APIResultStatus.Error);
+                return await Task.FromResult(new APIResponse<FlpProcessResponseDto>
+                {
+                    ResultStatus = APIResultStatus.InvalidParameters,
+                    ResponseMessage = new List<string> { "Invalid file extention" },
+                    Result = null
+                });
+            }
+
+
+
+        }
+       
+        else if (flpConfigurationRequestDto.LocationTypeId == (int)SourceLocationTypeEnum.OnPrem)
+        {
+            flpConfigurationRequestDto.SourcePath = flpRequestDto.OnPremFileLocation.FileUrl;
+            flpConfigurationRequestDto.UploadedFileId = flpRequestDto.OnPremFileLocation.UploadedId;
+
+            var isValidFile1 = await _fileLoadingProcessConfiguration.IsValidFile(flpConfigurationRequestDto.FlpConfigurationId, flpConfigurationRequestDto.SourcePath, ".xlsx");
+            var isValidFile2 = await _fileLoadingProcessConfiguration.IsValidFile(flpConfigurationRequestDto.FlpConfigurationId, flpConfigurationRequestDto.SourcePath, ".xls");
+            if (!isValidFile1 && !isValidFile2)
+            {
+                await _fileLoadingProcessConfiguration.UpdateFlpProcessStatus(flpConfigurationRequestDto.FlpConfigurationId, APIResultStatus.Error);
+                return await Task.FromResult(new APIResponse<FlpProcessResponseDto>
+                {
+                    ResultStatus = APIResultStatus.InvalidParameters,
+                    ResponseMessage = new List<string> { "Invalid file extention" },
+                    Result = null
+                });
+            }
+        }
+        else if (flpConfigurationRequestDto.LocationTypeId == (int)SourceLocationTypeEnum.SharePoint)
+        {
+            #region SharePoint Workspace - AY
+            flpConfigurationRequestDto.SourcePath = flpRequestDto.SharePointFileLocation.FileUrl;
+            flpConfigurationRequestDto.UploadedFileId = flpRequestDto.SharePointFileLocation.UploadedId;
+
+            var isValidFile1 = await _fileLoadingProcessConfiguration.IsValidFile(flpConfigurationRequestDto.FlpConfigurationId, flpConfigurationRequestDto.SourcePath, ".xlsx");
+            var isValidFile2 = await _fileLoadingProcessConfiguration.IsValidFile(flpConfigurationRequestDto.FlpConfigurationId, flpConfigurationRequestDto.SourcePath, ".xls");
+            if (!isValidFile1 && !isValidFile2)
+            {
+                await _fileLoadingProcessConfiguration.UpdateFlpProcessStatus(flpConfigurationRequestDto.FlpConfigurationId, APIResultStatus.Error);
+                return await Task.FromResult(new APIResponse<FlpProcessResponseDto>
+                {
+                    ResultStatus = APIResultStatus.InvalidParameters,
+                    ResponseMessage = new List<string> { "Invalid file extention" },
+                    Result = null
+                });
+            }
+            #endregion
+        }
+        if (flpConfigurationRequestDto.DestinationLocationTypeId == (int)DestinationLocationTypeEnum.Azure)
+        {
+            destinationStorageAccountDto = await _fileLoadingProcessConfiguration.DestinationstorageAccountInfo(flpConfigurationRequestDto.FlpConfigurationId);
+        }
+        else if (flpConfigurationRequestDto.DestinationLocationTypeId == (int)DestinationLocationTypeEnum.OnPrem)
+        {
+            sharedLocationDestinationServerDto = await _fileLoadingProcessConfiguration.SharedLocationDestinationServerDetails(flpConfigurationRequestDto.FlpConfigurationId);
+
+        }
+        var res = await ExcelProcess(flpConfigurationRequestDto, destinationStorageAccountDto, sharedLocationDestinationServerDto);
+        
+         await UpdateProcessStatus(flpConfigurationRequestDto, res);
+        if (!string.IsNullOrWhiteSpace(flpConfigurationRequestDto.UploadedFileId))
+        {
+           
+            int totalRows = res.Result?.TotalRows ?? 0;
+            int insertedRows = res.Result?.InsertedRows ?? 0;
+            int duplicateRows = res.Result?.DuplicateRows ?? 0;
+            string blobName = res.Result?.BlobName ?? string.Empty;
+            await _fileLoadingProcessConfiguration.AddBackUpFileDetails(flpConfigurationRequestDto.UploadedFileId, flpConfigurationRequestDto.FlpConfigurationId, res.Result?.BackUpFileName, null, totalRows, insertedRows, duplicateRows, blobName);
+        }
+        else
+        {
+            _logger.LogError($"Not updated backup file details for {flpConfigurationRequestDto.FlpConfigurationId}");
+        }
+        return await Task.FromResult(new APIResponse<FlpProcessResponseDto>
+        {
+            ResultStatus = res.ResultStatus,
+            ResponseMessage = res.ResponseMessage,
+            Result = res.Result
+        });
+
+    }
+    else
+    {
+        await _fileLoadingProcessConfiguration.UpdateFlpProcessStatus(flpRequestDto.FlpConfigurationId, APIResultStatus.Error);
+        return await Task.FromResult(new APIResponse<FlpProcessResponseDto>
+        {
+            ResultStatus = configurationResult.ResultStatus,
+            ResponseMessage = new List<string> { $"Not found records for {flpRequestDto.FlpConfigurationId}" },
+            Result = null
+        });
+    }
+}
+
