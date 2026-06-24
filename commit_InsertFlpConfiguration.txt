@@ -1,29 +1,25 @@
-  if (fileContent.Content.CanSeek)
-                        fileContent.Content.Position = 0;
+MoveSourceFileToTemporaryDestinationAndDelete
+
+string sourceFilePath = !string.IsNullOrWhiteSpace(fileLocation)
+                                    ? fileLocation
+                                    : flpConfigurationRequestDto.SourcePath;
 
 
- public async Task<FileStreamContent> GetFileContentAsync(Application credentials, string siteId, string driveId, string filePath, string? rangeHeader)
-    {
-        var url = _graph.BuildUrl($"sites/{siteId}/drives/{driveId}/root:/{CommonUtilities.EncodeGraphPath(filePath)}:/content");
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync(credentials).ConfigureAwait(false));
 
-        if (!string.IsNullOrWhiteSpace(rangeHeader))
-            request.Headers.TryAddWithoutValidation("Range", rangeHeader);
 
-        using var response = await _httpClientFactory.CreateClient().SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+GetFileLocation
 
-        var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+ {
+                var sharePointFileUrl = flpConfigurationRequestDto.SharePointFileLocation?.FileUrl;
+                if (!string.IsNullOrWhiteSpace(sharePointFileUrl))
+                    return sharePointFileUrl;
+                return flpConfigurationRequestDto.SourcePath ?? string.Empty;
+            }
 
-        return new FileStreamContent
-        {
-            Content = new MemoryStream(bytes),
-            ContentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream",
-            ContentLength = response.Content.Headers.ContentLength ?? bytes.Length,
-            StatusCode = (int)response.StatusCode,
-            ContentRange = response.Content.Headers.ContentRange?.ToString(),
-            AcceptRanges = response.Headers.AcceptRanges.Count > 0 ? string.Join(", ", response.Headers.AcceptRanges) : "bytes",
-            FileName = CommonUtilities.ExtractFileNameFromPath(filePath)
-        };
-    }
+
+
+
+
+ProcessCsvFile
+  flpConfigurationRequestDto.SharePointFileLocation = flpRequestDto.SharePointFileLocation;
+                   
