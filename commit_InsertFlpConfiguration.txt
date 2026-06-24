@@ -1,37 +1,38 @@
-MoveSourceFileToTemporaryDestinationAndDelete
-
-string sourceFilePath = !string.IsNullOrWhiteSpace(fileLocation)
-                                    ? fileLocation
-                                    : flpConfigurationRequestDto.SourcePath;
+ Task<bool> MoveFileAsync(WorkspaceCredentials credentials, string sourceFilePath, string destinationFolderPath, string newFileName, bool createDestinationIfMissing = false);
 
 
+ private async Task<string> EnsureFolderPathExistsAsync(Application credentials, string siteId, string driveId, string destinationFolderPath)
+    {
+        var normalizedPath = destinationFolderPath.Trim().Trim('/');
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+            throw new ArgumentException("Destination folder path is required.", nameof(destinationFolderPath));
 
+        var segments = normalizedPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var currentPath = string.Empty;
+        string? currentFolderId = null;
 
-GetFileLocation
-
- public static string GetFileLocation(FlpConfigurationResponseDto flpConfigurationRequestDto)
+        foreach (var segment in segments)
         {
-            if ((int)SourceLocationTypeEnum.Azure == flpConfigurationRequestDto.LocationTypeId)
-                return flpConfigurationRequestDto.BlobClients.Name;
+            currentPath = string.IsNullOrEmpty(currentPath) ? segment : $"{currentPath}/{segment}";
 
-            if ((int)SourceLocationTypeEnum.OnPrem == flpConfigurationRequestDto.LocationTypeId)
-                return flpConfigurationRequestDto.SourcePath;
-            #region SharePoint Workspace - AY
-            if ((int)SourceLocationTypeEnum.SharePoint == flpConfigurationRequestDto.LocationTypeId)
+            var folderUrl = _graph.BuildUrl($"sites/{siteId}/drives/{driveId}/root:/{CommonUtilities.EncodeGraphPath(currentPath)}");
+            using var request = new HttpRequestMessage(HttpMethod.Get, folderUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync(credentials).ConfigureAwait(false));
+            using var response = await _httpClientFactory.CreateClient().SendAsync(request).ConfigureAwait(false);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                var sharePointFileUrl = flpConfigurationRequestDto.SharePointFileLocation?.FileUrl;
-                if (!string.IsNullOrWhiteSpace(sharePointFileUrl))
-                    return sharePointFileUrl;
-                return flpConfigurationRequestDto.SourcePath ?? string.Empty;
+                _logger.LogInformation("Creating SharePoint folder '{FolderName}' at '{FolderPath}'", segment, currentPath);
+                currentFolderId = await CreateFolderAsync(credentials, siteId, driveId, currentFolderId, segment).ConfigureAwait(false);
+                continue;
             }
-            #endregion
-            return "";
+
+            response.EnsureSuccessStatusCode();
+            await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            using var folderDoc = await JsonDocument.ParseAsync(stream).ConfigureAwait(false);
+            currentFolderId = CommonUtilities.JsonGetString(folderDoc.RootElement, "id")
+                ?? throw new InvalidOperationException($"Cannot read folder id for path: {currentPath}");
         }
 
-
-
-
-
-ProcessCsvFile
-  flpConfigurationRequestDto.SharePointFileLocation = flpRequestDto.SharePointFileLocation;
-                   
+        return currentFolderId ?? throw new InvalidOperationException($"Could not resolve destination folder: {destinationFolderPath}");
+    }
