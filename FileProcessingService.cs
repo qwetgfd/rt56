@@ -1,39 +1,19 @@
-For SharePoint Configuration First (processTypeId = 6) on the File Process Status page, we added a frontend-only integration in two files and left existing DI services, backend logic, and Function App unchanged. New file: FRONTEND/src/app/sharepoint/services/sharepoint-configuration-first-runtime.service.ts (#region SharePoint Workspace - AY) — on page load it calls POST api/Import/GetProcessList (header x-tpdi-api-version: 1.0) with request { "processTypeId": 6 }, then for each file in the response it calls POST api/Import/ProcessExcelFile (v3.0, or v4.0 for DataBricks). GetProcessList response shape (relevant SharePoint fields):
+-- GetProcessList(6) = sel_flpConfigurationList. Run line 3 first; use update on line 4 OR line 5 (not both).
 
-{
-  "responseCode": 200,
-  "responseMessage": ["Success"],
-  "result": [
-    {
-      "flpConfigurationId": "9E0F7426-A149-4D36-AE39-5E321F93AD9E",
-      "processName": "DI_CACANAG6",
-      "processTypeId": 6,
-      "locationTypeId": 4,
-      "sourcePath": "Document-2/Test",
-      "destinationPath": "CANADA/Canada/Agents Only/",
-      "billingClientName": "Airbnb",
-      "fileProcessingServerTypeId": 1,
-      "sharePointFiles": [
-        {
-          "uploadedId": "72EF142B-EA0E-4B32-B571-948D7242998F",
-          "fileUrl": "Document-2/Test/Testing21.xlsx",
-          "fileSize": 41337
-        }
-      ],
-      "blobClients": null,
-      "onPremFileLocations": null
-    }
-  ]
-}
-ProcessExcelFile request payload (one call per item in sharePointFiles):
+select dbo.di_flpConfiguration.flpConfigurationId, dbo.di_flpConfiguration.process_name, dbo.di_flpSchedulerConfiguration.scheduleTypeId, dbo.di_flpSchedulerConfiguration.scheduleStartDate, dbo.di_flpSchedulerConfiguration.scheduleStartTime, dbo.di_flpSchedulerConfiguration.scheduleEndDate, dbo.di_flpSchedulerConfiguration.scheduleEndTime, dbo.di_processScheduler.nextRun from dbo.di_flpConfiguration inner join dbo.di_flpSchedulerConfiguration on dbo.di_flpSchedulerConfiguration.flpConfigurationId = dbo.di_flpConfiguration.flpConfigurationId and dbo.di_flpSchedulerConfiguration.active = 1 left join dbo.di_processScheduler on dbo.di_processScheduler.flpConfigurationId = dbo.di_flpConfiguration.flpConfigurationId and dbo.di_processScheduler.active = 1 where dbo.di_flpConfiguration.processTypeId = 6 and dbo.di_flpConfiguration.flpConfigurationId = 'PUT-FLP-GUID-HERE'
 
-{
-  "flpConfigurationId": "9E0F7426-A149-4D36-AE39-5E321F93AD9E",
-  "processName": "DI_CACANAG6",
-  "sharePointFileLocation": {
-    "uploadedId": "72EF142B-EA0E-4B32-B571-948D7242998F",
-    "fileUrl": "Document-2/Test/Testing21.xlsx",
-    "fileSize": 41337
-  }
-}
-In FRONTEND/src/app/file-processing-status/file-processing-status.component.ts, ngOnInit calls runDueSharePointProcesses() first; on complete or error it runs the existing getFileUploadedStatus() (GET api/Status/FileUploadStatus) and keeps the existing poll via getStatus(), so the UI shows Client → process name → file with the same step checklist as blob/on-prem. Prerequisites: config saved with processTypeId = 6, locationTypeId = 4, scheduler due, files present in SharePoint; backend SharePoint branches for GetProcessList and ProcessExcelFile must already be deployed.
+-- scheduleTypeId = 1 -> table di_flpSchedulerConfiguration: set scheduleStartDate + scheduleStartTime (past), scheduleEndDate + scheduleEndTime (future)
+update dbo.di_flpSchedulerConfiguration set scheduleStartDate = cast(getutcdate() as date), scheduleStartTime = cast(dateadd(minute, -5, getutcdate()) as time(7)), scheduleEndDate = dateadd(year, 1, cast(getutcdate() as date)), scheduleEndTime = cast('23:59:59' as time(7)), updationDateTime = getutcdate() where flpConfigurationId = 'PUT-FLP-GUID-HERE' and active = 1
+
+-- scheduleTypeId <> 1 -> table di_processScheduler: set nextRun (past)
+update dbo.di_processScheduler set nextRun = dateadd(minute, -1, getutcdate()), active = 1 where flpConfigurationId = 'PUT-FLP-GUID-HERE' and active = 1
+
+select dbo.di_flpConfiguration.flpConfigurationId, dbo.di_flpConfiguration.process_name, dbo.di_flpSharePointSource.sharePointApplicationId, dbo.di_flpSharePointSource.sharePointLibraryName, dbo.di_flpSharePointSource.sharePointFolderPath from dbo.di_flpConfiguration inner join dbo.di_flpSharePointSource on dbo.di_flpSharePointSource.flpConfigurationId = dbo.di_flpConfiguration.flpConfigurationId and dbo.di_flpSharePointSource.active = 1 where dbo.di_flpConfiguration.processTypeId = 6 and dbo.di_flpConfiguration.flpConfigurationId = 'PUT-FLP-GUID-HERE'
+
+exec dbo.sel_flpConfigurationList @processTypeId = 6
+
+select uploadFileId, fileName, flpConfigurationId, flpProcessStatusId, CreationDateTime from dbo.di_uploadedFile where active = 1 and processTypeId = 6 and flpConfigurationId = 'PUT-FLP-GUID-HERE' order by CreationDateTime desc
+
+exec dbo.sel_FileUploadStatusByProcessId @flpConfigurationId = 'PUT-FLP-GUID-HERE'
+
+exec dbo.sel_GetDetailedFileUploadStatus @flpConfigurationId = 'PUT-FLP-GUID-HERE', @uploadFileId = 'PUT-UPLOAD-GUID-HERE'
